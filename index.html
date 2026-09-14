@@ -113,7 +113,7 @@
     <div class="sub" id="overSub"></div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="restartBtn">PLAY AGAIN</button>
-      <button id="menuBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">SHOP</button>
+      <button id="menuBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">MENU</button>
       <button id="shareBtn" style="background:var(--exit);box-shadow:0 0 18px rgba(57,255,158,.5)">SHARE</button>
     </div>
   </div>
@@ -362,8 +362,15 @@ function resetGame() {
   el.hud.classList.remove("hidden");
   Sound.unlock(); Sound.startAmbient();
 }
+function trimPathAtExit(path){
+  const pad = CFG.GHOST_R + 6;
+  let end = path.length;
+  while (end>1 && path[end-1].x>exit.x-pad && path[end-1].x<exit.x+exit.w+pad &&
+         path[end-1].y>exit.y-pad && path[end-1].y<exit.y+exit.h+pad) end--;
+  return path.slice(0, end);
+}
 function completeRound() {
-  ghosts.push({ path: currentPath.slice() });
+  ghosts.push({ path: trimPathAtExit(currentPath) });
   round++; currentPath = []; frame = 0; ghostPhase = 0;
   grace = CFG.GRACE_TICKS; hasPrize = false;
   if (round>CFG.RAMP_START) ghostSpeed *= (1+CFG.GHOST_RAMP);
