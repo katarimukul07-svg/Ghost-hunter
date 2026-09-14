@@ -184,7 +184,8 @@ const CFG = {
   GHOST_R:9, PRIZE_R:11, EXIT_W:150, EXIT_H:44,
   GC_MOVES:10, GC_KEEP:4, SWEEP_TIME:0.7, GRACE_TICKS:36,
   RAMP_START:7, GHOST_RAMP:0.01, WALL_DRIFT:0.9,
-  OBSTACLES:4, SIZE_EVERY:5, SIZE_GROW:0.10, SIZE_MAX:2.0, EXIT_MOVE_EVERY:5,
+  OBSTACLES_START:2, OBSTACLES_ADD_EVERY:5, OBSTACLES_MAX:6,
+  SIZE_EVERY:5, SIZE_GROW:0.10, SIZE_MAX:2.0, EXIT_MOVE_EVERY:5,
   RETRY_COST:100,            // coins to revive at the same round after death
 };
 
@@ -319,6 +320,10 @@ function resize() {
 }
 window.addEventListener("resize", resize);
 
+const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex"];
+function obstacleCountForRound(r) {
+  return Math.min(CFG.OBSTACLES_MAX, CFG.OBSTACLES_START + Math.floor((r-1)/CFG.OBSTACLES_ADD_EVERY));
+}
 function buildObstacles() {
   obstacles = obstacleLayout.map(o => {
     const bw = o.w*room.w, bh = o.h*room.h;
@@ -327,15 +332,16 @@ function buildObstacles() {
       bw, bh, w:bw, h:bh,
       x: room.x + o.x*room.w, y: room.y + o.y*room.h,
       ampX: o.ampX*room.w, ampY: o.ampY*room.h, freq:o.freq, dir:o.dir,
+      shape: o.shape,
     };
   });
 }
-function makeObstacleLayout() {
+function makeObstacleLayout(count) {
   const out = [];
   const exitHalf = (CFG.EXIT_W/room.w)/2 + 0.05;
   const exitBand = (CFG.EXIT_H/room.h) + 0.07;
   let tries = 0;
-  while (out.length < CFG.OBSTACLES && tries < 500) {
+  while (out.length < count && tries < 500) {
     tries++;
     const w = 0.08 + Math.random()*0.05, h = 0.08 + Math.random()*0.06;
     const x = 0.06 + Math.random()*(1-0.12-w), y = 0.20 + Math.random()*(1-0.28-h);
@@ -349,7 +355,8 @@ function makeObstacleLayout() {
     out.push({ x, y, w, h,
       ampX: horiz ? (0.05+Math.random()*0.04) : 0,
       ampY: horiz ? 0 : (0.05+Math.random()*0.05),
-      freq: 0.4+Math.random()*0.5, dir: Math.random()<0.5?-1:1 });
+      freq: 0.4+Math.random()*0.5, dir: Math.random()<0.5?-1:1,
+      shape: OBSTACLE_SHAPES[Math.floor(Math.random()*OBSTACLE_SHAPES.length)] });
   }
   return out;
 }
@@ -493,7 +500,7 @@ function pop(x, y, text, color){ pops.push({ x, y, text, color, life:1 }); }
 /* ---------- Lifecycle ---------- */
 function resetGame() {
   resize();
-  obstacleLayout = makeObstacleLayout();
+  obstacleLayout = makeObstacleLayout(CFG.OBSTACLES_START);
   buildObstacles();
   player.x = room.x+room.w/2; player.y = room.y+room.h/2;
   pointer.x = player.x; pointer.y = player.y; pointer.active = false;
@@ -528,6 +535,12 @@ function completeRound() {
   if (round===CFG.RAMP_START+1) toast = { text:"\u26A0 THINGS GET WILD!", t:0 };
   if (round % CFG.GC_MOVES === 0 && ghosts.length > CFG.GC_KEEP && !sweep) { sweep={t:0}; Sound.sweep(); }
   if (round % CFG.EXIT_MOVE_EVERY === 0){ repositionExit(); toast = { text:"\u21C4 EXIT MOVED!", t:0 }; }
+  const wantObstacles = obstacleCountForRound(round);
+  if (wantObstacles !== obstacleLayout.length){
+    obstacleLayout = makeObstacleLayout(wantObstacles);
+    buildObstacles();
+    toast = { text:"\u26A0 NEW OBSTACLE!", t:0 };
+  }
   spawnPrize(); Sound.complete();
 }
 function startDeath() {
@@ -700,12 +713,41 @@ function drawRoomBorder(){
   ctx.shadowColor=C.border; ctx.shadowBlur=10; ctx.lineWidth=2;
   ctx.strokeRect(room.x,room.y,room.w,room.h); ctx.restore();
 }
+function traceObstaclePath(o){
+  const x=o.x, y=o.y, w=o.w, h=o.h, cx=x+w/2, cy=y+h/2;
+  switch (o.shape){
+    case "circle":
+      ctx.beginPath(); ctx.ellipse(cx,cy,w/2,h/2,0,0,Math.PI*2); ctx.closePath();
+      break;
+    case "diamond":
+      ctx.beginPath(); ctx.moveTo(cx,y); ctx.lineTo(x+w,cy); ctx.lineTo(cx,y+h); ctx.lineTo(x,cy); ctx.closePath();
+      break;
+    case "triangle":
+      ctx.beginPath(); ctx.moveTo(cx,y); ctx.lineTo(x+w,y+h); ctx.lineTo(x,y+h); ctx.closePath();
+      break;
+    case "hex": {
+      const pts = [[0.25,0],[0.75,0],[1,0.5],[0.75,1],[0.25,1],[0,0.5]];
+      ctx.beginPath();
+      pts.forEach(([px,py],i)=>{ const gx=x+px*w, gy=y+py*h; i===0?ctx.moveTo(gx,gy):ctx.lineTo(gx,gy); });
+      ctx.closePath();
+      break;
+    }
+    case "rounded": {
+      const r = Math.min(w,h)*0.3;
+      ctx.beginPath(); ctx.roundRect(x,y,w,h,r);
+      break;
+    }
+    default:
+      ctx.beginPath(); ctx.rect(x,y,w,h);
+  }
+}
 function drawObstacles(){
   ctx.save();
   for (const o of obstacles){
-    ctx.fillStyle="rgba(18,38,50,0.92)"; ctx.fillRect(o.x,o.y,o.w,o.h);
+    traceObstaclePath(o);
+    ctx.fillStyle="rgba(18,38,50,0.92)"; ctx.fill();
     ctx.strokeStyle=C.wall; ctx.shadowColor=C.wall; ctx.shadowBlur=8; ctx.lineWidth=2;
-    ctx.strokeRect(o.x,o.y,o.w,o.h); ctx.shadowBlur=0;
+    ctx.stroke(); ctx.shadowBlur=0;
   }
   ctx.restore();
 }

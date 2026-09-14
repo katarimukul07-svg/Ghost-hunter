@@ -1,6 +1,6 @@
-# Echo Steps — Development Workflow
+# Echo Steps — Dev Workflow
 
-A practical guide to how this game gets built, changed, and shipped.
+How this game actually gets built without me losing my mind.
 
 **Live game:** https://katarimukul07-svg.github.io/Ghost-hunter/
 **Repo:** https://github.com/katarimukul07-svg/Ghost-hunter
@@ -8,67 +8,61 @@ A practical guide to how this game gets built, changed, and shipped.
 
 ---
 
-## The setup: three places, three jobs
+## The cast of characters
 
-| Place | What it's for |
-|-------|---------------|
-| **Claude (this chat)** | Design decisions, planning, writing new features, and docs. The "engineer's desk." |
-| **Claude Code (in VS Code)** | Edits the files in your repo, commits, and pushes to GitHub. The "hands on the repo." |
-| **GitHub + Pages** | Stores the code and hosts the live game. The "shipping." |
+| Who | Job |
+|-----|-----|
+| **Claude (chat)** | Thinks up features, argues about design, writes the big stuff. Sits at a desk, drinks imaginary coffee. |
+| **Claude Code (VS Code)** | Actually touches the repo — edits, commits, pushes. The one with its hands dirty. |
+| **GitHub + Pages** | Where the code lives and where the game actually runs for real humans. |
 
-The whole game is a **single file: `index.html`** (HTML, CSS, and JavaScript together, no dependencies).
-
----
-
-## The golden rule: one change, one path
-
-Never edit the same thing through **both** the chat file *and* Claude Code — the two versions
-will overwrite each other. Pick one path per change:
-
-- **Big features / new systems** → built in chat, handed to you as `index.html`, you push it.
-- **Small tweaks** (rename a button, change a number, tweak text) → tell Claude Code directly.
+The entire game is **one file: `index.html`**. HTML, CSS, JS, all crammed in together like a college roommate situation. No dependencies, no build step, no drama.
 
 ---
 
-## Shipping a change
+## The one rule that saves me every time
 
-### Path A — a feature built in chat
-1. Chat gives you an updated `index.html`.
+**Don't edit the same thing in two places.** If chat hands you a whole `index.html` AND you also poke at it directly in Claude Code, they'll fight and one version wins by accident. Pick a lane per change:
+
+- **Big feature / new system** → built in chat, dropped in as `index.html`, you push it.
+- **Small tweak** (rename a button, nudge a number, fix a typo) → just tell Claude Code. Don't bother chat with it.
+
+---
+
+## Actually shipping something
+
+### Path A — chat built a feature
+1. Chat hands you a fresh `index.html`.
 2. Download it.
-3. Move it into `~/Documents/GitHub/Ghost-hunter/`, **replacing** the old `index.html`.
-4. In Claude Code: `I replaced index.html — read it, commit and push with a summary.`
-5. Wait ~1 minute, then **verify** (see below).
+3. Drop it into `~/Documents/GitHub/Ghost-hunter/`, **overwriting** the old one.
+4. Tell Claude Code: `I replaced index.html — read it, commit and push with a summary.`
+5. Wait about a minute, then go **verify** it's real (below).
 
-### Path B — a small tweak via Claude Code
-1. In Claude Code: describe the change plainly, e.g.
-   `On the game-over screen, rename the SHOP button to MENU. Then commit and push.`
-2. Approve the diff it shows.
+### Path B — a quick tweak in Claude Code
+1. Just say the thing plainly: `On the game-over screen, rename SHOP to MENU. Commit and push.`
+2. Look at the diff before saying yes.
 3. **Verify.**
 
 ---
 
-## Verifying a deploy (don't trust the cache)
+## Verifying a deploy (aka don't trust your own eyes)
 
-Caching fooled us more than once. To know what's *actually* live:
+The cache has lied to me more times than I'd like to admit. Here's how to actually know what's live:
 
-1. **Source of truth = GitHub.** Open the repo → click `index.html` → Cmd/Ctrl+F for a word
-   you know is new (e.g. `skin`, `MENU`). If it's there, the code is committed. No caching here.
-2. **Live page** can serve a stale copy. To force the newest:
-   - Open the URL in a **private / incognito tab**, or
+1. **GitHub is the truth.** Open the repo → `index.html` → Ctrl/Cmd+F for something you know is new. There if it's there, the push worked. No caching nonsense here.
+2. **The live page can still be stale.** Force a fresh look:
+   - Incognito / private tab, or
    - iPhone Safari: hold the reload button → *Reload Without Content Blockers*.
-3. **Pages needs ~1 minute** to rebuild after each push. A 404 or old view right after pushing
-   is usually just the build finishing.
+3. **GitHub Pages takes ~1 minute** to rebuild. A 404 or the old version right after pushing usually just means "give it a second," not "it's broken."
 
 ---
 
-## Gotchas that already bit us
+## Things that have already bitten me
 
-- **Stale cache** makes it look like nothing changed. Check the GitHub source, use incognito.
-- **File in the wrong place.** `index.html` must sit at the **repo root** for Pages to serve it.
-  Don't let it land inside a subfolder.
-- **Two separate logins.** GitHub Desktop and the terminal have *separate* auth. Claude Code
-  pushes from the terminal, so terminal auth must be set up once (`gh auth login`).
-- **Divergence.** Don't mix a chat-handed file with direct Claude Code edits on the same code.
+- **Stale cache** makes a real change look like nothing happened. Check GitHub, go incognito, don't panic.
+- **`index.html` in the wrong folder.** It has to live at the **repo root** or Pages won't serve it.
+- **Two different logins.** GitHub Desktop and the terminal don't share auth. Claude Code pushes from the terminal, so `gh auth login` needs to be done once there.
+- **Mixing edit paths.** Chat-handed file + direct Claude Code edits on the same code = merge headache. See "the one rule" above.
 
 ---
 
@@ -76,59 +70,55 @@ Caching fooled us more than once. To know what's *actually* live:
 
 ```
 Ghost-hunter/
-├── index.html      # the entire game
-├── README.md       # what the game is + how to run/deploy
-├── WORKFLOW.md      # this file
+├── index.html      # the whole game, yes really
+├── README.md       # what this thing is
+├── WORKFLOW.md      # this file, my sanity notes
 └── .gitignore
 ```
 
 ---
 
-## Tuning knobs (`CFG` block at the top of index.html)
+## Tuning knobs (`CFG` block up top in index.html)
 
-| Key | Meaning |
-|-----|---------|
-| `SPEED_FRAC` | Player dot speed (as a fraction of screen size) |
-| `GC_MOVES` | Sweep fires every N rounds |
-| `GC_KEEP` | Ghosts kept before the sweep starts trimming |
-| `RAMP_START` | Round after which walls move + ghosts speed up |
-| `GHOST_RAMP` | Ghost speed increase per round past `RAMP_START` |
-| `WALL_DRIFT` | How fast walls oscillate |
-| `OBSTACLES` | How many walls spawn each game |
-| `SIZE_EVERY` / `SIZE_GROW` / `SIZE_MAX` | Walls grow by `SIZE_GROW` every `SIZE_EVERY` rounds, capped at `SIZE_MAX` |
-| `GRACE_TICKS` | Collision-free frames at each round start |
+| Key | Does what |
+|-----|-----------|
+| `SPEED_FRAC` | Player speed, as a slice of screen size |
+| `GC_MOVES` | Sweep (ghost cleanup) fires every N rounds |
+| `GC_KEEP` | Ghosts kept around before the sweep starts trimming |
+| `RAMP_START` | Round where walls start drifting + ghosts speed up |
+| `GHOST_RAMP` | How much faster ghosts get per round past `RAMP_START` |
+| `WALL_DRIFT` | How twitchy the walls get once they start moving |
+| `OBSTACLES_START` / `OBSTACLES_ADD_EVERY` / `OBSTACLES_MAX` | Start with this many obstacles, add one every N rounds, never go past the cap |
+| `SIZE_EVERY` / `SIZE_GROW` / `SIZE_MAX` | Obstacles grow by `SIZE_GROW` every `SIZE_EVERY` rounds, capped at `SIZE_MAX` |
+| `GRACE_TICKS` | Free frames at round start so you don't die on spawn like a chump |
 
-Skins and their prices live in the **`SKINS`** array just below `CFG`.
+Skins and prices live in the **`SKINS`** array right below `CFG`.
 
 ---
 
-## Where player data lives
+## Where everyone's data actually lives
 
-Coins, best rounds, unlocked skins, name, and mute are saved in the browser's **localStorage**
-on that one device. Clearing browser data wipes it, and it does **not** sync between devices.
-Cloud save + a worldwide leaderboard is a backend step (see Roadmap).
+Coins, best rounds, unlocked skins, name, mute — all stashed in browser **localStorage** on that one device. Clear your browser data and it's gone. Doesn't sync anywhere. If we want a real leaderboard across devices, that's a backend project, not a checkbox (see Roadmap).
 
 ---
 
 ## Roadmap
 
-**Done:** core loop, echo-ghosts, garbage-collector sweep, random + growing walls, juice
-(trail, particles, screen shake, haptics), name entry, skin shop, coins + best-rounds saved,
-pause-on-blur, remembered mute.
+**Already done:** core loop, echo-ghosts, garbage-collector sweep, obstacles that grow and now come in different shapes, juice (trail, particles, screen shake, haptics), name entry, skin shop, coins + best-rounds saved, pause-on-blur, remembered mute.
 
-**Next options:**
-- **Global leaderboard** (Supabase backend) — turns "best 7 rounds" into a world rank.
-- **Daily challenge** (same seed for everyone that day) — very shareable.
+**Ideas kicking around:**
+- **Global leaderboard** (Supabase backend) — so "best 7 rounds" means something against strangers.
+- **Daily challenge** (same seed for everyone, same day) — good bragging-rights bait.
 - More skins / unlockable trails.
-- **Arena max-width** so big desktop screens stay punchy.
-- Privacy-friendly analytics (where players quit, session length).
-- **PWA install** + an **itch.io** release.
+- **Arena max-width** so it doesn't look silly stretched across a giant monitor.
+- Privacy-friendly analytics — where people quit, how long they stick around.
+- **PWA install** + maybe an itch.io page, for main-character energy.
 
 ---
 
-## Setting up on a new machine (recap)
+## Setting up on a new machine (in case future me forgets)
 
-1. Install Git + sign in (GitHub Desktop is easiest), and set up terminal auth: `gh auth login`.
-2. Install Claude Code (native installer): `curl -fsSL https://claude.ai/install.sh | bash`.
+1. Install Git, sign into GitHub (Desktop app is easiest), and set up terminal auth once: `gh auth login`.
+2. Install Claude Code: `curl -fsSL https://claude.ai/install.sh | bash`.
 3. `git clone https://github.com/katarimukul07-svg/Ghost-hunter.git`
-4. `cd Ghost-hunter`, then run `claude`.
+4. `cd Ghost-hunter`, then `claude`. Off you go.
