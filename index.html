@@ -74,11 +74,18 @@
 
   #hud {
     position:absolute; top:0; left:0; right:0; display:flex;
-    justify-content:space-between; align-items:center; padding:12px 16px;
+    justify-content:space-between; align-items:center; padding:10px 16px;
     font-size:13px; pointer-events:none;
   }
-  #hud .label { color:var(--dim); }
-  #hud .value { color:var(--ink); }
+  .hud-stats { display:flex; gap:6px; flex-wrap:wrap; }
+  .hud-stat {
+    display:flex; align-items:baseline; gap:5px;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+    border-left-width:3px; border-radius:8px; padding:5px 9px 5px 7px;
+    backdrop-filter:blur(3px);
+  }
+  .hud-stat .value { font-size:13px; font-weight:600; color:var(--ink); }
+  .hud-stat .label { font-size:9px; letter-spacing:1px; color:var(--dim); }
   #muteBtn, #pauseBtn { pointer-events:auto; background:transparent; color:var(--dim); box-shadow:none;
              border:1px solid var(--dim); border-radius:6px; padding:5px 10px; font-size:12px; }
   #muteBtn:active, #pauseBtn:active { transform:none; }
@@ -89,9 +96,17 @@
   <canvas id="c"></canvas>
 
   <div id="hud" class="hidden">
-    <div><span class="label">ROUND </span><span class="value" id="hudRound">1</span></div>
-    <div><span class="label">COINS </span><span class="value" id="hudCoins">0</span></div>
-    <div><span class="label">SWEEP </span><span class="value" id="hudGc">10 mv</span></div>
+    <div class="hud-stats">
+      <div class="hud-stat" style="border-left-color:var(--player)">
+        <span class="value" id="hudRound">1</span><span class="label">ROUND</span>
+      </div>
+      <div class="hud-stat" style="border-left-color:var(--prize)">
+        <span class="value" id="hudCoins">0</span><span class="label">COINS</span>
+      </div>
+      <div class="hud-stat" style="border-left-color:var(--sweep)">
+        <span class="value" id="hudGc">10 mv</span><span class="label">SWEEP</span>
+      </div>
+    </div>
     <div style="display:flex;gap:6px">
       <button id="pauseBtn">&#9208;</button>
       <button id="muteBtn">&#9834; ON</button>
@@ -192,7 +207,7 @@
  * ========================================================================= */
 
 const CFG = {
-  WALL_MARGIN:16, PLAYER_R:12,
+  WALL_MARGIN:16, HUD_CLEARANCE:46, PLAYER_R:12,
   SPEED_FRAC:0.020,          // player speed as a fraction of screen size
   GHOST_R:9, PRIZE_R:11, EXIT_W:150, EXIT_H:44,
   GC_MOVES:10, GC_KEEP:4, SWEEP_TIME:0.7, GRACE_TICKS:36,
@@ -402,8 +417,8 @@ function resize() {
   W = canvas.clientWidth; H = canvas.clientHeight;
   canvas.width = Math.round(W*DPR); canvas.height = Math.round(H*DPR);
   ctx.setTransform(DPR,0,0,DPR,0,0);
-  room.x = CFG.WALL_MARGIN; room.y = CFG.WALL_MARGIN;
-  room.w = W - CFG.WALL_MARGIN*2; room.h = H - CFG.WALL_MARGIN*2;
+  room.x = CFG.WALL_MARGIN; room.y = CFG.WALL_MARGIN + CFG.HUD_CLEARANCE;
+  room.w = W - CFG.WALL_MARGIN*2; room.h = H - room.y - CFG.WALL_MARGIN;
   exit.x = room.x + room.w/2 - CFG.EXIT_W/2; exit.y = room.y;
   exit.w = CFG.EXIT_W; exit.h = CFG.EXIT_H; exit.wall = "top";
   playerSpeed = Math.hypot(room.w, room.h) * CFG.SPEED_FRAC;
