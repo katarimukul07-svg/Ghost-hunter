@@ -1,4 +1,3 @@
-<!-- Echo Steps: Garbage Collector — by katarimukul07-svg -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -72,36 +71,38 @@
   <canvas id="c"></canvas>
 
   <div id="hud" class="hidden">
+    <div><span class="label">SCORE </span><span class="value" id="hudScore">0</span></div>
     <div><span class="label">ROUND </span><span class="value" id="hudRound">1</span></div>
-    <div><span class="label">LEAKS </span><span class="value" id="hudGhosts">0</span></div>
-    <div><span class="label">GC IN </span><span class="value" id="hudGc">7.0s</span></div>
+    <div><span class="label">SWEEP </span><span class="value" id="hudGc">10 mv</span></div>
     <button id="muteBtn">&#9834; ON</button>
   </div>
 
   <div id="startScreen" class="overlay">
     <h1>ECHO STEPS</h1>
-    <div class="sub">Garbage Collector</div>
+    <div class="sub">Chase the prize. Dodge your ghosts.</div>
     <div class="sub">
-      Drag the <span style="color:var(--player)">blue node</span> to the
-      <span style="color:var(--prize)">prize</span>, then to the
-      <span style="color:var(--exit)">exit</span>, weaving around the
-      <span style="color:var(--wall)">walls</span>.<br><br>
-      Every completed loop leaves a <span style="color:var(--ghost)">red ghost</span>
-      that patrols your old path forever. Touch one and you crash.<br><br>
-      Your echoes pile up and stay. Once memory fills, the
-      <span style="color:var(--sweep)">Garbage Collector</span>
-      sweeps the oldest one every 10 moves.<br><br>
-      Survive past <b>round 7</b> and the grid destabilizes: walls drift and
-      ghosts accelerate. Outlive your own memory.
+      Drag the <span style="color:var(--player)">blue dot</span> to grab the
+      <span style="color:var(--prize)">gold prize</span>, then reach the
+      <span style="color:var(--exit)">green exit</span> &mdash; dodge the walls on the way.<br><br>
+      Every round you finish leaves a <span style="color:var(--ghost)">red ghost</span>
+      that retraces your exact path. Touch a ghost and it's game over!<br><br>
+      Ghosts pile up as you go &mdash; every few rounds a sweep clears out your oldest.<br><br>
+      Make it past <b>round 7</b> and things get wild: the walls start moving and the
+      ghosts speed up. How long can you last?
     </div>
-    <button id="startBtn">INITIALIZE</button>
+    <button id="startBtn">PLAY</button>
   </div>
 
   <div id="overScreen" class="overlay hidden">
-    <h1 style="color:var(--ghost);text-shadow:0 0 14px rgba(255,53,84,.55)">MEMORY FAULT</h1>
-    <div class="stat">Rounds survived: <b id="finalScore">0</b></div>
-    <div class="sub" id="overSub">Segfault on a stale pointer.</div>
-    <button id="restartBtn">REALLOCATE</button>
+    <h1 style="color:var(--ghost);text-shadow:0 0 14px rgba(255,53,84,.55)">GHOST GOT YOU!</h1>
+    <div class="stat">Score: <b id="finalScore">0</b></div>
+    <div class="stat" style="font-size:15px">Rounds: <span id="finalRounds">0</span> &middot; Best: <span id="bestScore">0</span></div>
+    <div class="sub" id="newBest" style="color:var(--prize);text-shadow:0 0 12px rgba(255,210,63,.6);display:none">&#9733; NEW BEST &#9733;</div>
+    <div class="sub" id="overSub">One of your own paths caught up with you.</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button id="restartBtn">PLAY AGAIN</button>
+      <button id="shareBtn" style="background:var(--exit);box-shadow:0 0 18px rgba(57,255,158,.5)">SHARE</button>
+    </div>
   </div>
 </div>
 
@@ -118,7 +119,7 @@
 const CFG = {
   WALL_MARGIN:   16,
   PLAYER_R:      12,
-  PLAYER_SPEED:  6.2,
+  SPEED_FRAC:    0.020,  // player speed as a fraction of screen size — scales to any device
   GHOST_R:       9,
   PRIZE_R:       11,
   EXIT_W:        150,
@@ -130,16 +131,14 @@ const CFG = {
   RAMP_START:    7,      // after this round: walls start drifting AND ghosts start speeding up
   GHOST_RAMP:    0.01,   // +1% ghost speed per round once past RAMP_START (compounds)
   WALL_DRIFT:    0.9,    // how fast the walls oscillate once destabilized
+  OBSTACLES:     4,      // how many walls to scatter each game (randomized)
+  SIZE_EVERY:    5,      // walls grow every N rounds
+  SIZE_GROW:     0.10,   // ...by this much (+10%), compounding
+  SIZE_MAX:      2.0,    // capped so they never fill the room
 };
 
-/* Obstacle layout as fractions of the room, so it scales to any screen.
-   Kept clear of the top-centre exit gate. */
-const OBSTACLE_LAYOUT = [
-  { x: 0.13, y: 0.34, w: 0.15, h: 0.20 },
-  { x: 0.55, y: 0.28, w: 0.17, h: 0.13 },
-  { x: 0.30, y: 0.66, w: 0.22, h: 0.11 },
-  { x: 0.73, y: 0.58, w: 0.13, h: 0.22 },
-];
+/* Obstacles are generated fresh (random) at the start of every game — see
+   makeObstacleLayout(). The layout is stored as fractions so it rescales. */
 
 /* =========================================================================
  * Audio — everything is synthesized on the fly with the Web Audio API.
@@ -208,6 +207,8 @@ const ctx = canvas.getContext("2d");
 let W = 0, H = 0, DPR = 1;
 const room = { x: 0, y: 0, w: 0, h: 0 };
 let obstacles = [];
+let obstacleLayout = [];   // fractional layout, regenerated each game
+let playerSpeed = 8;       // px per tick, set responsively in resize()
 
 function resize() {
   DPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -225,21 +226,59 @@ function resize() {
   exit.x = room.x + room.w / 2 - CFG.EXIT_W / 2;
   exit.y = room.y;
 
-  obstacles = OBSTACLE_LAYOUT.map((o, i) => ({
-    x:  room.x + o.x * room.w,
-    y:  room.y + o.y * room.h,
-    bx: room.x + o.x * room.w,          // base (rest) position
-    by: room.y + o.y * room.h,
-    w:  o.w * room.w,
-    h:  o.h * room.h,
-    // alternate horizontal / vertical drifters, each a bit out of phase
-    ampX: (i % 2 === 0) ? 0.07 * room.w : 0,
-    ampY: (i % 2 === 1) ? 0.09 * room.h : 0,
-    freq: 0.5 + i * 0.18,
-    dir:  (i % 3 === 0) ? -1 : 1,
-  }));
+  playerSpeed = Math.hypot(room.w, room.h) * CFG.SPEED_FRAC;   // scales with screen size
+  buildObstacles();
 }
 window.addEventListener("resize", resize);
+
+/* Map the stored fractional layout to pixels (keeps randomness stable across resizes). */
+function buildObstacles() {
+  obstacles = obstacleLayout.map(o => {
+    const bw = o.w * room.w, bh = o.h * room.h;
+    return {
+      cx: room.x + (o.x + o.w / 2) * room.w,   // centre (walls grow from here)
+      cy: room.y + (o.y + o.h / 2) * room.h,
+      bw, bh, w: bw, h: bh,
+      x: room.x + o.x * room.w,
+      y: room.y + o.y * room.h,
+      ampX: o.ampX * room.w,
+      ampY: o.ampY * room.h,
+      freq: o.freq,
+      dir:  o.dir,
+    };
+  });
+}
+
+/* Generate a fresh random set of walls (as fractions), clear of the exit and centre. */
+function makeObstacleLayout() {
+  const out = [];
+  const exitHalf = (CFG.EXIT_W / room.w) / 2 + 0.05;   // exit half-width + margin (fraction)
+  const exitBand = (CFG.EXIT_H / room.h) + 0.07;       // keep walls below the exit gate
+  let tries = 0;
+  while (out.length < CFG.OBSTACLES && tries < 500) {
+    tries++;
+    const w = 0.08 + Math.random() * 0.05;             // start small: 8%–13% wide
+    const h = 0.08 + Math.random() * 0.06;             // 8%–14% tall
+    const x = 0.06 + Math.random() * (1 - 0.12 - w);
+    const y = 0.20 + Math.random() * (1 - 0.28 - h);   // below the exit, above bottom margin
+    const overExit    = (x < 0.5 + exitHalf && x + w > 0.5 - exitHalf && y < exitBand);
+    const coversStart = (x - 0.04 < 0.5 && x + w + 0.04 > 0.5 && y - 0.04 < 0.5 && y + h + 0.04 > 0.5);
+    let overlap = false;
+    for (const o of out) {
+      if (x < o.x + o.w + 0.03 && x + w + 0.03 > o.x && y < o.y + o.h + 0.03 && y + h + 0.03 > o.y) { overlap = true; break; }
+    }
+    if (overExit || coversStart || overlap) continue;
+    const horiz = Math.random() < 0.5;
+    out.push({
+      x, y, w, h,
+      ampX: horiz ? (0.05 + Math.random() * 0.04) : 0,   // drift axis (used only after round 7)
+      ampY: horiz ? 0 : (0.05 + Math.random() * 0.05),
+      freq: 0.4 + Math.random() * 0.5,
+      dir:  Math.random() < 0.5 ? -1 : 1,
+    });
+  }
+  return out;
+}
 
 /* ---------- Game state ---------- */
 const STATE = { START: 0, PLAYING: 1, OVER: 2 };
@@ -256,6 +295,8 @@ let ghosts = [];
 let frame = 0;
 let round = 1;
 let grace = 0;
+let score = 0;           // points; fast rounds are worth more
+let best = 0;            // high score, persisted across sessions
 
 let ghostPhase = 0;      // fractional patrol clock (advances by ghostSpeed each tick)
 let ghostSpeed = 1;      // 1 = base; ramps up after RAMP_START
@@ -268,13 +309,16 @@ let sweep = null;
 /* ---------- DOM refs ---------- */
 const el = {
   hud:        document.getElementById("hud"),
+  score:      document.getElementById("hudScore"),
   round:      document.getElementById("hudRound"),
-  ghosts:     document.getElementById("hudGhosts"),
   gc:         document.getElementById("hudGc"),
   mute:       document.getElementById("muteBtn"),
   start:      document.getElementById("startScreen"),
   over:       document.getElementById("overScreen"),
   finalScore: document.getElementById("finalScore"),
+  finalRounds:document.getElementById("finalRounds"),
+  bestScore:  document.getElementById("bestScore"),
+  newBest:    document.getElementById("newBest"),
   overSub:    document.getElementById("overSub"),
 };
 
@@ -326,6 +370,8 @@ function spawnPrize() {
 /* ---------- Lifecycle ---------- */
 function resetGame() {
   resize();
+  obstacleLayout = makeObstacleLayout();   // fresh random walls every game
+  buildObstacles();
   player.x = room.x + room.w / 2;
   player.y = room.y + room.h / 2;
   pointer.x = player.x; pointer.y = player.y; pointer.active = false;
@@ -334,6 +380,7 @@ function resetGame() {
   frame = 0;
   round = 1;
   grace = CFG.GRACE_TICKS;
+  score = 0;
   ghostPhase = 0;
   ghostSpeed = 1;
   wallTime = 0;
@@ -351,6 +398,12 @@ function resetGame() {
 }
 
 function completeRound() {
+  // faster rounds score more: under 4s = x3, under 7s = x2, else x1
+  const secs = frame / 60;
+  const mult = secs < 4 ? 3 : (secs < 7 ? 2 : 1);
+  const gain = 100 * mult;
+  score += gain;
+
   ghosts.push({ path: currentPath.slice() });
   round++;
   currentPath = [];
@@ -358,8 +411,9 @@ function completeRound() {
   ghostPhase = 0;                                   // all echoes restart their patrol in sync
   grace = CFG.GRACE_TICKS;
   hasPrize = false;
+  if (mult > 1) toast = { text: "SPEED BONUS \u00D7" + mult + "  +" + gain, t: 0 };
   if (round > CFG.RAMP_START) ghostSpeed *= (1 + CFG.GHOST_RAMP);   // +1% per round, compounding
-  if (round === CFG.RAMP_START + 1) toast = { text: "\u26A0 GRID DESTABILIZED", t: 0 };
+  if (round === CFG.RAMP_START + 1) toast = { text: "\u26A0 THINGS GET WILD!", t: 0 };
   if (round % CFG.GC_MOVES === 0 && ghosts.length > CFG.GC_KEEP && !sweep) { sweep = { t: 0 }; Sound.sweep(); }
   spawnPrize();
   Sound.complete();
@@ -367,10 +421,19 @@ function completeRound() {
 
 function gameOver() {
   mode = STATE.OVER;
-  el.finalScore.textContent = round - 1;
-  el.overSub.textContent = ghosts.length
-    ? "Collided with a stale pointer in the heap."
-    : "Crashed before leaving your first trace.";
+  const isBest = score > best && score > 0;
+  if (isBest) { best = score; saveBest(best); }
+  el.finalScore.textContent = score;
+  el.finalRounds.textContent = round - 1;
+  el.bestScore.textContent = best;
+  el.newBest.style.display = isBest ? "" : "none";
+  const lines = [
+    "One of your own paths caught up with you.",
+    "A ghost of a past round got you!",
+    "Your echo caught you off guard.",
+    "Boxed in by your own trail!",
+  ];
+  el.overSub.textContent = lines[Math.floor(Math.random() * lines.length)];
   el.over.classList.remove("hidden");
   el.hud.classList.add("hidden");
   Sound.death();
@@ -391,13 +454,18 @@ function ghostPos(g) {
   return { x: p[i0].x + (p[i1].x - p[i0].x) * f, y: p[i0].y + (p[i1].y - p[i0].y) * f };
 }
 
-/* ---------- Walls drift once the grid is destabilized ---------- */
+/* ---------- Walls: grow every few rounds, drift once destabilized ---------- */
 function updateObstacles(dt) {
   if (round > CFG.RAMP_START) wallTime += dt * CFG.WALL_DRIFT;
+  // +10% size every SIZE_EVERY rounds, compounding, capped
+  const steps = Math.floor(round / CFG.SIZE_EVERY);
+  const scale = Math.min(CFG.SIZE_MAX, Math.pow(1 + CFG.SIZE_GROW, steps));
   for (const o of obstacles) {
+    o.w = o.bw * scale;
+    o.h = o.bh * scale;
     const s = Math.sin(wallTime * o.freq) * o.dir;   // s = 0 while wallTime is 0 -> rests at base
-    o.x = clamp(o.bx + s * o.ampX, room.x, room.x + room.w - o.w);
-    o.y = clamp(o.by + s * o.ampY, room.y, room.y + room.h - o.h);
+    o.x = clamp(o.cx - o.w / 2 + s * o.ampX, room.x, room.x + room.w - o.w);
+    o.y = clamp(o.cy - o.h / 2 + s * o.ampY, room.y, room.y + room.h - o.h);
   }
 }
 
@@ -411,7 +479,7 @@ function update(dt) {
   const dx = pointer.x - player.x, dy = pointer.y - player.y;
   const d = Math.hypot(dx, dy);
   if (d > 0.5) {
-    const step = Math.min(d, CFG.PLAYER_SPEED);
+    const step = Math.min(d, playerSpeed);
     player.x += (dx / d) * step;
     player.y += (dy / d) * step;
   }
@@ -566,8 +634,8 @@ function render() {
   drawGhosts(); drawPrize(); drawSweep(); drawPlayer(); drawToast();
 }
 function updateHUD() {
+  el.score.textContent = score;
   el.round.textContent = round;
-  el.ghosts.textContent = ghosts.length;
   const movesLeft = CFG.GC_MOVES - (round % CFG.GC_MOVES);   // moves until the next scan
   const armed = ghosts.length > CFG.GC_KEEP;
   el.gc.textContent = movesLeft + " mv";
@@ -598,6 +666,17 @@ canvas.addEventListener("pointercancel", () => { pointer.active = false; });
 /* ---------- Buttons ---------- */
 document.getElementById("startBtn").addEventListener("click", resetGame);
 document.getElementById("restartBtn").addEventListener("click", resetGame);
+document.getElementById("shareBtn").addEventListener("click", async () => {
+  const url = location.href;
+  const text = "I survived " + (round - 1) + " rounds (score " + score + ") in Echo Steps: Garbage Collector!";
+  const b = document.getElementById("shareBtn");
+  try {
+    if (navigator.share) { await navigator.share({ title: "Echo Steps", text, url }); return; }
+    await navigator.clipboard.writeText(text + " " + url);
+    const old = b.textContent; b.textContent = "COPIED!";
+    setTimeout(() => { b.textContent = old; }, 1500);
+  } catch (e) { /* user dismissed the share sheet, or clipboard blocked — ignore */ }
+});
 el.mute.addEventListener("click", () => {
   const m = !Sound.isMuted();
   Sound.setMuted(m);
@@ -612,7 +691,13 @@ function getVar(name) {
   return _vars[name];
 }
 
+/* ---------- High-score persistence (guarded so it never breaks the game) ---------- */
+const BEST_KEY = "echoSteps.best";
+function loadBest() { try { return parseInt(localStorage.getItem(BEST_KEY), 10) || 0; } catch (e) { return 0; } }
+function saveBest(v) { try { localStorage.setItem(BEST_KEY, String(v)); } catch (e) {} }
+
 /* ---------- Boot ---------- */
+best = loadBest();
 resize();
 requestAnimationFrame(loop);
 </script>
