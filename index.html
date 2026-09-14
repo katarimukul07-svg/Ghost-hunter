@@ -50,6 +50,7 @@
   .swatches { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; max-width:290px; }
   .skin { display:flex; flex-direction:column; align-items:center; gap:4px; }
   .price { font-size:10px; color:var(--prize); min-height:12px; letter-spacing:.5px; }
+  .slabel { font-size:9px; color:var(--dim); letter-spacing:.5px; }
   .swatch { width:30px; height:30px; border-radius:50%; border:2px solid transparent;
             cursor:pointer; padding:0; box-shadow:none; }
   .swatch:active { transform:scale(.9); }
@@ -201,14 +202,20 @@ const COIN_PACKS = [
   { coins:5000,  price:"$24.99", best:true },
 ];
 
+/* Player skins — each is a color PLUS a distinct render style (see drawSkin()),
+   not just a recolor. `id` stays the hex color so older saves keep matching. */
 const SKINS = [
-  { id:"#29e0ff", cost:0 },    // cyan  (free)
-  { id:"#eaf2ff", cost:0 },    // white (free)
-  { id:"#3d7bff", cost:15 },   // blue
-  { id:"#ff5ca8", cost:25 },   // pink
-  { id:"#ff8a2b", cost:40 },   // orange
-  { id:"#b06bff", cost:60 },   // purple
+  { id:"#29e0ff", label:"Node",  style:"solid",  cost:0  },   // plain glowing dot
+  { id:"#eaf2ff", label:"Ghost", style:"ring",   cost:0  },   // hollow outlined ring
+  { id:"#3d7bff", label:"Pulse", style:"pulse",  cost:15 },   // core + breathing ring
+  { id:"#ff5ca8", label:"Comet", style:"comet",  cost:25 },   // spinning star spikes
+  { id:"#ff8a2b", label:"Blaze", style:"square", cost:40 },   // rotated glowing square
+  { id:"#b06bff", label:"Void",  style:"void",   cost:60 },   // bright ring, hollow core
 ];
+function getSkinStyle(colorId){
+  const s = SKINS.find(k=>k.id===colorId);
+  return s ? s.style : "solid";
+}
 
 const TRAILS = [
   { id:"classic", label:"Classic", cost:0 },
@@ -457,7 +464,7 @@ let toast = null, particles = [], pops = [], shake = 0, deathTimer = 0;
 let sweep = null, paused = false;
 let shockwaves = [];
 
-let playerColor = SKINS[0].id, playerName = "";
+let playerColor = SKINS[0].id, playerStyle = SKINS[0].style, playerName = "";
 let unlocked = [];
 let selectedTrail = TRAILS[0].id, selectedGhostSkin = GHOST_SKINS[0].id, selectedDeathFX = DEATH_FX[0].id;
 let unlockedTrail = [], unlockedGhostSkin = [], unlockedDeathFX = [];
@@ -494,6 +501,7 @@ const el = {
   shopColors:document.getElementById("shopColors"), shopTrail:document.getElementById("shopTrail"),
   shopGhost:document.getElementById("shopGhost"), shopDeath:document.getElementById("shopDeath"),
   shopSound:document.getElementById("shopSound"),
+  shopGetCoins:document.getElementById("shopGetCoinsBtn"),
 };
 
 /* ---------- Helpers ---------- */
@@ -785,6 +793,63 @@ function glow(targetCtx,x,y,r,color,alpha){
   targetCtx.beginPath(); targetCtx.arc(x,y,r,0,Math.PI*2); targetCtx.fill();
   targetCtx.globalAlpha = 1;
 }
+/* Renders a player skin by style — each one reads as a distinct shape, not
+   just a recolored dot. Shared by the live game and the shop preview panel. */
+function drawSkin(targetCtx, x, y, r, color, style, alpha, tSec){
+  switch (style){
+    case "ring": {
+      targetCtx.save(); targetCtx.globalAlpha = 0.9*alpha; targetCtx.strokeStyle = color;
+      targetCtx.shadowColor = color; targetCtx.shadowBlur = 14; targetCtx.lineWidth = Math.max(2,r*0.32);
+      targetCtx.beginPath(); targetCtx.arc(x,y,r*0.78,0,Math.PI*2); targetCtx.stroke();
+      targetCtx.restore();
+      break;
+    }
+    case "pulse": {
+      const p = 1 + Math.sin(tSec*4)*0.35;
+      targetCtx.save(); targetCtx.globalAlpha = 0.35*alpha; targetCtx.strokeStyle = color; targetCtx.lineWidth = 2;
+      targetCtx.beginPath(); targetCtx.arc(x,y,r*1.7*p,0,Math.PI*2); targetCtx.stroke();
+      targetCtx.restore();
+      glow(targetCtx, x, y, r*0.75, color, alpha);
+      break;
+    }
+    case "comet": {
+      const spikes = 5, outer = r*1.15, inner = r*0.45;
+      targetCtx.save(); targetCtx.globalAlpha = alpha; targetCtx.fillStyle = color;
+      targetCtx.shadowColor = color; targetCtx.shadowBlur = 16;
+      targetCtx.translate(x,y); targetCtx.rotate(tSec*3);
+      targetCtx.beginPath();
+      for (let i=0;i<spikes*2;i++){
+        const rad = i%2===0 ? outer : inner, ang = (Math.PI/spikes)*i;
+        const px = Math.cos(ang)*rad, py = Math.sin(ang)*rad;
+        i===0 ? targetCtx.moveTo(px,py) : targetCtx.lineTo(px,py);
+      }
+      targetCtx.closePath(); targetCtx.fill();
+      targetCtx.restore();
+      break;
+    }
+    case "square": {
+      const s = r*1.5;
+      targetCtx.save(); targetCtx.globalAlpha = alpha; targetCtx.fillStyle = color;
+      targetCtx.shadowColor = color; targetCtx.shadowBlur = 16;
+      targetCtx.translate(x,y); targetCtx.rotate(Math.PI/4 + tSec*0.6);
+      targetCtx.beginPath(); targetCtx.roundRect(-s/2,-s/2,s,s,r*0.3); targetCtx.fill();
+      targetCtx.restore();
+      break;
+    }
+    case "void": {
+      targetCtx.save();
+      targetCtx.globalAlpha = 0.95*alpha; targetCtx.strokeStyle = color;
+      targetCtx.shadowColor = color; targetCtx.shadowBlur = 18; targetCtx.lineWidth = Math.max(2,r*0.35);
+      targetCtx.beginPath(); targetCtx.arc(x,y,r*0.85,0,Math.PI*2); targetCtx.stroke();
+      targetCtx.globalAlpha = 0.92*alpha; targetCtx.fillStyle = C.bg || "#070b10";
+      targetCtx.beginPath(); targetCtx.arc(x,y,r*0.55,0,Math.PI*2); targetCtx.fill();
+      targetCtx.restore();
+      break;
+    }
+    default:
+      glow(targetCtx, x, y, r, color, alpha);
+  }
+}
 function drawGrid(){
   ctx.strokeStyle=C.grid; ctx.lineWidth=1; const gap=40; ctx.beginPath();
   for (let x=room.x;x<=room.x+room.w;x+=gap){ ctx.moveTo(x,room.y); ctx.lineTo(x,room.y+room.h); }
@@ -897,7 +962,7 @@ function drawTrail(){
 }
 function drawPlayer(){
   const blink=(grace>0 && Math.floor(frame/4)%2===0)?0.45:1;
-  glow(ctx,player.x,player.y,CFG.PLAYER_R,playerColor,blink);
+  drawSkin(ctx, player.x, player.y, CFG.PLAYER_R, playerColor, playerStyle, blink, performance.now()/1000);
   if (hasPrize){
     ctx.globalAlpha=blink; ctx.fillStyle=C.prize;
     ctx.beginPath(); ctx.arc(player.x,player.y,CFG.PLAYER_R*0.42,0,Math.PI*2); ctx.fill();
@@ -969,7 +1034,7 @@ function drawShopPreview(){
   drawPreviewGrid(pctx,w,h);
   if (previewTab==="colors"){
     const pulse = 1+Math.sin(performance.now()/200)*0.12;
-    glow(pctx, cx, cy, 14*pulse, previewColor, 1);
+    drawSkin(pctx, cx, cy, 14*pulse, previewColor, getSkinStyle(previewColor), 1, performance.now()/1000);
   } else if (previewTab==="trail"){
     previewPhase += 0.05;
     const rx=90, ry=26;
@@ -1076,13 +1141,18 @@ function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel
         price.style.color = C.ghost; setTimeout(()=>{ price.style.color = ""; }, 450);
       }
     });
-    wrap.appendChild(b); wrap.appendChild(price);
+    wrap.appendChild(b);
+    if (swatch && item.label){
+      const label = document.createElement("div"); label.className = "slabel"; label.textContent = item.label;
+      wrap.appendChild(label);
+    }
+    wrap.appendChild(price);
     container.appendChild(wrap);
   });
 }
 function buildShopAll(){
   renderShopCategory(el.shopColors, SKINS, unlocked, "echoSteps.unlocked",
-    ()=>playerColor, (v)=>{ playerColor=v; ss("echoSteps.color",v); applyColorUI(); }, true, "colors");
+    ()=>playerColor, (v)=>{ playerColor=v; playerStyle=getSkinStyle(v); ss("echoSteps.color",v); applyColorUI(); }, true, "colors");
   renderShopCategory(el.shopTrail, TRAILS, unlockedTrail, "echoSteps.trailOwned",
     ()=>selectedTrail, (v)=>{ selectedTrail=v; ss("echoSteps.trail",v); }, false, "trail");
   renderShopCategory(el.shopGhost, GHOST_SKINS, unlockedGhostSkin, "echoSteps.ghostOwned",
@@ -1110,6 +1180,7 @@ function setShopTab(cat){
   else if (cat==="trail") previewTrail = selectedTrail;
   else if (cat==="ghost") previewGhostColor = selectedGhostSkin;
   else if (cat==="death") setPreviewItem("death", selectedDeathFX);
+  el.shopGetCoins.classList.toggle("hidden", cat==="sound");   // sound packs are free — no coins needed
 }
 function openShop(){
   refreshShopCoinLine(); buildShopAll(); setShopTab("colors");
@@ -1246,7 +1317,7 @@ function initColors(){
   const cs=getComputedStyle(document.documentElement);
   const v=n=>cs.getPropertyValue(n).trim();
   C={ ghost:v("--ghost"), prize:v("--prize"), exit:v("--exit"), sweep:v("--sweep"),
-      wall:v("--wall"), grid:v("--grid"), border:v("--player"), ink:v("--ink"), dim:v("--dim") };
+      wall:v("--wall"), grid:v("--grid"), border:v("--player"), ink:v("--ink"), dim:v("--dim"), bg:v("--bg") };
 }
 initColors();
 coins = parseInt(ls("echoSteps.coins"), 10) || 0;
@@ -1260,6 +1331,7 @@ playerName = ls("echoSteps.name") || "";
 el.nameInput.value = playerName;
 const savedColor = ls("echoSteps.color");
 playerColor = (savedColor && unlocked.includes(savedColor)) ? savedColor : SKINS[0].id;
+playerStyle = getSkinStyle(playerColor);
 const savedTrail = ls("echoSteps.trail");
 selectedTrail = (savedTrail && unlockedTrail.includes(savedTrail)) ? savedTrail : TRAILS[0].id;
 const savedGhostSkin = ls("echoSteps.ghostSkin");
