@@ -126,11 +126,13 @@
       <button class="tab" data-cat="trail">TRAIL FX</button>
       <button class="tab" data-cat="ghost">GHOST SKIN</button>
       <button class="tab" data-cat="death">DEATH FX</button>
+      <button class="tab" data-cat="sound">SOUND</button>
     </div>
     <div class="swatches" id="shopColors"></div>
     <div class="swatches hidden" id="shopTrail"></div>
     <div class="swatches hidden" id="shopGhost"></div>
     <div class="swatches hidden" id="shopDeath"></div>
+    <div class="swatches hidden" id="shopSound"></div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="shopGetCoinsBtn" style="background:var(--prize);box-shadow:0 0 18px rgba(255,210,63,.5)">GET COINS</button>
       <button id="shopBackBtn">BACK</button>
@@ -193,7 +195,7 @@ const CFG = {
    swap purchaseCoins() for a Stripe Checkout / IAP call to make these real. */
 const COIN_PACKS = [
   { coins:100,   price:"$0.99"  },
-  { coins:250,   price:"$1.99"  },
+  { coins:200,   price:"$1.99"  },
   { coins:500,   price:"$3.99"  },
   { coins:1000,  price:"$6.99"  },
   { coins:5000,  price:"$24.99", best:true },
@@ -248,15 +250,28 @@ const DEATH_LINES = [
   "skill issue? no. YOU issue.",
 ];
 
+/* Selectable sound packs — free preference switcher (no coin cost). Each pack
+   only re-flavors pickup/complete/sweep; the death stinger is always the
+   dedicated scary effect below, regardless of pack. */
+const SOUND_PACKS = [
+  { id:"arcade",   label:"Arcade",   cost:0, pickup:{freq:880,  type:"square"},   complete:[{freq:660,type:"triangle"},{freq:988,type:"triangle"}], sweepFreq:220, sweepType:"sawtooth" },
+  { id:"chiptune", label:"Chiptune", cost:0, pickup:{freq:1046, type:"square"},   complete:[{freq:784,type:"square"},{freq:1318,type:"square"}],   sweepFreq:330, sweepType:"square"   },
+  { id:"synth",    label:"Synth",    cost:0, pickup:{freq:660,  type:"sine"},     complete:[{freq:494,type:"sine"},{freq:740,type:"sine"}],         sweepFreq:180, sweepType:"sawtooth" },
+  { id:"retro",    label:"Retro",    cost:0, pickup:{freq:1200, type:"square", dur:0.05}, complete:[{freq:900,type:"square"},{freq:1500,type:"square"}], sweepFreq:400, sweepType:"square" },
+  { id:"dark",     label:"Dark",     cost:0, pickup:{freq:440,  type:"triangle"}, complete:[{freq:330,type:"triangle"},{freq:494,type:"triangle"}], sweepFreq:110, sweepType:"sawtooth" },
+  { id:"lofi",     label:"Lo-Fi",    cost:0, pickup:{freq:520,  type:"sine"},     complete:[{freq:392,type:"sine"},{freq:587,type:"sine"}],         sweepFreq:160, sweepType:"triangle" },
+];
+
 /* ---------- Audio (synthesized) ---------- */
 const Sound = (function () {
-  let ctx=null, master=null, ambient=null, muted=false;
+  let ctx=null, master=null, ambient=null, muted=false, packId=SOUND_PACKS[0].id;
   function ensure() {
     if (ctx) return;
     const AC = window.AudioContext || window.webkitAudioContext;
     ctx = new AC(); master = ctx.createGain();
     master.gain.value = muted ? 0 : 0.9; master.connect(ctx.destination);
   }
+  function getPack(){ return SOUND_PACKS.find(p=>p.id===packId) || SOUND_PACKS[0]; }
   function tone(freq,dur,type,vol,glideTo) {
     if (!ctx || muted) return;
     const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
@@ -266,6 +281,55 @@ const Sound = (function () {
     g.gain.exponentialRampToValueAtTime(vol, t+0.012);
     g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
     o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.03);
+  }
+  function noiseBuffer(dur) {
+    const size = Math.max(1, Math.floor(ctx.sampleRate*dur));
+    const buf = ctx.createBuffer(1, size, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i=0;i<size;i++) data[i] = Math.random()*2-1;
+    return buf;
+  }
+  /* Dedicated horror stinger for death: sub-bass rumble + a dissonant
+     detuned cluster pitching down + a swept noise "gasp". Always plays this
+     regardless of the selected sound pack, so death always reads as scary. */
+  function scaryDeath() {
+    if (!ctx || muted) return;
+    const t = ctx.currentTime;
+
+    const rumble = ctx.createOscillator(), rGain = ctx.createGain();
+    rumble.type = "sine";
+    rumble.frequency.setValueAtTime(90, t);
+    rumble.frequency.exponentialRampToValueAtTime(32, t + 1.1);
+    rGain.gain.setValueAtTime(0.0001, t);
+    rGain.gain.exponentialRampToValueAtTime(0.38, t + 0.05);
+    rGain.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+    rumble.connect(rGain); rGain.connect(master);
+    rumble.start(t); rumble.stop(t + 1.25);
+
+    [190, 201, 269].forEach(f => {   // dissonant cluster (minor 2nd + tritone-ish spread)
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(f, t);
+      o.frequency.exponentialRampToValueAtTime(f * 0.4, t + 0.9);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.14, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t + 0.95);
+    });
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer(0.6);
+    const bp = ctx.createBiquadFilter();
+    bp.type = "bandpass"; bp.Q.value = 6;
+    bp.frequency.setValueAtTime(2400, t);
+    bp.frequency.exponentialRampToValueAtTime(200, t + 0.6);
+    const nGain = ctx.createGain();
+    nGain.gain.setValueAtTime(0.0001, t);
+    nGain.gain.exponentialRampToValueAtTime(0.28, t + 0.03);
+    nGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+    noise.connect(bp); bp.connect(nGain); nGain.connect(master);
+    noise.start(t); noise.stop(t + 0.65);
   }
   function startAmbient() {
     ensure(); if (ctx.state === "suspended") ctx.resume();
@@ -285,14 +349,24 @@ const Sound = (function () {
     try { a.g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.3); } catch(e){}
     setTimeout(()=>{ try{ a.o1.stop(); a.o2.stop(); a.lfo.stop(); }catch(e){} }, 380);
   }
+  function pickupSound(){ const p=getPack(); tone(p.pickup.freq, p.pickup.dur||0.09, p.pickup.type, 0.16); }
+  function completeSound(){
+    const p=getPack(), [a,b]=p.complete;
+    tone(a.freq, a.dur||0.10, a.type, 0.18);
+    setTimeout(()=>tone(b.freq, b.dur||0.14, b.type, 0.18), 95);
+  }
+  function sweepSound(){ const p=getPack(); tone(p.sweepFreq, CFG.SWEEP_TIME, p.sweepType, 0.10, p.sweepFreq*4); }
+  function previewPack(){ pickupSound(); setTimeout(completeSound, 160); }
   return {
     unlock(){ ensure(); if (ctx.state==="suspended") ctx.resume(); },
     setMuted(m){ muted=m; if (master) master.gain.value = m?0:0.9; },
     isMuted(){ return muted; },
-    pickup(){ tone(880,0.09,"square",0.16); },
-    complete(){ tone(660,0.10,"triangle",0.18); setTimeout(()=>tone(988,0.14,"triangle",0.18),95); },
-    sweep(){ tone(220,CFG.SWEEP_TIME,"sawtooth",0.10,900); },
-    death(){ tone(180,0.5,"sawtooth",0.24,55); },
+    setPack(id){ packId = id; },
+    pickup: pickupSound,
+    complete: completeSound,
+    sweep: sweepSound,
+    death(){ scaryDeath(); },
+    previewPack,
     startAmbient, stopAmbient,
   };
 })();
@@ -387,6 +461,7 @@ let playerColor = SKINS[0].id, playerName = "";
 let unlocked = [];
 let selectedTrail = TRAILS[0].id, selectedGhostSkin = GHOST_SKINS[0].id, selectedDeathFX = DEATH_FX[0].id;
 let unlockedTrail = [], unlockedGhostSkin = [], unlockedDeathFX = [];
+let selectedSound = SOUND_PACKS[0].id, unlockedSound = [];
 let hintSeen = false;
 let C = {};
 
@@ -418,6 +493,7 @@ const el = {
   shopTabs:document.getElementById("shopTabs"), shopPreview:document.getElementById("shopPreview"),
   shopColors:document.getElementById("shopColors"), shopTrail:document.getElementById("shopTrail"),
   shopGhost:document.getElementById("shopGhost"), shopDeath:document.getElementById("shopDeath"),
+  shopSound:document.getElementById("shopSound"),
 };
 
 /* ---------- Helpers ---------- */
@@ -1013,12 +1089,20 @@ function buildShopAll(){
     ()=>selectedGhostSkin, (v)=>{ selectedGhostSkin=v; ss("echoSteps.ghostSkin",v); applyGhostUI(); }, true, "ghost");
   renderShopCategory(el.shopDeath, DEATH_FX, unlockedDeathFX, "echoSteps.deathOwned",
     ()=>selectedDeathFX, (v)=>{ selectedDeathFX=v; ss("echoSteps.deathfx",v); }, false, "death");
+  renderShopCategory(el.shopSound, SOUND_PACKS, unlockedSound, "echoSteps.soundOwned",
+    ()=>selectedSound, selectSoundPack, false, "sound");
+}
+function selectSoundPack(id){
+  selectedSound = id; ss("echoSteps.sound", id);
+  Sound.setPack(id);
+  Sound.unlock();
+  Sound.previewPack();   // let the player hear the pack immediately
 }
 function refreshShopCoinLine(){
   el.shopCoinLine.textContent = "\u25C6 " + coins + " coins";
 }
 function setShopTab(cat){
-  const map = { colors:el.shopColors, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath };
+  const map = { colors:el.shopColors, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath, sound:el.shopSound };
   Object.keys(map).forEach(k => map[k].classList.toggle("hidden", k!==cat));
   el.shopTabs.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.cat===cat));
   previewTab = cat;
@@ -1171,6 +1255,7 @@ unlocked = loadUnlocked();
 unlockedTrail = loadOwnedList("echoSteps.trailOwned", TRAILS.filter(t=>t.cost===0).map(t=>t.id));
 unlockedGhostSkin = loadOwnedList("echoSteps.ghostOwned", GHOST_SKINS.filter(t=>t.cost===0).map(t=>t.id));
 unlockedDeathFX = loadOwnedList("echoSteps.deathOwned", DEATH_FX.filter(t=>t.cost===0).map(t=>t.id));
+unlockedSound = loadOwnedList("echoSteps.soundOwned", SOUND_PACKS.map(s=>s.id));   // all packs are free
 playerName = ls("echoSteps.name") || "";
 el.nameInput.value = playerName;
 const savedColor = ls("echoSteps.color");
@@ -1181,6 +1266,9 @@ const savedGhostSkin = ls("echoSteps.ghostSkin");
 selectedGhostSkin = (savedGhostSkin && unlockedGhostSkin.includes(savedGhostSkin)) ? savedGhostSkin : GHOST_SKINS[0].id;
 const savedDeathFX = ls("echoSteps.deathfx");
 selectedDeathFX = (savedDeathFX && unlockedDeathFX.includes(savedDeathFX)) ? savedDeathFX : DEATH_FX[0].id;
+const savedSound = ls("echoSteps.sound");
+selectedSound = (savedSound && SOUND_PACKS.some(p=>p.id===savedSound)) ? savedSound : SOUND_PACKS[0].id;
+Sound.setPack(selectedSound);
 hintSeen = ls("echoSteps.hint") === "1";
 Sound.setMuted(ls("echoSteps.mute")==="1");
 refreshCoinLine();
