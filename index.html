@@ -422,7 +422,6 @@ function makeObstacleLayout(count) {
   const out = [];
   const exitHalf = (CFG.EXIT_W/room.w)/2 + 0.05;
   const exitBand = (CFG.EXIT_H/room.h) + 0.07;
-  const atMax = count >= CFG.OBSTACLES_MAX;   // shapes stay plain rects until the cap is hit
   let tries = 0;
   while (out.length < count && tries < 500) {
     tries++;
@@ -439,7 +438,7 @@ function makeObstacleLayout(count) {
       ampX: horiz ? (0.05+Math.random()*0.04) : 0,
       ampY: horiz ? 0 : (0.05+Math.random()*0.05),
       freq: 0.4+Math.random()*0.5, dir: Math.random()<0.5?-1:1,
-      shape: atMax ? OBSTACLE_SHAPES[Math.floor(Math.random()*OBSTACLE_SHAPES.length)] : "rect" });
+      shape: OBSTACLE_SHAPES[Math.floor(Math.random()*OBSTACLE_SHAPES.length)] });
   }
   return out;
 }
