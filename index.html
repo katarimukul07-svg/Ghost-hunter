@@ -79,9 +79,9 @@
   }
   #hud .label { color:var(--dim); }
   #hud .value { color:var(--ink); }
-  #muteBtn { pointer-events:auto; background:transparent; color:var(--dim); box-shadow:none;
+  #muteBtn, #pauseBtn { pointer-events:auto; background:transparent; color:var(--dim); box-shadow:none;
              border:1px solid var(--dim); border-radius:6px; padding:5px 10px; font-size:12px; }
-  #muteBtn:active { transform:none; }
+  #muteBtn:active, #pauseBtn:active { transform:none; }
 </style>
 </head>
 <body>
@@ -92,7 +92,10 @@
     <div><span class="label">ROUND </span><span class="value" id="hudRound">1</span></div>
     <div><span class="label">COINS </span><span class="value" id="hudCoins">0</span></div>
     <div><span class="label">SWEEP </span><span class="value" id="hudGc">10 mv</span></div>
-    <button id="muteBtn">&#9834; ON</button>
+    <div style="display:flex;gap:6px">
+      <button id="pauseBtn">&#9208;</button>
+      <button id="muteBtn">&#9834; ON</button>
+    </div>
   </div>
 
   <div id="startScreen" class="overlay">
@@ -151,7 +154,14 @@
 
   <div id="pauseScreen" class="overlay hidden">
     <h1>PAUSED</h1>
-    <button id="resumeBtn">RESUME</button>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button id="resumeBtn">RESUME</button>
+      <button id="pauseSoundBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">SOUND</button>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button id="pauseRestartBtn" style="background:var(--prize);box-shadow:0 0 18px rgba(255,210,63,.5)">RESTART</button>
+      <button id="pauseMenuBtn" class="chip" style="color:var(--dim)">MAIN MENU</button>
+    </div>
   </div>
 
   <div id="overScreen" class="overlay hidden">
@@ -1181,13 +1191,16 @@ function setShopTab(cat){
   else if (cat==="death") setPreviewItem("death", selectedDeathFX);
   el.shopGetCoins.classList.toggle("hidden", cat==="sound");   // sound packs are free — no coins needed
 }
-function openShop(){
-  refreshShopCoinLine(); buildShopAll(); setShopTab("colors");
-  el.start.classList.add("hidden"); el.shop.classList.remove("hidden");
+let shopReturnTo = "start";   // where BACK sends us: "start" or "pause"
+function openShop(tab){
+  refreshShopCoinLine(); buildShopAll(); setShopTab(tab || "colors");
+  el.start.classList.add("hidden"); el.pause.classList.add("hidden");
+  el.shop.classList.remove("hidden");
 }
 function closeShop(){
-  el.shop.classList.add("hidden"); el.start.classList.remove("hidden");
-  refreshCoinLine();
+  el.shop.classList.add("hidden");
+  if (shopReturnTo === "pause") el.pause.classList.remove("hidden");
+  else { el.start.classList.remove("hidden"); refreshCoinLine(); }
 }
 function showStart(){
   mode = STATE.START;
@@ -1281,7 +1294,7 @@ document.getElementById("storeBackBtn").addEventListener("click", closeCoinStore
 document.getElementById("startBtn").addEventListener("click", resetGame);
 document.getElementById("restartBtn").addEventListener("click", resetGame);
 document.getElementById("menuBtn").addEventListener("click", showStart);
-el.shopBtn.addEventListener("click", openShop);
+el.shopBtn.addEventListener("click", ()=>{ shopReturnTo = "start"; openShop(); });
 el.shopBack.addEventListener("click", closeShop);
 el.shopTabs.addEventListener("click", (e) => {
   const b = e.target.closest(".tab"); if (!b) return;
@@ -1289,6 +1302,23 @@ el.shopTabs.addEventListener("click", (e) => {
 });
 document.getElementById("resumeBtn").addEventListener("click", ()=>{
   paused=false; grace=CFG.GRACE_TICKS; el.pause.classList.add("hidden"); Sound.startAmbient();
+});
+document.getElementById("pauseRestartBtn").addEventListener("click", ()=>{
+  el.pause.classList.add("hidden");
+  resetGame();
+});
+document.getElementById("pauseMenuBtn").addEventListener("click", ()=>{
+  paused = false;
+  el.pause.classList.add("hidden");
+  showStart();
+});
+document.getElementById("pauseSoundBtn").addEventListener("click", ()=>{
+  shopReturnTo = "pause";
+  openShop("sound");
+});
+document.getElementById("pauseBtn").addEventListener("click", ()=>{
+  if (mode!==STATE.PLAYING || paused) return;
+  paused = true; Sound.stopAmbient(); el.pause.classList.remove("hidden");
 });
 el.mute.addEventListener("click", ()=>{
   Sound.setMuted(!Sound.isMuted()); ss("echoSteps.mute", Sound.isMuted()?"1":"0"); updateMuteBtn();
