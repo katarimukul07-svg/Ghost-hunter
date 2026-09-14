@@ -99,7 +99,6 @@
     <h1>ECHO STEPS</h1>
     <div class="sub">Pilot the NODE. Outrun your own echoes.</div>
     <div class="sub" id="coinLine" style="color:var(--prize)">&#9670; 0 coins &middot; best 0 rounds</div>
-    <div class="sub" id="mapLine" style="color:var(--exit)"></div>
     <div class="menu">
       <label class="mlabel">PILOT NAME</label>
       <input id="nameInput" maxlength="12" placeholder="Player" autocomplete="off" />
@@ -125,14 +124,12 @@
     <canvas id="shopPreview" width="280" height="100"></canvas>
     <div class="tabs" id="shopTabs">
       <button class="tab" data-cat="colors">DOT COLOR</button>
-      <button class="tab" data-cat="vehicle">PILOT SKIN</button>
       <button class="tab" data-cat="trail">TRAIL FX</button>
       <button class="tab" data-cat="ghost">GHOST SKIN</button>
       <button class="tab" data-cat="death">DEATH FX</button>
       <button class="tab" data-cat="sound">SOUND</button>
     </div>
     <div class="swatches" id="shopColors"></div>
-    <div class="swatches hidden" id="shopVehicle"></div>
     <div class="swatches hidden" id="shopTrail"></div>
     <div class="swatches hidden" id="shopGhost"></div>
     <div class="swatches hidden" id="shopDeath"></div>
@@ -176,7 +173,6 @@
   </div>
 </div>
 
-<script src="vehicles.js"></script>
 <script>
 "use strict";
 
@@ -443,8 +439,7 @@ function makeObstacleLayout(count) {
       ampX: horiz ? (0.05+Math.random()*0.04) : 0,
       ampY: horiz ? 0 : (0.05+Math.random()*0.05),
       freq: 0.4+Math.random()*0.5, dir: Math.random()<0.5?-1:1,
-      shape: currentMap ? currentMap.obstacleShape
-             : (atMax ? OBSTACLE_SHAPES[Math.floor(Math.random()*OBSTACLE_SHAPES.length)] : "rect") });
+      shape: atMax ? OBSTACLE_SHAPES[Math.floor(Math.random()*OBSTACLE_SHAPES.length)] : "rect" });
   }
   return out;
 }
@@ -470,9 +465,6 @@ let sweep = null, paused = false;
 let shockwaves = [];
 
 let playerColor = SKINS[0].id, playerStyle = SKINS[0].style, playerName = "";
-let playerVehicle = null;                              // non-null id -> render as a vehicle, not a dot skin
-let selectedVehicle = null, unlockedVehicle = [];
-let currentMap = null;                                  // active VEHICLE_MAPS entry, or null for the classic look
 let unlocked = [];
 let selectedTrail = TRAILS[0].id, selectedGhostSkin = GHOST_SKINS[0].id, selectedDeathFX = DEATH_FX[0].id;
 let unlockedTrail = [], unlockedGhostSkin = [], unlockedDeathFX = [];
@@ -483,7 +475,6 @@ let C = {};
 /* ---------- Shop preview panel state ---------- */
 let previewTab = "colors";
 let previewColor = SKINS[0].id, previewTrail = TRAILS[0].id, previewGhostColor = GHOST_SKINS[0].id, previewDeath = DEATH_FX[0].id;
-let previewVehicle = VEHICLES[0].id;
 let previewPhase = 0, previewDeathT = 0, previewTrailPath = [];
 let previewParticles = [], previewShockwaves = [];
 
@@ -509,9 +500,8 @@ const el = {
   shopTabs:document.getElementById("shopTabs"), shopPreview:document.getElementById("shopPreview"),
   shopColors:document.getElementById("shopColors"), shopTrail:document.getElementById("shopTrail"),
   shopGhost:document.getElementById("shopGhost"), shopDeath:document.getElementById("shopDeath"),
-  shopSound:document.getElementById("shopSound"), shopVehicle:document.getElementById("shopVehicle"),
+  shopSound:document.getElementById("shopSound"),
   shopGetCoins:document.getElementById("shopGetCoinsBtn"),
-  mapLine:document.getElementById("mapLine"),
 };
 
 /* ---------- Helpers ---------- */
@@ -874,13 +864,13 @@ function drawRoomBorder(){
 function traceObstaclePath(o){
   const x=o.x, y=o.y, w=o.w, h=o.h, cx=x+w/2, cy=y+h/2;
   switch (o.shape){
-    case "circle": case "barrel":
+    case "circle":
       ctx.beginPath(); ctx.ellipse(cx,cy,w/2,h/2,0,0,Math.PI*2); ctx.closePath();
       break;
     case "diamond":
       ctx.beginPath(); ctx.moveTo(cx,y); ctx.lineTo(x+w,cy); ctx.lineTo(cx,y+h); ctx.lineTo(x,cy); ctx.closePath();
       break;
-    case "triangle": case "cone":
+    case "triangle":
       ctx.beginPath(); ctx.moveTo(cx,y); ctx.lineTo(x+w,y+h); ctx.lineTo(x,y+h); ctx.closePath();
       break;
     case "hex": {
@@ -890,25 +880,21 @@ function traceObstaclePath(o){
       ctx.closePath();
       break;
     }
-    case "rounded": case "crate": {
+    case "rounded": {
       const r = Math.min(w,h)*0.3;
       ctx.beginPath(); ctx.roundRect(x,y,w,h,r);
       break;
     }
-    case "tree":
-      ctx.beginPath(); ctx.ellipse(cx, y+h*0.42, w*0.5, h*0.42, 0, 0, Math.PI*2); ctx.closePath();
-      break;
-    default:   // includes "rect" and "barrier"
+    default:
       ctx.beginPath(); ctx.rect(x,y,w,h);
   }
 }
 function drawObstacles(){
   ctx.save();
-  const wallColor = currentMap ? currentMap.obstacleColor : C.wall;
   for (const o of obstacles){
     traceObstaclePath(o);
     ctx.fillStyle="rgba(18,38,50,0.92)"; ctx.fill();
-    ctx.strokeStyle=wallColor; ctx.shadowColor=wallColor; ctx.shadowBlur=8; ctx.lineWidth=2;
+    ctx.strokeStyle=C.wall; ctx.shadowColor=C.wall; ctx.shadowBlur=8; ctx.lineWidth=2;
     ctx.stroke(); ctx.shadowBlur=0;
   }
   ctx.restore();
@@ -976,8 +962,7 @@ function drawTrail(){
 }
 function drawPlayer(){
   const blink=(grace>0 && Math.floor(frame/4)%2===0)?0.45:1;
-  if (playerVehicle) drawVehicle(ctx, player.x, player.y, CFG.PLAYER_R*1.3, playerColor, playerVehicle, blink, performance.now()/1000);
-  else drawSkin(ctx, player.x, player.y, CFG.PLAYER_R, playerColor, playerStyle, blink, performance.now()/1000);
+  drawSkin(ctx, player.x, player.y, CFG.PLAYER_R, playerColor, playerStyle, blink, performance.now()/1000);
   if (hasPrize){
     ctx.globalAlpha=blink; ctx.fillStyle=C.prize;
     ctx.beginPath(); ctx.arc(player.x,player.y,CFG.PLAYER_R*0.42,0,Math.PI*2); ctx.fill();
@@ -1032,7 +1017,6 @@ function render(){
 }
 function setPreviewItem(cat, id){
   if (cat==="colors") previewColor = id;
-  else if (cat==="vehicle") previewVehicle = id;
   else if (cat==="trail") previewTrail = id;
   else if (cat==="ghost") previewGhostColor = id;
   else if (cat==="death"){ previewDeath = id; previewDeathT = 999; }   // force an immediate replay
@@ -1051,9 +1035,6 @@ function drawShopPreview(){
   if (previewTab==="colors"){
     const pulse = 1+Math.sin(performance.now()/200)*0.12;
     drawSkin(pctx, cx, cy, 14*pulse, previewColor, getSkinStyle(previewColor), 1, performance.now()/1000);
-  } else if (previewTab==="vehicle"){
-    const v = VEHICLES.find(x=>x.id===previewVehicle) || VEHICLES[0];
-    drawVehicle(pctx, cx, cy, 26, v.color, v.id, 1, performance.now()/1000);
   } else if (previewTab==="trail"){
     previewPhase += 0.05;
     const rx=90, ry=26;
@@ -1141,7 +1122,7 @@ function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel
     const wrap = document.createElement("div"); wrap.className = "skin";
     const b = document.createElement("button");
     b.className = (swatch?"swatch":"chip") + (item.id===getSel()?" sel":"") + (owned?"":" locked");
-    if (swatch) b.style.background = item.color || item.id; else b.textContent = item.label;
+    if (swatch) b.style.background = item.id; else b.textContent = item.label;
     const price = document.createElement("div"); price.className = "price";
     price.textContent = owned ? (item.id===getSel() ? "\u2713" : "") : ("\u25C6" + item.cost);
     b.addEventListener("click", () => {
@@ -1171,9 +1152,7 @@ function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel
 }
 function buildShopAll(){
   renderShopCategory(el.shopColors, SKINS, unlocked, "echoSteps.unlocked",
-    ()=>playerColor, (v)=>{ playerColor=v; playerStyle=getSkinStyle(v); clearVehicle(); ss("echoSteps.color",v); applyColorUI(); }, true, "colors");
-  renderShopCategory(el.shopVehicle, VEHICLES, unlockedVehicle, "echoSteps.vehicleOwned",
-    ()=>selectedVehicle, selectVehicle, true, "vehicle");
+    ()=>playerColor, (v)=>{ playerColor=v; playerStyle=getSkinStyle(v); ss("echoSteps.color",v); applyColorUI(); }, true, "colors");
   renderShopCategory(el.shopTrail, TRAILS, unlockedTrail, "echoSteps.trailOwned",
     ()=>selectedTrail, (v)=>{ selectedTrail=v; ss("echoSteps.trail",v); }, false, "trail");
   renderShopCategory(el.shopGhost, GHOST_SKINS, unlockedGhostSkin, "echoSteps.ghostOwned",
@@ -1189,42 +1168,15 @@ function selectSoundPack(id){
   Sound.unlock();
   Sound.previewPack();   // let the player hear the pack immediately
 }
-/* Picking a vehicle swaps the player's render to a vehicle icon and applies
-   that vehicle's themed map; picking a classic dot skin reverts both. */
-function selectVehicle(id){
-  const v = VEHICLES.find(x=>x.id===id); if (!v) return;
-  selectedVehicle = id; ss("echoSteps.vehicle", id);
-  playerVehicle = id; playerColor = v.color;
-  currentMap = VEHICLE_MAPS[v.mapId];
-  applyMapTheme(currentMap);
-  refreshMapLine();
-}
-function clearVehicle(){
-  playerVehicle = null; selectedVehicle = null; ss("echoSteps.vehicle", "");
-  currentMap = null;
-  applyMapTheme(null);
-  refreshMapLine();
-}
-function applyMapTheme(map){
-  const root = document.documentElement.style;
-  if (map){ root.setProperty("--bg", map.bg); root.setProperty("--grid", map.grid); }
-  else { root.removeProperty("--bg"); root.removeProperty("--grid"); }
-  initColors();
-}
-function refreshMapLine(){
-  if (currentMap){ el.mapLine.textContent = "▤ Map: " + currentMap.label; el.mapLine.style.display = ""; }
-  else { el.mapLine.style.display = "none"; }
-}
 function refreshShopCoinLine(){
   el.shopCoinLine.textContent = "\u25C6 " + coins + " coins";
 }
 function setShopTab(cat){
-  const map = { colors:el.shopColors, vehicle:el.shopVehicle, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath, sound:el.shopSound };
+  const map = { colors:el.shopColors, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath, sound:el.shopSound };
   Object.keys(map).forEach(k => map[k].classList.toggle("hidden", k!==cat));
   el.shopTabs.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.cat===cat));
   previewTab = cat;
   if (cat==="colors") previewColor = playerColor;
-  else if (cat==="vehicle") previewVehicle = selectedVehicle || VEHICLES[0].id;
   else if (cat==="trail") previewTrail = selectedTrail;
   else if (cat==="ghost") previewGhostColor = selectedGhostSkin;
   else if (cat==="death") setPreviewItem("death", selectedDeathFX);
@@ -1236,7 +1188,7 @@ function openShop(){
 }
 function closeShop(){
   el.shop.classList.add("hidden"); el.start.classList.remove("hidden");
-  refreshCoinLine(); refreshMapLine();
+  refreshCoinLine();
 }
 function showStart(){
   mode = STATE.START;
@@ -1244,7 +1196,7 @@ function showStart(){
   el.shop.classList.add("hidden");
   document.getElementById("coinStoreScreen").classList.add("hidden");
   Sound.stopAmbient();
-  refreshCoinLine(); refreshMapLine(); applyColorUI(); applyGhostUI();
+  refreshCoinLine(); applyColorUI(); applyGhostUI();
   el.start.classList.remove("hidden");
 }
 function updateMuteBtn(){
@@ -1375,7 +1327,6 @@ unlockedTrail = loadOwnedList("echoSteps.trailOwned", TRAILS.filter(t=>t.cost===
 unlockedGhostSkin = loadOwnedList("echoSteps.ghostOwned", GHOST_SKINS.filter(t=>t.cost===0).map(t=>t.id));
 unlockedDeathFX = loadOwnedList("echoSteps.deathOwned", DEATH_FX.filter(t=>t.cost===0).map(t=>t.id));
 unlockedSound = loadOwnedList("echoSteps.soundOwned", SOUND_PACKS.map(s=>s.id));   // all packs are free
-unlockedVehicle = loadOwnedList("echoSteps.vehicleOwned", VEHICLES.filter(v=>v.cost===0).map(v=>v.id));
 playerName = ls("echoSteps.name") || "";
 el.nameInput.value = playerName;
 const savedColor = ls("echoSteps.color");
@@ -1390,11 +1341,9 @@ selectedDeathFX = (savedDeathFX && unlockedDeathFX.includes(savedDeathFX)) ? sav
 const savedSound = ls("echoSteps.sound");
 selectedSound = (savedSound && SOUND_PACKS.some(p=>p.id===savedSound)) ? savedSound : SOUND_PACKS[0].id;
 Sound.setPack(selectedSound);
-const savedVehicle = ls("echoSteps.vehicle");
-if (savedVehicle && unlockedVehicle.includes(savedVehicle)) selectVehicle(savedVehicle);
 hintSeen = ls("echoSteps.hint") === "1";
 Sound.setMuted(ls("echoSteps.mute")==="1");
-refreshCoinLine(); refreshMapLine();
+refreshCoinLine();
 applyColorUI(); applyGhostUI();
 updateMuteBtn();
 resize();
