@@ -55,6 +55,19 @@
   .swatch:active { transform:scale(.9); }
   .swatch.sel { border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.25); }
   .swatch.locked { opacity:.4; }
+  .chip { min-width:70px; padding:9px 12px; border-radius:8px; background:rgba(255,255,255,.05);
+          border:1px solid var(--dim); color:var(--ink); font-size:11px; letter-spacing:.5px; box-shadow:none; }
+  .chip:active { transform:scale(.96); }
+  .chip.sel { border-color:#fff; background:rgba(255,255,255,.15); box-shadow:0 0 0 2px rgba(255,255,255,.2); }
+  .chip.locked { opacity:.4; }
+
+  /* shop */
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:4px 0; }
+  .tab { font-size:11px; padding:8px 14px; background:rgba(255,255,255,.05); color:var(--dim);
+         border:1px solid var(--dim); box-shadow:none; border-radius:8px; letter-spacing:1px; }
+  .tab.active { color:var(--bg); background:var(--sweep); border-color:var(--sweep);
+                box-shadow:0 0 12px rgba(198,107,255,.4); }
+  .tab:active { transform:scale(.96); }
 
   #hud {
     position:absolute; top:0; left:0; right:0; display:flex;
@@ -86,17 +99,34 @@
     <div class="menu">
       <label class="mlabel">YOUR NAME</label>
       <input id="nameInput" maxlength="12" placeholder="Player" autocomplete="off" />
-      <label class="mlabel">DOT SKIN &mdash; tap a locked one to buy</label>
-      <div class="swatches" id="swatches"></div>
     </div>
     <div class="sub">
       Drag your <span id="hintDot" style="color:var(--player)">dot</span> to grab a
       <span style="color:var(--prize)">gold coin</span>, then reach the
       <span style="color:var(--exit)">green exit</span> to clear a round. Every round leaves a
-      <span style="color:var(--ghost)">ghost</span> that retraces your path &mdash; touch one and it's over!<br>
-      Rounds cleared are your score. Coins unlock skins. Past <b>round 7</b> things get wild.
+      <span id="hintGhost" style="color:var(--ghost)">ghost</span> that retraces your path &mdash; touch one and it's over!<br>
+      Rounds cleared are your score. Coins unlock shop items. Past <b>round 7</b> things get wild.
     </div>
-    <button id="startBtn">PLAY</button>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button id="startBtn">PLAY</button>
+      <button id="shopBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">SHOP</button>
+    </div>
+  </div>
+
+  <div id="shopScreen" class="overlay hidden">
+    <h1 style="color:var(--sweep);text-shadow:0 0 14px rgba(198,107,255,.55)">SHOP</h1>
+    <div class="sub" id="shopCoinLine" style="color:var(--prize)">&#9670; 0 coins</div>
+    <div class="tabs" id="shopTabs">
+      <button class="tab" data-cat="colors">DOT COLOR</button>
+      <button class="tab" data-cat="trail">TRAIL FX</button>
+      <button class="tab" data-cat="ghost">GHOST SKIN</button>
+      <button class="tab" data-cat="death">DEATH FX</button>
+    </div>
+    <div class="swatches" id="shopColors"></div>
+    <div class="swatches hidden" id="shopTrail"></div>
+    <div class="swatches hidden" id="shopGhost"></div>
+    <div class="swatches hidden" id="shopDeath"></div>
+    <button id="shopBackBtn">BACK</button>
   </div>
 
   <div id="pauseScreen" class="overlay hidden">
@@ -137,12 +167,31 @@ const CFG = {
 };
 
 const SKINS = [
-  { color:"#29e0ff", cost:0 },    // cyan  (free)
-  { color:"#eaf2ff", cost:0 },    // white (free)
-  { color:"#3d7bff", cost:15 },   // blue
-  { color:"#ff5ca8", cost:25 },   // pink
-  { color:"#ff8a2b", cost:40 },   // orange
-  { color:"#b06bff", cost:60 },   // purple
+  { id:"#29e0ff", cost:0 },    // cyan  (free)
+  { id:"#eaf2ff", cost:0 },    // white (free)
+  { id:"#3d7bff", cost:15 },   // blue
+  { id:"#ff5ca8", cost:25 },   // pink
+  { id:"#ff8a2b", cost:40 },   // orange
+  { id:"#b06bff", cost:60 },   // purple
+];
+
+const TRAILS = [
+  { id:"classic", label:"Classic", cost:0 },
+  { id:"sparkle", label:"Sparkle", cost:20 },
+  { id:"long", label:"Long Trail", cost:30 },
+  { id:"rainbow", label:"Rainbow", cost:50 },
+];
+const GHOST_SKINS = [
+  { id:"#ff3554", label:"Crimson", cost:0 },
+  { id:"#c66bff", label:"Violet", cost:20 },
+  { id:"#39ff9e", label:"Toxic", cost:35 },
+  { id:"#eaf2ff", label:"Phantom", cost:50 },
+];
+const DEATH_FX = [
+  { id:"classic", label:"Classic", cost:0 },
+  { id:"shockwave", label:"Shockwave", cost:25 },
+  { id:"confetti", label:"Confetti", cost:40 },
+  { id:"implode", label:"Implode", cost:55 },
 ];
 
 /* ---------- Audio (synthesized) ---------- */
@@ -266,9 +315,12 @@ let coins = 0, runCoins = 0, bestRounds = 0;   // coins = spendable bank; bestRo
 let ghostPhase = 0, ghostSpeed = 1, wallTime = 0;
 let toast = null, particles = [], pops = [], shake = 0, deathTimer = 0;
 let sweep = null, paused = false;
+let shockwaves = [];
 
-let playerColor = SKINS[0].color, playerName = "";
+let playerColor = SKINS[0].id, playerName = "";
 let unlocked = [];
+let selectedTrail = TRAILS[0].id, selectedGhostSkin = GHOST_SKINS[0].id, selectedDeathFX = DEATH_FX[0].id;
+let unlockedTrail = [], unlockedGhostSkin = [], unlockedDeathFX = [];
 let hintSeen = false;
 let C = {};
 
@@ -285,8 +337,14 @@ const el = {
   finalCoins:document.getElementById("finalCoins"),
   totalCoinsOver:document.getElementById("totalCoinsOver"),
   newBest:document.getElementById("newBest"), overSub:document.getElementById("overSub"),
-  nameInput:document.getElementById("nameInput"), swatches:document.getElementById("swatches"),
-  hintDot:document.getElementById("hintDot"), coinLine:document.getElementById("coinLine"),
+  nameInput:document.getElementById("nameInput"),
+  hintDot:document.getElementById("hintDot"), hintGhost:document.getElementById("hintGhost"),
+  coinLine:document.getElementById("coinLine"),
+  shop:document.getElementById("shopScreen"), shopBtn:document.getElementById("shopBtn"),
+  shopBack:document.getElementById("shopBackBtn"), shopCoinLine:document.getElementById("shopCoinLine"),
+  shopTabs:document.getElementById("shopTabs"),
+  shopColors:document.getElementById("shopColors"), shopTrail:document.getElementById("shopTrail"),
+  shopGhost:document.getElementById("shopGhost"), shopDeath:document.getElementById("shopDeath"),
 };
 
 /* ---------- Helpers ---------- */
@@ -330,11 +388,16 @@ function loadBestRounds(){ return parseInt(ls("echoSteps.bestRounds"),10) || 0; 
 function saveBestRounds(v){ ss("echoSteps.bestRounds", String(v)); }
 function saveCoins(){ ss("echoSteps.coins", String(coins)); }
 function loadUnlocked(){
-  const base = SKINS.filter(k=>k.cost===0).map(k=>k.color);
+  const base = SKINS.filter(k=>k.cost===0).map(k=>k.id);
   const saved = (ls("echoSteps.unlocked")||"").split(",").filter(Boolean);
   return Array.from(new Set(base.concat(saved)));
 }
 function saveUnlocked(){ ss("echoSteps.unlocked", unlocked.join(",")); }
+function loadOwnedList(key, freeIds){
+  const saved = (ls(key)||"").split(",").filter(Boolean);
+  return Array.from(new Set(freeIds.concat(saved)));
+}
+function saveOwnedList(key, list){ ss(key, list.join(",")); }
 
 /* Collect a coin: +1 to the run haul and the permanent bank. */
 function collectCoin(x, y){ coins++; runCoins++; saveCoins(); pop(x, y, "+1", C.prize); }
@@ -347,7 +410,7 @@ function resetGame() {
   buildObstacles();
   player.x = room.x+room.w/2; player.y = room.y+room.h/2;
   pointer.x = player.x; pointer.y = player.y; pointer.active = false;
-  ghosts = []; currentPath = []; particles = []; pops = [];
+  ghosts = []; currentPath = []; particles = []; pops = []; shockwaves = [];
   frame = 0; round = 1; grace = CFG.GRACE_TICKS; runCoins = 0;
   ghostPhase = 0; ghostSpeed = 1; wallTime = 0;
   toast = null; shake = 0; deathTimer = 0; sweep = null;
@@ -380,8 +443,7 @@ function completeRound() {
 }
 function startDeath() {
   mode = STATE.DYING; deathTimer = 0; shake = 16;
-  burst(player.x, player.y, playerColor, 26);
-  burst(player.x, player.y, C.ghost, 12);
+  playDeathFX(player.x, player.y);
   if (navigator.vibrate) navigator.vibrate([25,30,55]);
   Sound.death(); Sound.stopAmbient();
 }
@@ -438,6 +500,38 @@ function burst(x,y,color,n){
     particles.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, color, r:1.5+Math.random()*2.5 });
   }
 }
+const CONFETTI_COLORS = ["#ffd23f","#ff5ca8","#3d7bff","#39ff9e","#b06bff","#ff8a2b"];
+function burstMulti(x,y,colors,n){
+  for (let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, sp=1+Math.random()*4.5;
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    particles.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, color, r:1.5+Math.random()*2.5 });
+  }
+}
+function burstImplode(x,y,color,n){
+  for (let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, r=30+Math.random()*40, sp=2+Math.random()*3;
+    particles.push({ x:x+Math.cos(a)*r, y:y+Math.sin(a)*r, vx:-Math.cos(a)*sp, vy:-Math.sin(a)*sp, life:1, color, r:1.5+Math.random()*2.5 });
+  }
+}
+function playDeathFX(x,y){
+  switch (selectedDeathFX){
+    case "shockwave":
+      burst(x,y,playerColor,16);
+      shockwaves.push({ x, y, t:0 });
+      break;
+    case "confetti":
+      burstMulti(x,y,CONFETTI_COLORS,30);
+      break;
+    case "implode":
+      burstImplode(x,y,selectedGhostSkin,22);
+      burst(x,y,playerColor,10);
+      break;
+    default:
+      burst(x,y,playerColor,26);
+      burst(x,y,selectedGhostSkin,12);
+  }
+}
 function updateEffects(dt){
   for (let i=particles.length-1;i>=0;i--){
     const p=particles[i];
@@ -447,6 +541,10 @@ function updateEffects(dt){
   for (let i=pops.length-1;i>=0;i--){
     const q=pops[i]; q.y-=0.7; q.life-=dt*1.1;
     if (q.life<=0) pops.splice(i,1);
+  }
+  for (let i=shockwaves.length-1;i>=0;i--){
+    const s=shockwaves[i]; s.t+=dt/0.6;
+    if (s.t>=1) shockwaves.splice(i,1);
   }
   if (shake>0.3) shake*=0.86; else shake=0;
 }
@@ -543,12 +641,12 @@ function drawPrize(){
 function drawGhosts(){
   for (let i=0;i<ghosts.length;i++){
     const g=ghosts[i], pos=ghostPos(g); if (!pos) continue;
-    ctx.strokeStyle=C.ghost; ctx.globalAlpha=0.10; ctx.lineWidth=2;
+    ctx.strokeStyle=selectedGhostSkin; ctx.globalAlpha=0.10; ctx.lineWidth=2;
     const p=g.path; ctx.beginPath(); ctx.moveTo(p[0].x,p[0].y);
     for (let k=1;k<p.length;k+=3) ctx.lineTo(p[k].x,p[k].y);
     ctx.stroke(); ctx.globalAlpha=1;
     const flick=(i===0 && sweep)?(0.45+0.4*Math.sin(performance.now()/40)):1;
-    glow(pos.x,pos.y,CFG.GHOST_R,C.ghost,flick);
+    glow(pos.x,pos.y,CFG.GHOST_R,selectedGhostSkin,flick);
   }
 }
 function drawSweep(){
@@ -557,13 +655,26 @@ function drawSweep(){
   ctx.lineWidth=3; ctx.globalAlpha=0.9; ctx.beginPath();
   ctx.moveTo(x,room.y); ctx.lineTo(x,room.y+room.h); ctx.stroke(); ctx.restore();
 }
+function trailColorAt(i, n){
+  if (selectedTrail!=="rainbow") return playerColor;
+  const hue = ((i/n)*300 + performance.now()/12) % 360;
+  return "hsl(" + hue + ",90%,60%)";
+}
 function drawTrail(){
-  const n=currentPath.length, start=Math.max(0,n-16);
+  const span = selectedTrail==="long" ? 30 : 16;
+  const n=currentPath.length, start=Math.max(0,n-span);
   for (let i=start;i<n;i++){
-    const t=(i-start)/16; ctx.globalAlpha=0.16*t; ctx.fillStyle=playerColor;
+    const t=(i-start)/span; ctx.globalAlpha=0.16*t; ctx.fillStyle=trailColorAt(i,n);
     ctx.beginPath(); ctx.arc(currentPath[i].x,currentPath[i].y,CFG.PLAYER_R*(0.35+0.5*t),0,Math.PI*2); ctx.fill();
   }
   ctx.globalAlpha=1;
+  if (selectedTrail==="sparkle" && n>0 && Math.random()<0.5){
+    const p = currentPath[n-1];
+    const a=Math.random()*Math.PI*2, r=6+Math.random()*10;
+    ctx.globalAlpha=0.7; ctx.fillStyle="#fff";
+    ctx.beginPath(); ctx.arc(p.x+Math.cos(a)*r, p.y+Math.sin(a)*r, 1+Math.random()*1.5, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha=1;
+  }
 }
 function drawPlayer(){
   const blink=(grace>0 && Math.floor(frame/4)%2===0)?0.45:1;
@@ -594,6 +705,14 @@ function drawHint(){
   ctx.fillText("drag to move", player.x, player.y-30);
   ctx.globalAlpha=1;
 }
+function drawShockwaves(){
+  for (const s of shockwaves){
+    const r = 6 + s.t*90;
+    ctx.save(); ctx.globalAlpha = Math.max(0,1-s.t); ctx.strokeStyle = playerColor;
+    ctx.shadowColor = playerColor; ctx.shadowBlur = 14; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+  }
+}
 function drawToast(){
   if (!toast) return;
   const a = toast.t<0.3 ? toast.t/0.3 : (toast.t>2.0 ? Math.max(0,(2.6-toast.t)/0.6) : 1);
@@ -609,7 +728,7 @@ function render(){
   drawGrid(); drawRoomBorder(); drawObstacles(); drawExit();
   drawGhosts(); drawPrize(); drawSweep();
   if (mode===STATE.PLAYING){ drawTrail(); drawPlayer(); drawHint(); }
-  drawParticles(); drawPops(); drawToast();
+  drawParticles(); drawShockwaves(); drawPops(); drawToast();
   ctx.restore();
 }
 function updateHUD(){
@@ -643,41 +762,69 @@ canvas.addEventListener("pointercancel", ()=>{ pointer.active=false; });
 function refreshCoinLine(){
   el.coinLine.textContent = "\u25C6 " + coins + " coins \u00B7 best " + bestRounds + " rounds";
 }
-function buildShop(){
-  el.swatches.innerHTML = "";
-  SKINS.forEach(skin => {
-    const owned = unlocked.includes(skin.color);
+function applyColorUI(){ el.hintDot.style.color = playerColor; }
+function applyGhostUI(){ if (el.hintGhost) el.hintGhost.style.color = selectedGhostSkin; }
+function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch){
+  container.innerHTML = "";
+  items.forEach(item => {
+    const owned = ownedArr.includes(item.id);
     const wrap = document.createElement("div"); wrap.className = "skin";
     const b = document.createElement("button");
-    b.className = "swatch" + (skin.color===playerColor?" sel":"") + (owned?"":" locked");
-    b.style.background = skin.color;
+    b.className = (swatch?"swatch":"chip") + (item.id===getSel()?" sel":"") + (owned?"":" locked");
+    if (swatch) b.style.background = item.id; else b.textContent = item.label;
     const price = document.createElement("div"); price.className = "price";
-    price.textContent = owned ? (skin.color===playerColor ? "\u2713" : "") : ("\u25C6" + skin.cost);
+    price.textContent = owned ? (item.id===getSel() ? "\u2713" : "") : ("\u25C6" + item.cost);
     b.addEventListener("click", () => {
-      if (unlocked.includes(skin.color)) {                       // already owned -> select
-        playerColor = skin.color; ss("echoSteps.color", skin.color);
-        el.hintDot.style.color = skin.color; buildShop();
-      } else if (coins >= skin.cost) {                           // buy it
-        coins -= skin.cost; saveCoins();
-        unlocked.push(skin.color); saveUnlocked();
-        playerColor = skin.color; ss("echoSteps.color", skin.color);
-        el.hintDot.style.color = skin.color;
+      if (ownedArr.includes(item.id)) {                          // already owned -> select
+        setSel(item.id);
+        renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch);
+      } else if (coins >= item.cost) {                           // buy it
+        coins -= item.cost; saveCoins();
+        ownedArr.push(item.id); saveOwnedList(ownedKey, ownedArr);
+        setSel(item.id);
         if (navigator.vibrate) navigator.vibrate(20);
-        refreshCoinLine(); buildShop();
+        refreshShopCoinLine();
+        renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch);
       } else {                                                   // can't afford -> flash price red
         price.style.color = C.ghost; setTimeout(()=>{ price.style.color = ""; }, 450);
       }
     });
     wrap.appendChild(b); wrap.appendChild(price);
-    el.swatches.appendChild(wrap);
+    container.appendChild(wrap);
   });
-  el.hintDot.style.color = playerColor;
+}
+function buildShopAll(){
+  renderShopCategory(el.shopColors, SKINS, unlocked, "echoSteps.unlocked",
+    ()=>playerColor, (v)=>{ playerColor=v; ss("echoSteps.color",v); applyColorUI(); }, true);
+  renderShopCategory(el.shopTrail, TRAILS, unlockedTrail, "echoSteps.trailOwned",
+    ()=>selectedTrail, (v)=>{ selectedTrail=v; ss("echoSteps.trail",v); }, false);
+  renderShopCategory(el.shopGhost, GHOST_SKINS, unlockedGhostSkin, "echoSteps.ghostOwned",
+    ()=>selectedGhostSkin, (v)=>{ selectedGhostSkin=v; ss("echoSteps.ghostSkin",v); applyGhostUI(); }, true);
+  renderShopCategory(el.shopDeath, DEATH_FX, unlockedDeathFX, "echoSteps.deathOwned",
+    ()=>selectedDeathFX, (v)=>{ selectedDeathFX=v; ss("echoSteps.deathfx",v); }, false);
+}
+function refreshShopCoinLine(){
+  el.shopCoinLine.textContent = "\u25C6 " + coins + " coins";
+}
+function setShopTab(cat){
+  const map = { colors:el.shopColors, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath };
+  Object.keys(map).forEach(k => map[k].classList.toggle("hidden", k!==cat));
+  el.shopTabs.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.cat===cat));
+}
+function openShop(){
+  refreshShopCoinLine(); buildShopAll(); setShopTab("colors");
+  el.start.classList.add("hidden"); el.shop.classList.remove("hidden");
+}
+function closeShop(){
+  el.shop.classList.add("hidden"); el.start.classList.remove("hidden");
+  refreshCoinLine();
 }
 function showStart(){
   mode = STATE.START;
   el.over.classList.add("hidden"); el.pause.classList.add("hidden"); el.hud.classList.add("hidden");
+  el.shop.classList.add("hidden");
   Sound.stopAmbient();
-  refreshCoinLine(); buildShop();
+  refreshCoinLine(); applyColorUI(); applyGhostUI();
   el.start.classList.remove("hidden");
 }
 function updateMuteBtn(){
@@ -688,6 +835,12 @@ function updateMuteBtn(){
 document.getElementById("startBtn").addEventListener("click", resetGame);
 document.getElementById("restartBtn").addEventListener("click", resetGame);
 document.getElementById("menuBtn").addEventListener("click", showStart);
+el.shopBtn.addEventListener("click", openShop);
+el.shopBack.addEventListener("click", closeShop);
+el.shopTabs.addEventListener("click", (e) => {
+  const b = e.target.closest(".tab"); if (!b) return;
+  setShopTab(b.dataset.cat);
+});
 document.getElementById("resumeBtn").addEventListener("click", ()=>{
   paused=false; grace=CFG.GRACE_TICKS; el.pause.classList.add("hidden"); Sound.startAmbient();
 });
@@ -723,14 +876,23 @@ initColors();
 coins = parseInt(ls("echoSteps.coins"), 10) || 0;
 bestRounds = loadBestRounds();
 unlocked = loadUnlocked();
+unlockedTrail = loadOwnedList("echoSteps.trailOwned", TRAILS.filter(t=>t.cost===0).map(t=>t.id));
+unlockedGhostSkin = loadOwnedList("echoSteps.ghostOwned", GHOST_SKINS.filter(t=>t.cost===0).map(t=>t.id));
+unlockedDeathFX = loadOwnedList("echoSteps.deathOwned", DEATH_FX.filter(t=>t.cost===0).map(t=>t.id));
 playerName = ls("echoSteps.name") || "";
 el.nameInput.value = playerName;
 const savedColor = ls("echoSteps.color");
-playerColor = (savedColor && unlocked.includes(savedColor)) ? savedColor : SKINS[0].color;
+playerColor = (savedColor && unlocked.includes(savedColor)) ? savedColor : SKINS[0].id;
+const savedTrail = ls("echoSteps.trail");
+selectedTrail = (savedTrail && unlockedTrail.includes(savedTrail)) ? savedTrail : TRAILS[0].id;
+const savedGhostSkin = ls("echoSteps.ghostSkin");
+selectedGhostSkin = (savedGhostSkin && unlockedGhostSkin.includes(savedGhostSkin)) ? savedGhostSkin : GHOST_SKINS[0].id;
+const savedDeathFX = ls("echoSteps.deathfx");
+selectedDeathFX = (savedDeathFX && unlockedDeathFX.includes(savedDeathFX)) ? savedDeathFX : DEATH_FX[0].id;
 hintSeen = ls("echoSteps.hint") === "1";
 Sound.setMuted(ls("echoSteps.mute")==="1");
 refreshCoinLine();
-buildShop();
+applyColorUI(); applyGhostUI();
 updateMuteBtn();
 resize();
 requestAnimationFrame(loop);
