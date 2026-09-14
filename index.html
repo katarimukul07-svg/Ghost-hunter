@@ -1,3 +1,4 @@
+<!-- Echo Steps: Garbage Collector — by katarimukul07-svg -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,64 +7,62 @@
 <title>Echo Steps: Garbage Collector</title>
 <style>
   :root {
-    --bg:        #070b10;
-    --grid:      #0e2230;
-    --player:    #29e0ff;
-    --ghost:     #ff3554;
-    --prize:     #ffd23f;
-    --exit:      #39ff9e;
-    --sweep:     #c66bff;
-    --wall:      #3d6b7a;
-    --ink:       #cfe9f5;
-    --dim:       #4a6572;
+    --bg:#070b10; --grid:#0e2230; --player:#29e0ff; --ghost:#ff3554;
+    --prize:#ffd23f; --exit:#39ff9e; --sweep:#c66bff; --wall:#3d6b7a;
+    --ink:#cfe9f5; --dim:#4a6572;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; background: var(--bg); overflow: hidden; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; background:var(--bg); overflow:hidden; }
   body {
-    font-family: "SFMono-Regular", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
-    color: var(--ink);
-    touch-action: none;
-    -webkit-user-select: none; user-select: none;
+    font-family:"SFMono-Regular", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+    color:var(--ink); touch-action:none; -webkit-user-select:none; user-select:none;
   }
-  #stage { position: fixed; inset: 0; }
-  canvas { display: block; width: 100%; height: 100%; }
+  #stage { position:fixed; inset:0; }
+  canvas { display:block; width:100%; height:100%; }
 
   .overlay {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    text-align: center; gap: 18px;
-    background: rgba(4, 8, 12, 0.82);
-    backdrop-filter: blur(2px);
-    padding: 24px;
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; gap:16px;
+    background:rgba(4,8,12,0.82); backdrop-filter:blur(2px); padding:24px; overflow-y:auto;
   }
-  .hidden { display: none !important; }
-  h1 { font-size: clamp(22px, 6vw, 40px); letter-spacing: 1px; color: var(--player);
-       text-shadow: 0 0 14px rgba(41,224,255,.55); font-weight: 600; }
-  .sub { color: var(--dim); max-width: 32ch; line-height: 1.6; font-size: 14px; }
-  .stat { font-size: clamp(16px, 4vw, 22px); color: var(--ink); }
-  .stat b { color: var(--prize); }
+  .hidden { display:none !important; }
+  h1 { font-size:clamp(22px,6vw,40px); letter-spacing:1px; color:var(--player);
+       text-shadow:0 0 14px rgba(41,224,255,.55); font-weight:600; }
+  .sub { color:var(--dim); max-width:32ch; line-height:1.6; font-size:14px; }
+  .stat { font-size:clamp(16px,4vw,22px); color:var(--ink); }
+  .stat b { color:var(--prize); }
   button {
-    font-family: inherit; font-size: 15px; letter-spacing: .5px;
-    color: var(--bg); background: var(--player);
-    border: none; border-radius: 8px; padding: 12px 28px; cursor: pointer;
-    box-shadow: 0 0 18px rgba(41,224,255,.5); transition: transform .08s ease;
+    font-family:inherit; font-size:15px; letter-spacing:.5px; color:var(--bg);
+    background:var(--player); border:none; border-radius:8px; padding:12px 28px;
+    cursor:pointer; box-shadow:0 0 18px rgba(41,224,255,.5); transition:transform .08s ease;
   }
-  button:active { transform: scale(.96); }
+  button:active { transform:scale(.96); }
+
+  /* player menu */
+  .menu { display:flex; flex-direction:column; gap:10px; align-items:center; margin:2px 0; }
+  .mlabel { color:var(--dim); font-size:11px; letter-spacing:2px; }
+  #nameInput {
+    font-family:inherit; text-align:center; font-size:15px; color:var(--ink);
+    background:rgba(255,255,255,.05); border:1px solid var(--dim); border-radius:8px;
+    padding:9px 14px; width:210px; outline:none;
+  }
+  #nameInput:focus { border-color:var(--player); }
+  .swatches { display:flex; gap:12px; }
+  .swatch { width:30px; height:30px; border-radius:50%; border:2px solid transparent;
+            cursor:pointer; padding:0; box-shadow:none; }
+  .swatch:active { transform:scale(.9); }
+  .swatch.sel { border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.25); }
 
   #hud {
-    position: absolute; top: 0; left: 0; right: 0;
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 16px; font-size: 13px; pointer-events: none;
+    position:absolute; top:0; left:0; right:0; display:flex;
+    justify-content:space-between; align-items:center; padding:12px 16px;
+    font-size:13px; pointer-events:none;
   }
-  #hud .label { color: var(--dim); }
-  #hud .value { color: var(--ink); }
-  #muteBtn {
-    pointer-events: auto; background: transparent; color: var(--dim);
-    box-shadow: none; border: 1px solid var(--dim); border-radius: 6px;
-    padding: 5px 10px; font-size: 12px; letter-spacing: .5px;
-  }
-  #muteBtn:active { transform: none; }
+  #hud .label { color:var(--dim); }
+  #hud .value { color:var(--ink); }
+  #muteBtn { pointer-events:auto; background:transparent; color:var(--dim); box-shadow:none;
+             border:1px solid var(--dim); border-radius:6px; padding:5px 10px; font-size:12px; }
+  #muteBtn:active { transform:none; }
 </style>
 </head>
 <body>
@@ -71,7 +70,7 @@
   <canvas id="c"></canvas>
 
   <div id="hud" class="hidden">
-    <div><span class="label">SCORE </span><span class="value" id="hudScore">0</span></div>
+    <div><span class="label">BYTES </span><span class="value" id="hudScore">0</span></div>
     <div><span class="label">ROUND </span><span class="value" id="hudRound">1</span></div>
     <div><span class="label">SWEEP </span><span class="value" id="hudGc">10 mv</span></div>
     <button id="muteBtn">&#9834; ON</button>
@@ -79,26 +78,36 @@
 
   <div id="startScreen" class="overlay">
     <h1>ECHO STEPS</h1>
-    <div class="sub">Chase the prize. Dodge your ghosts.</div>
+    <div class="sub">Chase the coins. Dodge your ghosts.</div>
+    <div class="sub" id="totalBytes" style="color:var(--prize)">Bytes banked: 0</div>
+    <div class="menu">
+      <label class="mlabel">YOUR NAME</label>
+      <input id="nameInput" maxlength="12" placeholder="Player" autocomplete="off" />
+      <label class="mlabel">DOT COLOR</label>
+      <div class="swatches" id="swatches"></div>
+    </div>
     <div class="sub">
-      Drag the <span style="color:var(--player)">blue dot</span> to grab the
-      <span style="color:var(--prize)">gold prize</span>, then reach the
-      <span style="color:var(--exit)">green exit</span> &mdash; dodge the walls on the way.<br><br>
-      Every round you finish leaves a <span style="color:var(--ghost)">red ghost</span>
-      that retraces your exact path. Touch a ghost and it's game over!<br><br>
-      Ghosts pile up as you go &mdash; every few rounds a sweep clears out your oldest.<br><br>
-      Make it past <b>round 7</b> and things get wild: the walls start moving and the
-      ghosts speed up. How long can you last?
+      Drag your <span id="hintDot" style="color:var(--player)">dot</span> to grab a
+      <span style="color:var(--prize)">gold coin</span> (+10 Bytes), then reach the
+      <span style="color:var(--exit)">green exit</span> (+1). Every round leaves a
+      <span style="color:var(--ghost)">ghost</span> that retraces your path &mdash; touch one and it's over!
+      Past <b>round 7</b> things get wild.
     </div>
     <button id="startBtn">PLAY</button>
   </div>
 
+  <div id="pauseScreen" class="overlay hidden">
+    <h1>PAUSED</h1>
+    <button id="resumeBtn">RESUME</button>
+  </div>
+
   <div id="overScreen" class="overlay hidden">
     <h1 style="color:var(--ghost);text-shadow:0 0 14px rgba(255,53,84,.55)">GHOST GOT YOU!</h1>
-    <div class="stat">Score: <b id="finalScore">0</b></div>
-    <div class="stat" style="font-size:15px">Rounds: <span id="finalRounds">0</span> &middot; Best: <span id="bestScore">0</span></div>
+    <div class="stat">+<b id="finalScore">0</b> Bytes this run</div>
+    <div class="stat" style="font-size:15px">Rounds: <span id="finalRounds">0</span> &middot; Best run: <span id="bestScore">0</span></div>
+    <div class="stat" style="font-size:16px;color:var(--prize)">Total banked: <b id="totalBytesOver">0</b> Bytes</div>
     <div class="sub" id="newBest" style="color:var(--prize);text-shadow:0 0 12px rgba(255,210,63,.6);display:none">&#9733; NEW BEST &#9733;</div>
-    <div class="sub" id="overSub">One of your own paths caught up with you.</div>
+    <div class="sub" id="overSub"></div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="restartBtn">PLAY AGAIN</button>
       <button id="shareBtn" style="background:var(--exit);box-shadow:0 0 18px rgba(57,255,158,.5)">SHARE</button>
@@ -110,594 +119,571 @@
 "use strict";
 
 /* =========================================================================
- * Echo Steps: Garbage Collector — prototype v2
- * Adds: static walls (obstacles), patrolling (ping-pong) ghosts,
- *       fully synthesized audio (Web Audio, no asset files).
+ * Echo Steps: Garbage Collector
+ * Vanilla HTML5 Canvas. No asset files. Player menu + Phase-1 juice.
  * ========================================================================= */
 
-/* ---------- Tunable config ---------- */
 const CFG = {
-  WALL_MARGIN:   16,
-  PLAYER_R:      12,
-  SPEED_FRAC:    0.020,  // player speed as a fraction of screen size — scales to any device
-  GHOST_R:       9,
-  PRIZE_R:       11,
-  EXIT_W:        150,
-  EXIT_H:        44,
-  GC_MOVES:      10,     // scanner sweeps once every N moves (completed rounds), not on a timer
-  GC_KEEP:       4,      // echoes persist until memory holds more than this; then the collector trims the oldest
-  SWEEP_TIME:    0.7,
-  GRACE_TICKS:   36,
-  RAMP_START:    7,      // after this round: walls start drifting AND ghosts start speeding up
-  GHOST_RAMP:    0.01,   // +1% ghost speed per round once past RAMP_START (compounds)
-  WALL_DRIFT:    0.9,    // how fast the walls oscillate once destabilized
-  OBSTACLES:     4,      // how many walls to scatter each game (randomized)
-  SIZE_EVERY:    5,      // walls grow every N rounds
-  SIZE_GROW:     0.10,   // ...by this much (+10%), compounding
-  SIZE_MAX:      2.0,    // capped so they never fill the room
+  WALL_MARGIN:16, PLAYER_R:12,
+  SPEED_FRAC:0.020,          // player speed as a fraction of screen size
+  GHOST_R:9, PRIZE_R:11, EXIT_W:150, EXIT_H:44,
+  GC_MOVES:10, GC_KEEP:4, SWEEP_TIME:0.7, GRACE_TICKS:36,
+  RAMP_START:7, GHOST_RAMP:0.01, WALL_DRIFT:0.9,
+  OBSTACLES:4, SIZE_EVERY:5, SIZE_GROW:0.10, SIZE_MAX:2.0,
 };
 
-/* Obstacles are generated fresh (random) at the start of every game — see
-   makeObstacleLayout(). The layout is stored as fractions so it rescales. */
+const COLORS = ["#29e0ff", "#3d7bff", "#ff5ca8", "#ff8a2b", "#eaf2ff", "#b06bff"];
 
-/* =========================================================================
- * Audio — everything is synthesized on the fly with the Web Audio API.
- * ========================================================================= */
+/* ---------- Audio (synthesized) ---------- */
 const Sound = (function () {
-  let ctx = null, master = null, ambient = null, muted = false;
+  let ctx=null, master=null, ambient=null, muted=false;
   function ensure() {
     if (ctx) return;
     const AC = window.AudioContext || window.webkitAudioContext;
-    ctx = new AC();
-    master = ctx.createGain();
-    master.gain.value = muted ? 0 : 0.9;
-    master.connect(ctx.destination);
+    ctx = new AC(); master = ctx.createGain();
+    master.gain.value = muted ? 0 : 0.9; master.connect(ctx.destination);
   }
-  function tone(freq, dur, type, vol, glideTo) {
+  function tone(freq,dur,type,vol,glideTo) {
     if (!ctx || muted) return;
-    const t = ctx.currentTime;
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = type;
-    o.frequency.setValueAtTime(freq, t);
-    if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t + dur);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(master);
-    o.start(t); o.stop(t + dur + 0.03);
+    const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq,t);
+    if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t+dur);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol, t+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.03);
   }
   function startAmbient() {
-    ensure();
-    if (ctx.state === "suspended") ctx.resume();
+    ensure(); if (ctx.state === "suspended") ctx.resume();
     if (ambient) return;
-    const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
-    const filt = ctx.createBiquadFilter(), g = ctx.createGain();
-    const lfo = ctx.createOscillator(), lfoGain = ctx.createGain();
-    o1.type = "sawtooth"; o2.type = "sawtooth";
-    o1.frequency.value = 55; o2.frequency.value = 55 * 1.008;   // low, slightly detuned
-    filt.type = "lowpass"; filt.frequency.value = 300; filt.Q.value = 7;
-    g.gain.value = 0.05;
-    lfo.frequency.value = 0.14; lfoGain.gain.value = 0.035;      // slow breathing tremolo
+    const o1=ctx.createOscillator(), o2=ctx.createOscillator();
+    const filt=ctx.createBiquadFilter(), g=ctx.createGain();
+    const lfo=ctx.createOscillator(), lfoGain=ctx.createGain();
+    o1.type="sawtooth"; o2.type="sawtooth"; o1.frequency.value=55; o2.frequency.value=55*1.008;
+    filt.type="lowpass"; filt.frequency.value=300; filt.Q.value=7; g.gain.value=0.05;
+    lfo.frequency.value=0.14; lfoGain.gain.value=0.035;
     lfo.connect(lfoGain); lfoGain.connect(g.gain);
     o1.connect(filt); o2.connect(filt); filt.connect(g); g.connect(master);
-    o1.start(); o2.start(); lfo.start();
-    ambient = { o1, o2, lfo, g };
+    o1.start(); o2.start(); lfo.start(); ambient={o1,o2,lfo,g};
   }
   function stopAmbient() {
-    if (!ambient) return;
-    const a = ambient; ambient = null;
-    try { a.g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3); } catch (e) {}
-    setTimeout(() => { try { a.o1.stop(); a.o2.stop(); a.lfo.stop(); } catch (e) {} }, 380);
+    if (!ambient) return; const a=ambient; ambient=null;
+    try { a.g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.3); } catch(e){}
+    setTimeout(()=>{ try{ a.o1.stop(); a.o2.stop(); a.lfo.stop(); }catch(e){} }, 380);
   }
   return {
-    unlock() { ensure(); if (ctx.state === "suspended") ctx.resume(); },
-    setMuted(m) { muted = m; if (master) master.gain.value = m ? 0 : 0.9; },
-    isMuted() { return muted; },
-    pickup()   { tone(880, 0.09, "square", 0.16); },
-    complete() { tone(660, 0.10, "triangle", 0.18); setTimeout(() => tone(988, 0.14, "triangle", 0.18), 95); },
-    sweep()    { tone(220, CFG.SWEEP_TIME, "sawtooth", 0.10, 900); },
-    death()    { tone(180, 0.5, "sawtooth", 0.24, 55); },
+    unlock(){ ensure(); if (ctx.state==="suspended") ctx.resume(); },
+    setMuted(m){ muted=m; if (master) master.gain.value = m?0:0.9; },
+    isMuted(){ return muted; },
+    pickup(){ tone(880,0.09,"square",0.16); },
+    complete(){ tone(660,0.10,"triangle",0.18); setTimeout(()=>tone(988,0.14,"triangle",0.18),95); },
+    sweep(){ tone(220,CFG.SWEEP_TIME,"sawtooth",0.10,900); },
+    death(){ tone(180,0.5,"sawtooth",0.24,55); },
     startAmbient, stopAmbient,
   };
 })();
 
-/* ---------- Canvas / DPR setup ---------- */
+/* ---------- Canvas / room ---------- */
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
-let W = 0, H = 0, DPR = 1;
-const room = { x: 0, y: 0, w: 0, h: 0 };
+let W=0, H=0, DPR=1;
+const room = { x:0, y:0, w:0, h:0 };
 let obstacles = [];
-let obstacleLayout = [];   // fractional layout, regenerated each game
-let playerSpeed = 8;       // px per tick, set responsively in resize()
+let obstacleLayout = [];
+let playerSpeed = 8;
 
 function resize() {
   DPR = Math.min(window.devicePixelRatio || 1, 2);
-  W = canvas.clientWidth;
-  H = canvas.clientHeight;
-  canvas.width  = Math.round(W * DPR);
-  canvas.height = Math.round(H * DPR);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-  room.x = CFG.WALL_MARGIN;
-  room.y = CFG.WALL_MARGIN;
-  room.w = W - CFG.WALL_MARGIN * 2;
-  room.h = H - CFG.WALL_MARGIN * 2;
-
-  exit.x = room.x + room.w / 2 - CFG.EXIT_W / 2;
-  exit.y = room.y;
-
-  playerSpeed = Math.hypot(room.w, room.h) * CFG.SPEED_FRAC;   // scales with screen size
+  W = canvas.clientWidth; H = canvas.clientHeight;
+  canvas.width = Math.round(W*DPR); canvas.height = Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  room.x = CFG.WALL_MARGIN; room.y = CFG.WALL_MARGIN;
+  room.w = W - CFG.WALL_MARGIN*2; room.h = H - CFG.WALL_MARGIN*2;
+  exit.x = room.x + room.w/2 - CFG.EXIT_W/2; exit.y = room.y;
+  playerSpeed = Math.hypot(room.w, room.h) * CFG.SPEED_FRAC;
   buildObstacles();
 }
 window.addEventListener("resize", resize);
 
-/* Map the stored fractional layout to pixels (keeps randomness stable across resizes). */
 function buildObstacles() {
   obstacles = obstacleLayout.map(o => {
-    const bw = o.w * room.w, bh = o.h * room.h;
+    const bw = o.w*room.w, bh = o.h*room.h;
     return {
-      cx: room.x + (o.x + o.w / 2) * room.w,   // centre (walls grow from here)
-      cy: room.y + (o.y + o.h / 2) * room.h,
-      bw, bh, w: bw, h: bh,
-      x: room.x + o.x * room.w,
-      y: room.y + o.y * room.h,
-      ampX: o.ampX * room.w,
-      ampY: o.ampY * room.h,
-      freq: o.freq,
-      dir:  o.dir,
+      cx: room.x + (o.x + o.w/2)*room.w, cy: room.y + (o.y + o.h/2)*room.h,
+      bw, bh, w:bw, h:bh,
+      x: room.x + o.x*room.w, y: room.y + o.y*room.h,
+      ampX: o.ampX*room.w, ampY: o.ampY*room.h, freq:o.freq, dir:o.dir,
     };
   });
 }
-
-/* Generate a fresh random set of walls (as fractions), clear of the exit and centre. */
 function makeObstacleLayout() {
   const out = [];
-  const exitHalf = (CFG.EXIT_W / room.w) / 2 + 0.05;   // exit half-width + margin (fraction)
-  const exitBand = (CFG.EXIT_H / room.h) + 0.07;       // keep walls below the exit gate
+  const exitHalf = (CFG.EXIT_W/room.w)/2 + 0.05;
+  const exitBand = (CFG.EXIT_H/room.h) + 0.07;
   let tries = 0;
   while (out.length < CFG.OBSTACLES && tries < 500) {
     tries++;
-    const w = 0.08 + Math.random() * 0.05;             // start small: 8%–13% wide
-    const h = 0.08 + Math.random() * 0.06;             // 8%–14% tall
-    const x = 0.06 + Math.random() * (1 - 0.12 - w);
-    const y = 0.20 + Math.random() * (1 - 0.28 - h);   // below the exit, above bottom margin
-    const overExit    = (x < 0.5 + exitHalf && x + w > 0.5 - exitHalf && y < exitBand);
-    const coversStart = (x - 0.04 < 0.5 && x + w + 0.04 > 0.5 && y - 0.04 < 0.5 && y + h + 0.04 > 0.5);
+    const w = 0.08 + Math.random()*0.05, h = 0.08 + Math.random()*0.06;
+    const x = 0.06 + Math.random()*(1-0.12-w), y = 0.20 + Math.random()*(1-0.28-h);
+    const overExit    = (x < 0.5+exitHalf && x+w > 0.5-exitHalf && y < exitBand);
+    const coversStart = (x-0.04 < 0.5 && x+w+0.04 > 0.5 && y-0.04 < 0.5 && y+h+0.04 > 0.5);
     let overlap = false;
-    for (const o of out) {
-      if (x < o.x + o.w + 0.03 && x + w + 0.03 > o.x && y < o.y + o.h + 0.03 && y + h + 0.03 > o.y) { overlap = true; break; }
-    }
+    for (const o of out)
+      if (x < o.x+o.w+0.03 && x+w+0.03 > o.x && y < o.y+o.h+0.03 && y+h+0.03 > o.y) { overlap=true; break; }
     if (overExit || coversStart || overlap) continue;
     const horiz = Math.random() < 0.5;
-    out.push({
-      x, y, w, h,
-      ampX: horiz ? (0.05 + Math.random() * 0.04) : 0,   // drift axis (used only after round 7)
-      ampY: horiz ? 0 : (0.05 + Math.random() * 0.05),
-      freq: 0.4 + Math.random() * 0.5,
-      dir:  Math.random() < 0.5 ? -1 : 1,
-    });
+    out.push({ x, y, w, h,
+      ampX: horiz ? (0.05+Math.random()*0.04) : 0,
+      ampY: horiz ? 0 : (0.05+Math.random()*0.05),
+      freq: 0.4+Math.random()*0.5, dir: Math.random()<0.5?-1:1 });
   }
   return out;
 }
 
-/* ---------- Game state ---------- */
-const STATE = { START: 0, PLAYING: 1, OVER: 2 };
+/* ---------- State ---------- */
+const STATE = { START:0, PLAYING:1, OVER:2, DYING:3 };
 let mode = STATE.START;
 
-const player = { x: 0, y: 0 };
-const pointer = { x: 0, y: 0, active: false };
-const exit = { x: 0, y: 0, w: CFG.EXIT_W, h: CFG.EXIT_H };
-let prize = null;
-let hasPrize = false;
+const player = { x:0, y:0 };
+const pointer = { x:0, y:0, active:false };
+const exit = { x:0, y:0, w:CFG.EXIT_W, h:CFG.EXIT_H };
+let prize = null, hasPrize = false;
 
-let currentPath = [];
-let ghosts = [];
-let frame = 0;
-let round = 1;
-let grace = 0;
-let score = 0;           // points; fast rounds are worth more
-let best = 0;            // high score, persisted across sessions
+let currentPath = [], ghosts = [];
+let frame = 0, round = 1, grace = 0;
+let score = 0, best = 0, totalBytes = 0;
+let ghostPhase = 0, ghostSpeed = 1, wallTime = 0;
+let toast = null, particles = [], pops = [], shake = 0, deathTimer = 0;
+let sweep = null, paused = false;
 
-let ghostPhase = 0;      // fractional patrol clock (advances by ghostSpeed each tick)
-let ghostSpeed = 1;      // 1 = base; ramps up after RAMP_START
-let wallTime = 0;        // advances only once walls are destabilized
-let toast = null;        // { text, t } transient on-screen message
+let playerColor = COLORS[0], playerName = "";
+let hintSeen = false;
+let C = {};
 
-let gcTimer = 0;
-let sweep = null;
-
-/* ---------- DOM refs ---------- */
+/* ---------- DOM ---------- */
 const el = {
-  hud:        document.getElementById("hud"),
-  score:      document.getElementById("hudScore"),
-  round:      document.getElementById("hudRound"),
-  gc:         document.getElementById("hudGc"),
-  mute:       document.getElementById("muteBtn"),
-  start:      document.getElementById("startScreen"),
-  over:       document.getElementById("overScreen"),
-  finalScore: document.getElementById("finalScore"),
+  hud:document.getElementById("hud"), score:document.getElementById("hudScore"),
+  round:document.getElementById("hudRound"), gc:document.getElementById("hudGc"),
+  mute:document.getElementById("muteBtn"),
+  start:document.getElementById("startScreen"),
+  pause:document.getElementById("pauseScreen"),
+  over:document.getElementById("overScreen"),
+  finalScore:document.getElementById("finalScore"),
   finalRounds:document.getElementById("finalRounds"),
-  bestScore:  document.getElementById("bestScore"),
-  newBest:    document.getElementById("newBest"),
-  overSub:    document.getElementById("overSub"),
+  bestScore:document.getElementById("bestScore"),
+  newBest:document.getElementById("newBest"), overSub:document.getElementById("overSub"),
+  nameInput:document.getElementById("nameInput"), swatches:document.getElementById("swatches"),
+  hintDot:document.getElementById("hintDot"),
+  totalBytes:document.getElementById("totalBytes"),
+  totalBytesOver:document.getElementById("totalBytesOver"),
 };
 
 /* ---------- Helpers ---------- */
-const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-const dist2 = (ax, ay, bx, by) => { const dx = ax - bx, dy = ay - by; return dx * dx + dy * dy; };
-
-function pointInObstacles(px, py, pad) {
-  for (const o of obstacles) {
-    if (px > o.x - pad && px < o.x + o.w + pad &&
-        py > o.y - pad && py < o.y + o.h + pad) return true;
-  }
+const clamp = (v,lo,hi) => Math.max(lo, Math.min(hi,v));
+const dist2 = (ax,ay,bx,by) => { const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy; };
+function pointInObstacles(px,py,pad){
+  for (const o of obstacles)
+    if (px>o.x-pad && px<o.x+o.w+pad && py>o.y-pad && py<o.y+o.h+pad) return true;
   return false;
 }
-
-/* Push a circle out of a rectangle (enables smooth sliding along walls). */
-function resolveCircleRect(cx, cy, r, o) {
-  const nx = clamp(cx, o.x, o.x + o.w);
-  const ny = clamp(cy, o.y, o.y + o.h);
-  const dx = cx - nx, dy = cy - ny;
-  const d = Math.hypot(dx, dy);
-  if (d > 0 && d < r) {
-    const push = r - d;
-    return { x: cx + (dx / d) * push, y: cy + (dy / d) * push };
+function resolveCircleRect(cx,cy,r,o){
+  const nx=clamp(cx,o.x,o.x+o.w), ny=clamp(cy,o.y,o.y+o.h);
+  const dx=cx-nx, dy=cy-ny, d=Math.hypot(dx,dy);
+  if (d>0 && d<r){ const push=r-d; return {x:cx+(dx/d)*push, y:cy+(dy/d)*push}; }
+  if (d===0){
+    const left=cx-o.x, right=o.x+o.w-cx, top=cy-o.y, bottom=o.y+o.h-cy;
+    const m=Math.min(left,right,top,bottom);
+    if (m===left) return {x:o.x-r, y:cy};
+    if (m===right) return {x:o.x+o.w+r, y:cy};
+    if (m===top) return {x:cx, y:o.y-r};
+    return {x:cx, y:o.y+o.h+r};
   }
-  if (d === 0) { // centre inside the rect: eject along the nearest edge
-    const left = cx - o.x, right = o.x + o.w - cx, top = cy - o.y, bottom = o.y + o.h - cy;
-    const m = Math.min(left, right, top, bottom);
-    if (m === left)  return { x: o.x - r, y: cy };
-    if (m === right) return { x: o.x + o.w + r, y: cy };
-    if (m === top)   return { x: cx, y: o.y - r };
-    return { x: cx, y: o.y + o.h + r };
-  }
-  return { x: cx, y: cy };
+  return {x:cx, y:cy};
 }
-
-function spawnPrize() {
+function spawnPrize(){
   const pad = CFG.PRIZE_R + 24;
-  for (let i = 0; i < 60; i++) {
-    const px = room.x + pad + Math.random() * (room.w - pad * 2);
-    const py = room.y + pad + Math.random() * (room.h - pad * 2);
-    const overExit = px > exit.x - pad && px < exit.x + exit.w + pad && py < exit.y + exit.h + pad;
-    const nearPlayer = dist2(px, py, player.x, player.y) < 90 * 90;
-    if (!overExit && !nearPlayer && !pointInObstacles(px, py, pad)) { prize = { x: px, y: py }; return; }
+  for (let i=0;i<60;i++){
+    const px = room.x+pad+Math.random()*(room.w-pad*2);
+    const py = room.y+pad+Math.random()*(room.h-pad*2);
+    const overExit = px>exit.x-pad && px<exit.x+exit.w+pad && py<exit.y+exit.h+pad;
+    const nearPlayer = dist2(px,py,player.x,player.y) < 90*90;
+    if (!overExit && !nearPlayer && !pointInObstacles(px,py,pad)){ prize={x:px,y:py}; return; }
   }
-  prize = { x: room.x + room.w / 2, y: room.y + room.h * 0.5 };
+  prize = { x:room.x+room.w/2, y:room.y+room.h*0.5 };
 }
+
+/* ---------- Persistence (guarded) ---------- */
+function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function ss(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function loadBest(){ const v=parseInt(ls("echoSteps.best"),10); return v||0; }
+function saveBest(v){ ss("echoSteps.best", String(v)); }
+function saveBytes(){ ss("echoSteps.bytes", String(totalBytes)); }
+
+/* Award Bytes to the run and the permanent bank, with a floating popup. */
+function earn(amount, x, y, color){
+  score += amount; totalBytes += amount; saveBytes();
+  pop(x, y, "+" + amount, color);
+}
+function pop(x, y, text, color){ pops.push({ x, y, text, color, life:1 }); }
 
 /* ---------- Lifecycle ---------- */
 function resetGame() {
   resize();
-  obstacleLayout = makeObstacleLayout();   // fresh random walls every game
+  obstacleLayout = makeObstacleLayout();
   buildObstacles();
-  player.x = room.x + room.w / 2;
-  player.y = room.y + room.h / 2;
+  player.x = room.x+room.w/2; player.y = room.y+room.h/2;
   pointer.x = player.x; pointer.y = player.y; pointer.active = false;
-  ghosts = [];
-  currentPath = [];
-  frame = 0;
-  round = 1;
-  grace = CFG.GRACE_TICKS;
-  score = 0;
-  ghostPhase = 0;
-  ghostSpeed = 1;
-  wallTime = 0;
-  toast = null;
-  gcTimer = 0;
-  sweep = null;
-  hasPrize = false;
+  ghosts = []; currentPath = []; particles = []; pops = [];
+  frame = 0; round = 1; grace = CFG.GRACE_TICKS; score = 0;
+  ghostPhase = 0; ghostSpeed = 1; wallTime = 0;
+  toast = null; shake = 0; deathTimer = 0; sweep = null;
+  hasPrize = false; paused = false;
+  playerName = (el.nameInput.value || "").trim().slice(0,12) || "Player";
+  ss("echoSteps.name", playerName);
   spawnPrize();
   mode = STATE.PLAYING;
   el.start.classList.add("hidden");
   el.over.classList.add("hidden");
+  el.pause.classList.add("hidden");
   el.hud.classList.remove("hidden");
-  Sound.unlock();
-  Sound.startAmbient();
+  Sound.unlock(); Sound.startAmbient();
 }
-
 function completeRound() {
-  // faster rounds score more: under 4s = x3, under 7s = x2, else x1
-  const secs = frame / 60;
-  const mult = secs < 4 ? 3 : (secs < 7 ? 2 : 1);
-  const gain = 100 * mult;
-  score += gain;
-
+  earn(1, player.x, player.y, C.exit);         // +1 Byte for clearing the round
   ghosts.push({ path: currentPath.slice() });
-  round++;
-  currentPath = [];
-  frame = 0;
-  ghostPhase = 0;                                   // all echoes restart their patrol in sync
-  grace = CFG.GRACE_TICKS;
-  hasPrize = false;
-  if (mult > 1) toast = { text: "SPEED BONUS \u00D7" + mult + "  +" + gain, t: 0 };
-  if (round > CFG.RAMP_START) ghostSpeed *= (1 + CFG.GHOST_RAMP);   // +1% per round, compounding
-  if (round === CFG.RAMP_START + 1) toast = { text: "\u26A0 THINGS GET WILD!", t: 0 };
-  if (round % CFG.GC_MOVES === 0 && ghosts.length > CFG.GC_KEEP && !sweep) { sweep = { t: 0 }; Sound.sweep(); }
-  spawnPrize();
-  Sound.complete();
+  round++; currentPath = []; frame = 0; ghostPhase = 0;
+  grace = CFG.GRACE_TICKS; hasPrize = false;
+  if (round>CFG.RAMP_START) ghostSpeed *= (1+CFG.GHOST_RAMP);
+  if (round===CFG.RAMP_START+1) toast = { text:"\u26A0 THINGS GET WILD!", t:0 };
+  if (round % CFG.GC_MOVES === 0 && ghosts.length > CFG.GC_KEEP && !sweep) { sweep={t:0}; Sound.sweep(); }
+  spawnPrize(); Sound.complete();
 }
-
-function gameOver() {
+function startDeath() {
+  mode = STATE.DYING; deathTimer = 0; shake = 16;
+  burst(player.x, player.y, playerColor, 26);
+  burst(player.x, player.y, C.ghost, 12);
+  if (navigator.vibrate) navigator.vibrate([25,30,55]);
+  Sound.death(); Sound.stopAmbient();
+}
+function finalizeDeath() {
   mode = STATE.OVER;
-  const isBest = score > best && score > 0;
-  if (isBest) { best = score; saveBest(best); }
+  const isBest = score>best && score>0;
+  if (isBest){ best=score; saveBest(best); }
   el.finalScore.textContent = score;
-  el.finalRounds.textContent = round - 1;
+  el.finalRounds.textContent = round-1;
   el.bestScore.textContent = best;
+  el.totalBytesOver.textContent = totalBytes;
   el.newBest.style.display = isBest ? "" : "none";
   const lines = [
-    "One of your own paths caught up with you.",
-    "A ghost of a past round got you!",
-    "Your echo caught you off guard.",
-    "Boxed in by your own trail!",
+    "a ghost of a past round got you!",
+    "your own echo caught you off guard.",
+    "boxed in by your own trail!",
+    "one of your old paths caught up.",
   ];
-  el.overSub.textContent = lines[Math.floor(Math.random() * lines.length)];
+  el.overSub.textContent = playerName + ", " + lines[Math.floor(Math.random()*lines.length)];
   el.over.classList.remove("hidden");
   el.hud.classList.add("hidden");
-  Sound.death();
-  Sound.stopAmbient();
 }
 
-/* ---------- Ghost sampling: interpolated ping-pong patrol (speed-scalable) ---------- */
-function ghostPos(g) {
-  const p = g.path, n = p.length;
+/* ---------- Ghost sampling ---------- */
+function ghostPos(g){
+  const p=g.path, n=p.length;
   if (!n) return null;
-  if (n === 1) return p[0];
-  const period = (n - 1) * 2;
-  let ph = ghostPhase % period;
-  const idx = (ph <= n - 1) ? ph : period - ph;   // reflect -> continuous index in [0, n-1]
-  const i0 = Math.floor(idx);
-  const i1 = Math.min(i0 + 1, n - 1);
-  const f = idx - i0;
-  return { x: p[i0].x + (p[i1].x - p[i0].x) * f, y: p[i0].y + (p[i1].y - p[i0].y) * f };
+  if (n===1) return p[0];
+  const period=(n-1)*2;
+  let ph=ghostPhase%period;
+  const idx=(ph<=n-1)?ph:period-ph;
+  const i0=Math.floor(idx), i1=Math.min(i0+1,n-1), f=idx-i0;
+  return { x:p[i0].x+(p[i1].x-p[i0].x)*f, y:p[i0].y+(p[i1].y-p[i0].y)*f };
 }
 
-/* ---------- Walls: grow every few rounds, drift once destabilized ---------- */
-function updateObstacles(dt) {
-  if (round > CFG.RAMP_START) wallTime += dt * CFG.WALL_DRIFT;
-  // +10% size every SIZE_EVERY rounds, compounding, capped
-  const steps = Math.floor(round / CFG.SIZE_EVERY);
-  const scale = Math.min(CFG.SIZE_MAX, Math.pow(1 + CFG.SIZE_GROW, steps));
-  for (const o of obstacles) {
-    o.w = o.bw * scale;
-    o.h = o.bh * scale;
-    const s = Math.sin(wallTime * o.freq) * o.dir;   // s = 0 while wallTime is 0 -> rests at base
-    o.x = clamp(o.cx - o.w / 2 + s * o.ampX, room.x, room.x + room.w - o.w);
-    o.y = clamp(o.cy - o.h / 2 + s * o.ampY, room.y, room.y + room.h - o.h);
+/* ---------- Walls: grow + drift ---------- */
+function updateObstacles(dt){
+  if (round>CFG.RAMP_START) wallTime += dt*CFG.WALL_DRIFT;
+  const steps = Math.floor(round/CFG.SIZE_EVERY);
+  const scale = Math.min(CFG.SIZE_MAX, Math.pow(1+CFG.SIZE_GROW, steps));
+  for (const o of obstacles){
+    o.w=o.bw*scale; o.h=o.bh*scale;
+    const s=Math.sin(wallTime*o.freq)*o.dir;
+    o.x=clamp(o.cx-o.w/2+s*o.ampX, room.x, room.x+room.w-o.w);
+    o.y=clamp(o.cy-o.h/2+s*o.ampY, room.y, room.y+room.h-o.h);
   }
+}
+
+/* ---------- Particles / shake ---------- */
+function burst(x,y,color,n){
+  for (let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, sp=1+Math.random()*4.5;
+    particles.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, color, r:1.5+Math.random()*2.5 });
+  }
+}
+function updateEffects(dt){
+  for (let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.vx*=0.93; p.vy*=0.93; p.life-=dt*1.5;
+    if (p.life<=0) particles.splice(i,1);
+  }
+  for (let i=pops.length-1;i>=0;i--){
+    const q=pops[i]; q.y-=0.7; q.life-=dt*1.1;
+    if (q.life<=0) pops.splice(i,1);
+  }
+  if (shake>0.3) shake*=0.86; else shake=0;
 }
 
 /* ---------- Update ---------- */
 function update(dt) {
-  if (mode !== STATE.PLAYING) return;
+  if (mode===STATE.DYING){ deathTimer+=dt; if (deathTimer>0.6) finalizeDeath(); return; }
+  if (mode!==STATE.PLAYING) return;
 
-  updateObstacles(dt);   // move the walls first, so collision uses their new positions
+  updateObstacles(dt);
 
-  // move toward the pointer, speed-capped
-  const dx = pointer.x - player.x, dy = pointer.y - player.y;
-  const d = Math.hypot(dx, dy);
-  if (d > 0.5) {
-    const step = Math.min(d, playerSpeed);
-    player.x += (dx / d) * step;
-    player.y += (dy / d) * step;
-  }
-  // walls of the room
-  player.x = clamp(player.x, room.x + CFG.PLAYER_R, room.x + room.w - CFG.PLAYER_R);
-  player.y = clamp(player.y, room.y + CFG.PLAYER_R, room.y + room.h - CFG.PLAYER_R);
-  // solid obstacles (two passes for stability at corners)
-  for (let pass = 0; pass < 2; pass++) {
-    for (const o of obstacles) {
-      const r = resolveCircleRect(player.x, player.y, CFG.PLAYER_R, o);
-      player.x = r.x; player.y = r.y;
+  const dx=pointer.x-player.x, dy=pointer.y-player.y, d=Math.hypot(dx,dy);
+  if (d>0.5){ const step=Math.min(d,playerSpeed); player.x+=(dx/d)*step; player.y+=(dy/d)*step; }
+  player.x = clamp(player.x, room.x+CFG.PLAYER_R, room.x+room.w-CFG.PLAYER_R);
+  player.y = clamp(player.y, room.y+CFG.PLAYER_R, room.y+room.h-CFG.PLAYER_R);
+  for (let pass=0;pass<2;pass++)
+    for (const o of obstacles){ const r=resolveCircleRect(player.x,player.y,CFG.PLAYER_R,o); player.x=r.x; player.y=r.y; }
+
+  currentPath.push({ x:player.x, y:player.y });
+
+  if (prize && !hasPrize){
+    const rr=CFG.PLAYER_R+CFG.PRIZE_R;
+    if (dist2(player.x,player.y,prize.x,prize.y) < rr*rr){
+      burst(prize.x, prize.y, C.prize, 16);
+      earn(10, prize.x, prize.y, C.prize);      // +10 Bytes per coin
+      if (navigator.vibrate) navigator.vibrate(18);
+      hasPrize=true; prize=null; Sound.pickup();
     }
   }
-
-  currentPath.push({ x: player.x, y: player.y });
-
-  if (prize && !hasPrize) {
-    const rr = CFG.PLAYER_R + CFG.PRIZE_R;
-    if (dist2(player.x, player.y, prize.x, prize.y) < rr * rr) {
-      hasPrize = true; prize = null; Sound.pickup();
-    }
-  }
-
-  if (hasPrize &&
-      player.x > exit.x && player.x < exit.x + exit.w &&
-      player.y > exit.y && player.y < exit.y + exit.h) {
+  if (hasPrize && player.x>exit.x && player.x<exit.x+exit.w && player.y>exit.y && player.y<exit.y+exit.h)
     completeRound();
-  }
 
-  if (sweep) {
-    sweep.t += dt / CFG.SWEEP_TIME;
-    if (sweep.t >= 1) { if (ghosts.length > CFG.GC_KEEP) ghosts.shift(); sweep = null; }
-  }
+  if (sweep){ sweep.t += dt/CFG.SWEEP_TIME; if (sweep.t>=1){ if (ghosts.length>CFG.GC_KEEP) ghosts.shift(); sweep=null; } }
 
-  if (grace > 0) {
-    grace--;
-  } else {
-    const rr = CFG.PLAYER_R + CFG.GHOST_R;
-    for (const g of ghosts) {
-      const pos = ghostPos(g);
-      if (pos && dist2(player.x, player.y, pos.x, pos.y) < rr * rr) { gameOver(); break; }
+  if (grace>0) grace--;
+  else {
+    const rr=CFG.PLAYER_R+CFG.GHOST_R;
+    for (const g of ghosts){
+      const pos=ghostPos(g);
+      if (pos && dist2(player.x,player.y,pos.x,pos.y) < rr*rr){ startDeath(); break; }
     }
   }
 
-  if (toast) { toast.t += dt; if (toast.t > 2.6) toast = null; }
-
-  ghostPhase += ghostSpeed;
-  frame++;
+  if (!hintSeen && round===1 && frame>210){ hintSeen=true; ss("echoSteps.hint","1"); }
+  if (toast){ toast.t+=dt; if (toast.t>2.6) toast=null; }
+  ghostPhase += ghostSpeed; frame++;
 }
 
 /* ---------- Render ---------- */
-function drawGrid() {
-  ctx.strokeStyle = getVar("--grid");
-  ctx.lineWidth = 1;
-  const gap = 40;
-  ctx.beginPath();
-  for (let x = room.x; x <= room.x + room.w; x += gap) { ctx.moveTo(x, room.y); ctx.lineTo(x, room.y + room.h); }
-  for (let y = room.y; y <= room.y + room.h; y += gap) { ctx.moveTo(room.x, y); ctx.lineTo(room.x + room.w, y); }
+function glow(x,y,r,color,alpha){
+  ctx.globalAlpha = 0.22*alpha; ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x,y,r*2.1,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha = 0.92*alpha;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+function drawGrid(){
+  ctx.strokeStyle=C.grid; ctx.lineWidth=1; const gap=40; ctx.beginPath();
+  for (let x=room.x;x<=room.x+room.w;x+=gap){ ctx.moveTo(x,room.y); ctx.lineTo(x,room.y+room.h); }
+  for (let y=room.y;y<=room.y+room.h;y+=gap){ ctx.moveTo(room.x,y); ctx.lineTo(room.x+room.w,y); }
   ctx.stroke();
 }
-function drawRoomBorder() {
-  ctx.save();
-  ctx.strokeStyle = getVar("--player"); ctx.globalAlpha = 0.5;
-  ctx.shadowColor = getVar("--player"); ctx.shadowBlur = 10; ctx.lineWidth = 2;
-  ctx.strokeRect(room.x, room.y, room.w, room.h);
-  ctx.restore();
+function drawRoomBorder(){
+  ctx.save(); ctx.strokeStyle=C.border; ctx.globalAlpha=0.5;
+  ctx.shadowColor=C.border; ctx.shadowBlur=10; ctx.lineWidth=2;
+  ctx.strokeRect(room.x,room.y,room.w,room.h); ctx.restore();
 }
-function drawObstacles() {
+function drawObstacles(){
   ctx.save();
-  for (const o of obstacles) {
-    ctx.fillStyle = "rgba(18,38,50,0.92)";
-    ctx.fillRect(o.x, o.y, o.w, o.h);
-    ctx.strokeStyle = getVar("--wall");
-    ctx.shadowColor = getVar("--wall"); ctx.shadowBlur = 8; ctx.lineWidth = 2;
-    ctx.strokeRect(o.x, o.y, o.w, o.h);
-    ctx.shadowBlur = 0;
+  for (const o of obstacles){
+    ctx.fillStyle="rgba(18,38,50,0.92)"; ctx.fillRect(o.x,o.y,o.w,o.h);
+    ctx.strokeStyle=C.wall; ctx.shadowColor=C.wall; ctx.shadowBlur=8; ctx.lineWidth=2;
+    ctx.strokeRect(o.x,o.y,o.w,o.h); ctx.shadowBlur=0;
   }
   ctx.restore();
 }
-function drawExit() {
-  const active = hasPrize;
-  ctx.save();
-  ctx.strokeStyle = getVar("--exit"); ctx.globalAlpha = active ? 1 : 0.28;
-  ctx.shadowColor = getVar("--exit"); ctx.shadowBlur = active ? 16 : 0; ctx.lineWidth = 2;
-  ctx.strokeRect(exit.x, exit.y, exit.w, exit.h);
-  ctx.fillStyle = getVar("--exit"); ctx.globalAlpha = active ? 0.9 : 0.35;
-  ctx.font = "12px ui-monospace, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText(active ? "EXIT \u25B2" : "EXIT", exit.x + exit.w / 2, exit.y + exit.h / 2);
+function drawExit(){
+  const active=hasPrize; ctx.save();
+  ctx.strokeStyle=C.exit; ctx.globalAlpha=active?1:0.28;
+  ctx.shadowColor=C.exit; ctx.shadowBlur=active?16:0; ctx.lineWidth=2;
+  ctx.strokeRect(exit.x,exit.y,exit.w,exit.h);
+  ctx.fillStyle=C.exit; ctx.globalAlpha=active?0.9:0.35;
+  ctx.font="12px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(active?"EXIT \u25B2":"EXIT", exit.x+exit.w/2, exit.y+exit.h/2);
   ctx.restore();
 }
-function drawPrize() {
-  if (!prize) return;
-  ctx.save();
-  ctx.fillStyle = getVar("--prize"); ctx.shadowColor = getVar("--prize"); ctx.shadowBlur = 18;
-  const pulse = 1 + Math.sin(performance.now() / 200) * 0.12;
-  ctx.beginPath(); ctx.arc(prize.x, prize.y, CFG.PRIZE_R * pulse, 0, Math.PI * 2); ctx.fill();
+function drawPrize(){
+  if (!prize) return; ctx.save();
+  ctx.fillStyle=C.prize; ctx.shadowColor=C.prize; ctx.shadowBlur=18;
+  const pulse=1+Math.sin(performance.now()/200)*0.12;
+  ctx.beginPath(); ctx.arc(prize.x,prize.y,CFG.PRIZE_R*pulse,0,Math.PI*2); ctx.fill();
   ctx.restore();
 }
-function drawGhosts() {
-  for (let i = 0; i < ghosts.length; i++) {
-    const g = ghosts[i]; const pos = ghostPos(g); if (!pos) continue;
-    const isOldest = i === 0;
-    // faint full trail
-    ctx.save();
-    ctx.strokeStyle = getVar("--ghost"); ctx.globalAlpha = 0.12; ctx.lineWidth = 2;
-    ctx.beginPath(); const p = g.path; ctx.moveTo(p[0].x, p[0].y);
-    for (let k = 1; k < p.length; k += 2) ctx.lineTo(p[k].x, p[k].y);
-    ctx.stroke(); ctx.restore();
-    // dangerous head
-    ctx.save();
-    ctx.fillStyle = getVar("--ghost"); ctx.shadowColor = getVar("--ghost"); ctx.shadowBlur = 12;
-    ctx.globalAlpha = (isOldest && sweep) ? (0.4 + 0.4 * Math.sin(performance.now() / 40)) : 0.85;
-    ctx.beginPath(); ctx.arc(pos.x, pos.y, CFG.GHOST_R, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
+function drawGhosts(){
+  for (let i=0;i<ghosts.length;i++){
+    const g=ghosts[i], pos=ghostPos(g); if (!pos) continue;
+    ctx.strokeStyle=C.ghost; ctx.globalAlpha=0.10; ctx.lineWidth=2;
+    const p=g.path; ctx.beginPath(); ctx.moveTo(p[0].x,p[0].y);
+    for (let k=1;k<p.length;k+=3) ctx.lineTo(p[k].x,p[k].y);
+    ctx.stroke(); ctx.globalAlpha=1;
+    const flick=(i===0 && sweep)?(0.45+0.4*Math.sin(performance.now()/40)):1;
+    glow(pos.x,pos.y,CFG.GHOST_R,C.ghost,flick);
   }
 }
-function drawSweep() {
-  if (!sweep) return;
-  const x = room.x + sweep.t * room.w;
-  ctx.save();
-  ctx.strokeStyle = getVar("--sweep"); ctx.shadowColor = getVar("--sweep"); ctx.shadowBlur = 20;
-  ctx.lineWidth = 3; ctx.globalAlpha = 0.9;
-  ctx.beginPath(); ctx.moveTo(x, room.y); ctx.lineTo(x, room.y + room.h); ctx.stroke();
-  ctx.restore();
+function drawSweep(){
+  if (!sweep) return; const x=room.x+sweep.t*room.w; ctx.save();
+  ctx.strokeStyle=C.sweep; ctx.shadowColor=C.sweep; ctx.shadowBlur=20;
+  ctx.lineWidth=3; ctx.globalAlpha=0.9; ctx.beginPath();
+  ctx.moveTo(x,room.y); ctx.lineTo(x,room.y+room.h); ctx.stroke(); ctx.restore();
 }
-function drawPlayer() {
-  ctx.save();
-  ctx.fillStyle = getVar("--player"); ctx.shadowColor = getVar("--player"); ctx.shadowBlur = 16;
-  ctx.globalAlpha = (grace > 0 && Math.floor(frame / 4) % 2 === 0) ? 0.4 : 1;
-  ctx.beginPath(); ctx.arc(player.x, player.y, CFG.PLAYER_R, 0, Math.PI * 2); ctx.fill();
-  if (hasPrize) {
-    ctx.fillStyle = getVar("--prize"); ctx.shadowColor = getVar("--prize");
-    ctx.beginPath(); ctx.arc(player.x, player.y, CFG.PLAYER_R * 0.42, 0, Math.PI * 2); ctx.fill();
+function drawTrail(){
+  const n=currentPath.length, start=Math.max(0,n-16);
+  for (let i=start;i<n;i++){
+    const t=(i-start)/16; ctx.globalAlpha=0.16*t; ctx.fillStyle=playerColor;
+    ctx.beginPath(); ctx.arc(currentPath[i].x,currentPath[i].y,CFG.PLAYER_R*(0.35+0.5*t),0,Math.PI*2); ctx.fill();
   }
-  ctx.restore();
+  ctx.globalAlpha=1;
 }
-function drawToast() {
+function drawPlayer(){
+  const blink=(grace>0 && Math.floor(frame/4)%2===0)?0.45:1;
+  glow(player.x,player.y,CFG.PLAYER_R,playerColor,blink);
+  if (hasPrize){
+    ctx.globalAlpha=blink; ctx.fillStyle=C.prize;
+    ctx.beginPath(); ctx.arc(player.x,player.y,CFG.PLAYER_R*0.42,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=1;
+  }
+}
+function drawParticles(){
+  for (const p of particles){
+    ctx.globalAlpha=Math.max(0,p.life); ctx.fillStyle=p.color;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+function drawPops(){
+  ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font="600 15px ui-monospace, monospace";
+  for (const q of pops){ ctx.globalAlpha=Math.max(0,q.life); ctx.fillStyle=q.color; ctx.fillText(q.text,q.x,q.y); }
+  ctx.globalAlpha=1;
+}
+function drawHint(){
+  if (hintSeen || round!==1) return;
+  const a=0.45+0.45*Math.sin(performance.now()/300);
+  ctx.globalAlpha=a; ctx.fillStyle=C.ink; ctx.font="600 15px ui-monospace, monospace";
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("drag to move", player.x, player.y-30);
+  ctx.globalAlpha=1;
+}
+function drawToast(){
   if (!toast) return;
-  const a = toast.t < 0.3 ? toast.t / 0.3 : (toast.t > 2.0 ? Math.max(0, (2.6 - toast.t) / 0.6) : 1);
+  const a = toast.t<0.3 ? toast.t/0.3 : (toast.t>2.0 ? Math.max(0,(2.6-toast.t)/0.6) : 1);
+  ctx.save(); ctx.globalAlpha=a; ctx.fillStyle=C.sweep;
+  ctx.shadowColor=C.sweep; ctx.shadowBlur=16; ctx.font="600 18px ui-monospace, monospace";
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(toast.text, room.x+room.w/2, room.y+room.h*0.16); ctx.restore();
+}
+function render(){
+  ctx.clearRect(0,0,W,H);
   ctx.save();
-  ctx.globalAlpha = a;
-  ctx.fillStyle = getVar("--sweep");
-  ctx.shadowColor = getVar("--sweep"); ctx.shadowBlur = 16;
-  ctx.font = "600 18px ui-monospace, monospace";
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText(toast.text, room.x + room.w / 2, room.y + room.h * 0.16);
+  if (shake>0.3) ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
+  drawGrid(); drawRoomBorder(); drawObstacles(); drawExit();
+  drawGhosts(); drawPrize(); drawSweep();
+  if (mode===STATE.PLAYING){ drawTrail(); drawPlayer(); drawHint(); }
+  drawParticles(); drawPops(); drawToast();
   ctx.restore();
 }
-function render() {
-  ctx.clearRect(0, 0, W, H);
-  drawGrid(); drawRoomBorder(); drawObstacles(); drawExit();
-  drawGhosts(); drawPrize(); drawSweep(); drawPlayer(); drawToast();
-}
-function updateHUD() {
-  el.score.textContent = score;
-  el.round.textContent = round;
-  const movesLeft = CFG.GC_MOVES - (round % CFG.GC_MOVES);   // moves until the next scan
+function updateHUD(){
+  el.score.textContent = score; el.round.textContent = round;
+  const movesLeft = CFG.GC_MOVES - (round % CFG.GC_MOVES);
   const armed = ghosts.length > CFG.GC_KEEP;
   el.gc.textContent = movesLeft + " mv";
-  el.gc.style.color = armed ? (movesLeft <= 2 ? getVar("--sweep") : "") : getVar("--dim");
+  el.gc.style.color = armed ? (movesLeft<=2 ? C.sweep : "") : C.dim;
 }
 
-/* ---------- Main loop (fixed logic step for stable ghost sync) ---------- */
+/* ---------- Loop ---------- */
 let last = performance.now(), acc = 0;
-const STEP = 1 / 60;
-function loop(now) {
-  let dt = (now - last) / 1000; last = now;
-  if (dt > 0.1) dt = 0.1;
-  acc += dt;
-  while (acc >= STEP) { update(STEP); acc -= STEP; }
+const STEP = 1/60;
+function loop(now){
+  let dt=(now-last)/1000; last=now; if (dt>0.1) dt=0.1; acc+=dt;
+  while (acc>=STEP){ if (!paused) update(STEP); updateEffects(STEP); acc-=STEP; }
   render();
-  if (mode === STATE.PLAYING) updateHUD();
+  if (mode===STATE.PLAYING && !paused) updateHUD();
   requestAnimationFrame(loop);
 }
 
 /* ---------- Input ---------- */
-function toLocal(e) { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
-function onPointerMove(e) { const p = toLocal(e); pointer.x = p.x; pointer.y = p.y; }
-canvas.addEventListener("pointerdown", (e) => { pointer.active = true; onPointerMove(e); canvas.setPointerCapture(e.pointerId); });
-canvas.addEventListener("pointermove", onPointerMove);
-canvas.addEventListener("pointerup",   () => { pointer.active = false; });
-canvas.addEventListener("pointercancel", () => { pointer.active = false; });
+function toLocal(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
+function onMove(e){ const p=toLocal(e); pointer.x=p.x; pointer.y=p.y; }
+canvas.addEventListener("pointerdown",(e)=>{ pointer.active=true; onMove(e); canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener("pointermove", onMove);
+canvas.addEventListener("pointerup", ()=>{ pointer.active=false; });
+canvas.addEventListener("pointercancel", ()=>{ pointer.active=false; });
 
-/* ---------- Buttons ---------- */
+/* ---------- Menu / buttons ---------- */
+function buildSwatches(){
+  el.swatches.innerHTML="";
+  COLORS.forEach(col=>{
+    const b=document.createElement("button");
+    b.className="swatch"+(col===playerColor?" sel":"");
+    b.style.background=col;
+    b.addEventListener("click",()=>{
+      playerColor=col; ss("echoSteps.color",col);
+      [...el.swatches.children].forEach(c=>c.classList.remove("sel"));
+      b.classList.add("sel");
+      el.hintDot.style.color=col;
+    });
+    el.swatches.appendChild(b);
+  });
+  el.hintDot.style.color=playerColor;
+}
+function updateMuteBtn(){
+  const m=Sound.isMuted();
+  el.mute.innerHTML = m ? "&#9834; OFF" : "&#9834; ON";
+  el.mute.style.color = m ? C.dim : C.ink;
+}
 document.getElementById("startBtn").addEventListener("click", resetGame);
 document.getElementById("restartBtn").addEventListener("click", resetGame);
-document.getElementById("shareBtn").addEventListener("click", async () => {
-  const url = location.href;
-  const text = "I survived " + (round - 1) + " rounds (score " + score + ") in Echo Steps: Garbage Collector!";
-  const b = document.getElementById("shareBtn");
+document.getElementById("resumeBtn").addEventListener("click", ()=>{
+  paused=false; grace=CFG.GRACE_TICKS; el.pause.classList.add("hidden"); Sound.startAmbient();
+});
+el.mute.addEventListener("click", ()=>{
+  Sound.setMuted(!Sound.isMuted()); ss("echoSteps.mute", Sound.isMuted()?"1":"0"); updateMuteBtn();
+});
+document.getElementById("shareBtn").addEventListener("click", async ()=>{
+  const url=location.href;
+  const text=playerName+" banked "+score+" Bytes over "+(round-1)+" rounds in Echo Steps!";
+  const b=document.getElementById("shareBtn");
   try {
-    if (navigator.share) { await navigator.share({ title: "Echo Steps", text, url }); return; }
-    await navigator.clipboard.writeText(text + " " + url);
-    const old = b.textContent; b.textContent = "COPIED!";
-    setTimeout(() => { b.textContent = old; }, 1500);
-  } catch (e) { /* user dismissed the share sheet, or clipboard blocked — ignore */ }
-});
-el.mute.addEventListener("click", () => {
-  const m = !Sound.isMuted();
-  Sound.setMuted(m);
-  el.mute.innerHTML = m ? "&#9834; OFF" : "&#9834; ON";
-  el.mute.style.color = m ? getVar("--dim") : getVar("--ink");
+    if (navigator.share){ await navigator.share({ title:"Echo Steps", text, url }); return; }
+    await navigator.clipboard.writeText(text+" "+url);
+    const old=b.textContent; b.textContent="COPIED!"; setTimeout(()=>{ b.textContent=old; },1500);
+  } catch(e){}
 });
 
-/* ---------- CSS var reader ---------- */
-const _vars = {};
-function getVar(name) {
-  if (!_vars[name]) _vars[name] = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return _vars[name];
-}
-
-/* ---------- High-score persistence (guarded so it never breaks the game) ---------- */
-const BEST_KEY = "echoSteps.best";
-function loadBest() { try { return parseInt(localStorage.getItem(BEST_KEY), 10) || 0; } catch (e) { return 0; } }
-function saveBest(v) { try { localStorage.setItem(BEST_KEY, String(v)); } catch (e) {} }
+/* ---------- Pause on tab blur ---------- */
+document.addEventListener("visibilitychange", ()=>{
+  if (document.hidden && mode===STATE.PLAYING && !paused){
+    paused=true; Sound.stopAmbient(); el.pause.classList.remove("hidden");
+  }
+});
 
 /* ---------- Boot ---------- */
+function initColors(){
+  const cs=getComputedStyle(document.documentElement);
+  const v=n=>cs.getPropertyValue(n).trim();
+  C={ ghost:v("--ghost"), prize:v("--prize"), exit:v("--exit"), sweep:v("--sweep"),
+      wall:v("--wall"), grid:v("--grid"), border:v("--player"), ink:v("--ink"), dim:v("--dim") };
+}
+initColors();
 best = loadBest();
+totalBytes = parseInt(ls("echoSteps.bytes"), 10) || 0;
+el.totalBytes.textContent = "Bytes banked: " + totalBytes;
+playerName = ls("echoSteps.name") || "";
+el.nameInput.value = playerName;
+playerColor = ls("echoSteps.color") || COLORS[0];
+hintSeen = ls("echoSteps.hint") === "1";
+Sound.setMuted(ls("echoSteps.mute")==="1");
+buildSwatches();
+updateMuteBtn();
 resize();
 requestAnimationFrame(loop);
 </script>
