@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Echo Steps: Garbage Collector</title>
+<style>
+  :root {
+    --bg:        #070b10;
+    --grid:      #0e2230;
+    --player:    #29e0ff;
+    --ghost:     #ff3554;
+    --prize:     #ffd23f;
+    --exit:      #39ff9e;
+    --sweep:     #c66bff;
+    --wall:      #3d6b7a;
+    --ink:       #cfe9f5;
+    --dim:       #4a6572;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); overflow: hidden; }
+  body {
+    font-family: "SFMono-Regular", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+    color: var(--ink);
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+  }
+  #stage { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; gap: 18px;
+    background: rgba(4, 8, 12, 0.82);
+    backdrop-filter: blur(2px);
+    padding: 24px;
+  }
+  .hidden { display: none !important; }
+  h1 { font-size: clamp(22px, 6vw, 40px); letter-spacing: 1px; color: var(--player);
+       text-shadow: 0 0 14px rgba(41,224,255,.55); font-weight: 600; }
+  .sub { color: var(--dim); max-width: 32ch; line-height: 1.6; font-size: 14px; }
+  .stat { font-size: clamp(16px, 4vw, 22px); color: var(--ink); }
+  .stat b { color: var(--prize); }
+  button {
+    font-family: inherit; font-size: 15px; letter-spacing: .5px;
+    color: var(--bg); background: var(--player);
+    border: none; border-radius: 8px; padding: 12px 28px; cursor: pointer;
+    box-shadow: 0 0 18px rgba(41,224,255,.5); transition: transform .08s ease;
+  }
+  button:active { transform: scale(.96); }
+
+  #hud {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; font-size: 13px; pointer-events: none;
+  }
+  #hud .label { color: var(--dim); }
+  #hud .value { color: var(--ink); }
+  #muteBtn {
+    pointer-events: auto; background: transparent; color: var(--dim);
+    box-shadow: none; border: 1px solid var(--dim); border-radius: 6px;
+    padding: 5px 10px; font-size: 12px; letter-spacing: .5px;
+  }
+  #muteBtn:active { transform: none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c"></canvas>
+
+  <div id="hud" class="hidden">
+    <div><span class="label">ROUND </span><span class="value" id="hudRound">1</span></div>
+    <div><span class="label">LEAKS </span><span class="value" id="hudGhosts">0</span></div>
+    <div><span class="label">GC IN </span><span class="value" id="hudGc">7.0s</span></div>
+    <button id="muteBtn">&#9834; ON</button>
+  </div>
+
+  <div id="startScreen" class="overlay">
+    <h1>ECHO STEPS</h1>
+    <div class="sub">Garbage Collector</div>
+    <div class="sub">
+      Drag the <span style="color:var(--player)">blue node</span> to the
+      <span style="color:var(--prize)">prize</span>, then to the
+      <span style="color:var(--exit)">exit</span>, weaving around the
+      <span style="color:var(--wall)">walls</span>.<br><br>
+      Every completed loop leaves a <span style="color:var(--ghost)">red ghost</span>
+      that patrols your old path forever. Touch one and you crash.<br><br>
+      Your echoes pile up and stay. Once memory fills, the
+      <span style="color:var(--sweep)">Garbage Collector</span>
+      sweeps the oldest one every 10 moves.<br><br>
+      Survive past <b>round 7</b> and the grid destabilizes: walls drift and
+      ghosts accelerate. Outlive your own memory.
+    </div>
+    <button id="startBtn">INITIALIZE</button>
+  </div>
+
+  <div id="overScreen" class="overlay hidden">
+    <h1 style="color:var(--ghost);text-shadow:0 0 14px rgba(255,53,84,.55)">MEMORY FAULT</h1>
+    <div class="stat">Rounds survived: <b id="finalScore">0</b></div>
+    <div class="sub" id="overSub">Segfault on a stale pointer.</div>
+    <button id="restartBtn">REALLOCATE</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================================
+ * Echo Steps: Garbage Collector — prototype v2
+ * Adds: static walls (obstacles), patrolling (ping-pong) ghosts,
+ *       fully synthesized audio (Web Audio, no asset files).
+ * ========================================================================= */
+
+/* ---------- Tunable config ---------- */
+const CFG = {
+  WALL_MARGIN:   16,
+  PLAYER_R:      12,
+  PLAYER_SPEED:  6.2,
+  GHOST_R:       9,
+  PRIZE_R:       11,
+  EXIT_W:        150,
+  EXIT_H:        44,
+  GC_MOVES:      10,     // scanner sweeps once every N moves (completed rounds), not on a timer
+  GC_KEEP:       4,      // echoes persist until memory holds more than this; then the collector trims the oldest
+  SWEEP_TIME:    0.7,
+  GRACE_TICKS:   36,
+  RAMP_START:    7,      // after this round: walls start drifting AND ghosts start speeding up
+  GHOST_RAMP:    0.01,   // +1% ghost speed per round once past RAMP_START (compounds)
+  WALL_DRIFT:    0.9,    // how fast the walls oscillate once destabilized
+};
+
+/* Obstacle layout as fractions of the room, so it scales to any screen.
+   Kept clear of the top-centre exit gate. */
+const OBSTACLE_LAYOUT = [
+  { x: 0.13, y: 0.34, w: 0.15, h: 0.20 },
+  { x: 0.55, y: 0.28, w: 0.17, h: 0.13 },
+  { x: 0.30, y: 0.66, w: 0.22, h: 0.11 },
+  { x: 0.73, y: 0.58, w: 0.13, h: 0.22 },
+];
+
+/* =========================================================================
+ * Audio — everything is synthesized on the fly with the Web Audio API.
+ * ========================================================================= */
+const Sound = (function () {
+  let ctx = null, master = null, ambient = null, muted = false;
+  function ensure() {
+    if (ctx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = muted ? 0 : 0.9;
+    master.connect(ctx.destination);
+  }
+  function tone(freq, dur, type, vol, glideTo) {
+    if (!ctx || muted) return;
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.03);
+  }
+  function startAmbient() {
+    ensure();
+    if (ctx.state === "suspended") ctx.resume();
+    if (ambient) return;
+    const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+    const filt = ctx.createBiquadFilter(), g = ctx.createGain();
+    const lfo = ctx.createOscillator(), lfoGain = ctx.createGain();
+    o1.type = "sawtooth"; o2.type = "sawtooth";
+    o1.frequency.value = 55; o2.frequency.value = 55 * 1.008;   // low, slightly detuned
+    filt.type = "lowpass"; filt.frequency.value = 300; filt.Q.value = 7;
+    g.gain.value = 0.05;
+    lfo.frequency.value = 0.14; lfoGain.gain.value = 0.035;      // slow breathing tremolo
+    lfo.connect(lfoGain); lfoGain.connect(g.gain);
+    o1.connect(filt); o2.connect(filt); filt.connect(g); g.connect(master);
+    o1.start(); o2.start(); lfo.start();
+    ambient = { o1, o2, lfo, g };
+  }
+  function stopAmbient() {
+    if (!ambient) return;
+    const a = ambient; ambient = null;
+    try { a.g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3); } catch (e) {}
+    setTimeout(() => { try { a.o1.stop(); a.o2.stop(); a.lfo.stop(); } catch (e) {} }, 380);
+  }
+  return {
+    unlock() { ensure(); if (ctx.state === "suspended") ctx.resume(); },
+    setMuted(m) { muted = m; if (master) master.gain.value = m ? 0 : 0.9; },
+    isMuted() { return muted; },
+    pickup()   { tone(880, 0.09, "square", 0.16); },
+    complete() { tone(660, 0.10, "triangle", 0.18); setTimeout(() => tone(988, 0.14, "triangle", 0.18), 95); },
+    sweep()    { tone(220, CFG.SWEEP_TIME, "sawtooth", 0.10, 900); },
+    death()    { tone(180, 0.5, "sawtooth", 0.24, 55); },
+    startAmbient, stopAmbient,
+  };
+})();
+
+/* ---------- Canvas / DPR setup ---------- */
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+let W = 0, H = 0, DPR = 1;
+const room = { x: 0, y: 0, w: 0, h: 0 };
+let obstacles = [];
+
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = canvas.clientWidth;
+  H = canvas.clientHeight;
+  canvas.width  = Math.round(W * DPR);
+  canvas.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  room.x = CFG.WALL_MARGIN;
+  room.y = CFG.WALL_MARGIN;
+  room.w = W - CFG.WALL_MARGIN * 2;
+  room.h = H - CFG.WALL_MARGIN * 2;
+
+  exit.x = room.x + room.w / 2 - CFG.EXIT_W / 2;
+  exit.y = room.y;
+
+  obstacles = OBSTACLE_LAYOUT.map((o, i) => ({
+    x:  room.x + o.x * room.w,
+    y:  room.y + o.y * room.h,
+    bx: room.x + o.x * room.w,          // base (rest) position
+    by: room.y + o.y * room.h,
+    w:  o.w * room.w,
+    h:  o.h * room.h,
+    // alternate horizontal / vertical drifters, each a bit out of phase
+    ampX: (i % 2 === 0) ? 0.07 * room.w : 0,
+    ampY: (i % 2 === 1) ? 0.09 * room.h : 0,
+    freq: 0.5 + i * 0.18,
+    dir:  (i % 3 === 0) ? -1 : 1,
+  }));
+}
+window.addEventListener("resize", resize);
+
+/* ---------- Game state ---------- */
+const STATE = { START: 0, PLAYING: 1, OVER: 2 };
+let mode = STATE.START;
+
+const player = { x: 0, y: 0 };
+const pointer = { x: 0, y: 0, active: false };
+const exit = { x: 0, y: 0, w: CFG.EXIT_W, h: CFG.EXIT_H };
+let prize = null;
+let hasPrize = false;
+
+let currentPath = [];
+let ghosts = [];
+let frame = 0;
+let round = 1;
+let grace = 0;
+
+let ghostPhase = 0;      // fractional patrol clock (advances by ghostSpeed each tick)
+let ghostSpeed = 1;      // 1 = base; ramps up after RAMP_START
+let wallTime = 0;        // advances only once walls are destabilized
+let toast = null;        // { text, t } transient on-screen message
+
+let gcTimer = 0;
+let sweep = null;
+
+/* ---------- DOM refs ---------- */
+const el = {
+  hud:        document.getElementById("hud"),
+  round:      document.getElementById("hudRound"),
+  ghosts:     document.getElementById("hudGhosts"),
+  gc:         document.getElementById("hudGc"),
+  mute:       document.getElementById("muteBtn"),
+  start:      document.getElementById("startScreen"),
+  over:       document.getElementById("overScreen"),
+  finalScore: document.getElementById("finalScore"),
+  overSub:    document.getElementById("overSub"),
+};
+
+/* ---------- Helpers ---------- */
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const dist2 = (ax, ay, bx, by) => { const dx = ax - bx, dy = ay - by; return dx * dx + dy * dy; };
+
+function pointInObstacles(px, py, pad) {
+  for (const o of obstacles) {
+    if (px > o.x - pad && px < o.x + o.w + pad &&
+        py > o.y - pad && py < o.y + o.h + pad) return true;
+  }
+  return false;
+}
+
+/* Push a circle out of a rectangle (enables smooth sliding along walls). */
+function resolveCircleRect(cx, cy, r, o) {
+  const nx = clamp(cx, o.x, o.x + o.w);
+  const ny = clamp(cy, o.y, o.y + o.h);
+  const dx = cx - nx, dy = cy - ny;
+  const d = Math.hypot(dx, dy);
+  if (d > 0 && d < r) {
+    const push = r - d;
+    return { x: cx + (dx / d) * push, y: cy + (dy / d) * push };
+  }
+  if (d === 0) { // centre inside the rect: eject along the nearest edge
+    const left = cx - o.x, right = o.x + o.w - cx, top = cy - o.y, bottom = o.y + o.h - cy;
+    const m = Math.min(left, right, top, bottom);
+    if (m === left)  return { x: o.x - r, y: cy };
+    if (m === right) return { x: o.x + o.w + r, y: cy };
+    if (m === top)   return { x: cx, y: o.y - r };
+    return { x: cx, y: o.y + o.h + r };
+  }
+  return { x: cx, y: cy };
+}
+
+function spawnPrize() {
+  const pad = CFG.PRIZE_R + 24;
+  for (let i = 0; i < 60; i++) {
+    const px = room.x + pad + Math.random() * (room.w - pad * 2);
+    const py = room.y + pad + Math.random() * (room.h - pad * 2);
+    const overExit = px > exit.x - pad && px < exit.x + exit.w + pad && py < exit.y + exit.h + pad;
+    const nearPlayer = dist2(px, py, player.x, player.y) < 90 * 90;
+    if (!overExit && !nearPlayer && !pointInObstacles(px, py, pad)) { prize = { x: px, y: py }; return; }
+  }
+  prize = { x: room.x + room.w / 2, y: room.y + room.h * 0.5 };
+}
+
+/* ---------- Lifecycle ---------- */
+function resetGame() {
+  resize();
+  player.x = room.x + room.w / 2;
+  player.y = room.y + room.h / 2;
+  pointer.x = player.x; pointer.y = player.y; pointer.active = false;
+  ghosts = [];
+  currentPath = [];
+  frame = 0;
+  round = 1;
+  grace = CFG.GRACE_TICKS;
+  ghostPhase = 0;
+  ghostSpeed = 1;
+  wallTime = 0;
+  toast = null;
+  gcTimer = 0;
+  sweep = null;
+  hasPrize = false;
+  spawnPrize();
+  mode = STATE.PLAYING;
+  el.start.classList.add("hidden");
+  el.over.classList.add("hidden");
+  el.hud.classList.remove("hidden");
+  Sound.unlock();
+  Sound.startAmbient();
+}
+
+function completeRound() {
+  ghosts.push({ path: currentPath.slice() });
+  round++;
+  currentPath = [];
+  frame = 0;
+  ghostPhase = 0;                                   // all echoes restart their patrol in sync
+  grace = CFG.GRACE_TICKS;
+  hasPrize = false;
+  if (round > CFG.RAMP_START) ghostSpeed *= (1 + CFG.GHOST_RAMP);   // +1% per round, compounding
+  if (round === CFG.RAMP_START + 1) toast = { text: "\u26A0 GRID DESTABILIZED", t: 0 };
+  if (round % CFG.GC_MOVES === 0 && ghosts.length > CFG.GC_KEEP && !sweep) { sweep = { t: 0 }; Sound.sweep(); }
+  spawnPrize();
+  Sound.complete();
+}
+
+function gameOver() {
+  mode = STATE.OVER;
+  el.finalScore.textContent = round - 1;
+  el.overSub.textContent = ghosts.length
+    ? "Collided with a stale pointer in the heap."
+    : "Crashed before leaving your first trace.";
+  el.over.classList.remove("hidden");
+  el.hud.classList.add("hidden");
+  Sound.death();
+  Sound.stopAmbient();
+}
+
+/* ---------- Ghost sampling: interpolated ping-pong patrol (speed-scalable) ---------- */
+function ghostPos(g) {
+  const p = g.path, n = p.length;
+  if (!n) return null;
+  if (n === 1) return p[0];
+  const period = (n - 1) * 2;
+  let ph = ghostPhase % period;
+  const idx = (ph <= n - 1) ? ph : period - ph;   // reflect -> continuous index in [0, n-1]
+  const i0 = Math.floor(idx);
+  const i1 = Math.min(i0 + 1, n - 1);
+  const f = idx - i0;
+  return { x: p[i0].x + (p[i1].x - p[i0].x) * f, y: p[i0].y + (p[i1].y - p[i0].y) * f };
+}
+
+/* ---------- Walls drift once the grid is destabilized ---------- */
+function updateObstacles(dt) {
+  if (round > CFG.RAMP_START) wallTime += dt * CFG.WALL_DRIFT;
+  for (const o of obstacles) {
+    const s = Math.sin(wallTime * o.freq) * o.dir;   // s = 0 while wallTime is 0 -> rests at base
+    o.x = clamp(o.bx + s * o.ampX, room.x, room.x + room.w - o.w);
+    o.y = clamp(o.by + s * o.ampY, room.y, room.y + room.h - o.h);
+  }
+}
+
+/* ---------- Update ---------- */
+function update(dt) {
+  if (mode !== STATE.PLAYING) return;
+
+  updateObstacles(dt);   // move the walls first, so collision uses their new positions
+
+  // move toward the pointer, speed-capped
+  const dx = pointer.x - player.x, dy = pointer.y - player.y;
+  const d = Math.hypot(dx, dy);
+  if (d > 0.5) {
+    const step = Math.min(d, CFG.PLAYER_SPEED);
+    player.x += (dx / d) * step;
+    player.y += (dy / d) * step;
+  }
+  // walls of the room
+  player.x = clamp(player.x, room.x + CFG.PLAYER_R, room.x + room.w - CFG.PLAYER_R);
+  player.y = clamp(player.y, room.y + CFG.PLAYER_R, room.y + room.h - CFG.PLAYER_R);
+  // solid obstacles (two passes for stability at corners)
+  for (let pass = 0; pass < 2; pass++) {
+    for (const o of obstacles) {
+      const r = resolveCircleRect(player.x, player.y, CFG.PLAYER_R, o);
+      player.x = r.x; player.y = r.y;
+    }
+  }
+
+  currentPath.push({ x: player.x, y: player.y });
+
+  if (prize && !hasPrize) {
+    const rr = CFG.PLAYER_R + CFG.PRIZE_R;
+    if (dist2(player.x, player.y, prize.x, prize.y) < rr * rr) {
+      hasPrize = true; prize = null; Sound.pickup();
+    }
+  }
+
+  if (hasPrize &&
+      player.x > exit.x && player.x < exit.x + exit.w &&
+      player.y > exit.y && player.y < exit.y + exit.h) {
+    completeRound();
+  }
+
+  if (sweep) {
+    sweep.t += dt / CFG.SWEEP_TIME;
+    if (sweep.t >= 1) { if (ghosts.length > CFG.GC_KEEP) ghosts.shift(); sweep = null; }
+  }
+
+  if (grace > 0) {
+    grace--;
+  } else {
+    const rr = CFG.PLAYER_R + CFG.GHOST_R;
+    for (const g of ghosts) {
+      const pos = ghostPos(g);
+      if (pos && dist2(player.x, player.y, pos.x, pos.y) < rr * rr) { gameOver(); break; }
+    }
+  }
+
+  if (toast) { toast.t += dt; if (toast.t > 2.6) toast = null; }
+
+  ghostPhase += ghostSpeed;
+  frame++;
+}
+
+/* ---------- Render ---------- */
+function drawGrid() {
+  ctx.strokeStyle = getVar("--grid");
+  ctx.lineWidth = 1;
+  const gap = 40;
+  ctx.beginPath();
+  for (let x = room.x; x <= room.x + room.w; x += gap) { ctx.moveTo(x, room.y); ctx.lineTo(x, room.y + room.h); }
+  for (let y = room.y; y <= room.y + room.h; y += gap) { ctx.moveTo(room.x, y); ctx.lineTo(room.x + room.w, y); }
+  ctx.stroke();
+}
+function drawRoomBorder() {
+  ctx.save();
+  ctx.strokeStyle = getVar("--player"); ctx.globalAlpha = 0.5;
+  ctx.shadowColor = getVar("--player"); ctx.shadowBlur = 10; ctx.lineWidth = 2;
+  ctx.strokeRect(room.x, room.y, room.w, room.h);
+  ctx.restore();
+}
+function drawObstacles() {
+  ctx.save();
+  for (const o of obstacles) {
+    ctx.fillStyle = "rgba(18,38,50,0.92)";
+    ctx.fillRect(o.x, o.y, o.w, o.h);
+    ctx.strokeStyle = getVar("--wall");
+    ctx.shadowColor = getVar("--wall"); ctx.shadowBlur = 8; ctx.lineWidth = 2;
+    ctx.strokeRect(o.x, o.y, o.w, o.h);
+    ctx.shadowBlur = 0;
+  }
+  ctx.restore();
+}
+function drawExit() {
+  const active = hasPrize;
+  ctx.save();
+  ctx.strokeStyle = getVar("--exit"); ctx.globalAlpha = active ? 1 : 0.28;
+  ctx.shadowColor = getVar("--exit"); ctx.shadowBlur = active ? 16 : 0; ctx.lineWidth = 2;
+  ctx.strokeRect(exit.x, exit.y, exit.w, exit.h);
+  ctx.fillStyle = getVar("--exit"); ctx.globalAlpha = active ? 0.9 : 0.35;
+  ctx.font = "12px ui-monospace, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(active ? "EXIT \u25B2" : "EXIT", exit.x + exit.w / 2, exit.y + exit.h / 2);
+  ctx.restore();
+}
+function drawPrize() {
+  if (!prize) return;
+  ctx.save();
+  ctx.fillStyle = getVar("--prize"); ctx.shadowColor = getVar("--prize"); ctx.shadowBlur = 18;
+  const pulse = 1 + Math.sin(performance.now() / 200) * 0.12;
+  ctx.beginPath(); ctx.arc(prize.x, prize.y, CFG.PRIZE_R * pulse, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function drawGhosts() {
+  for (let i = 0; i < ghosts.length; i++) {
+    const g = ghosts[i]; const pos = ghostPos(g); if (!pos) continue;
+    const isOldest = i === 0;
+    // faint full trail
+    ctx.save();
+    ctx.strokeStyle = getVar("--ghost"); ctx.globalAlpha = 0.12; ctx.lineWidth = 2;
+    ctx.beginPath(); const p = g.path; ctx.moveTo(p[0].x, p[0].y);
+    for (let k = 1; k < p.length; k += 2) ctx.lineTo(p[k].x, p[k].y);
+    ctx.stroke(); ctx.restore();
+    // dangerous head
+    ctx.save();
+    ctx.fillStyle = getVar("--ghost"); ctx.shadowColor = getVar("--ghost"); ctx.shadowBlur = 12;
+    ctx.globalAlpha = (isOldest && sweep) ? (0.4 + 0.4 * Math.sin(performance.now() / 40)) : 0.85;
+    ctx.beginPath(); ctx.arc(pos.x, pos.y, CFG.GHOST_R, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+}
+function drawSweep() {
+  if (!sweep) return;
+  const x = room.x + sweep.t * room.w;
+  ctx.save();
+  ctx.strokeStyle = getVar("--sweep"); ctx.shadowColor = getVar("--sweep"); ctx.shadowBlur = 20;
+  ctx.lineWidth = 3; ctx.globalAlpha = 0.9;
+  ctx.beginPath(); ctx.moveTo(x, room.y); ctx.lineTo(x, room.y + room.h); ctx.stroke();
+  ctx.restore();
+}
+function drawPlayer() {
+  ctx.save();
+  ctx.fillStyle = getVar("--player"); ctx.shadowColor = getVar("--player"); ctx.shadowBlur = 16;
+  ctx.globalAlpha = (grace > 0 && Math.floor(frame / 4) % 2 === 0) ? 0.4 : 1;
+  ctx.beginPath(); ctx.arc(player.x, player.y, CFG.PLAYER_R, 0, Math.PI * 2); ctx.fill();
+  if (hasPrize) {
+    ctx.fillStyle = getVar("--prize"); ctx.shadowColor = getVar("--prize");
+    ctx.beginPath(); ctx.arc(player.x, player.y, CFG.PLAYER_R * 0.42, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawToast() {
+  if (!toast) return;
+  const a = toast.t < 0.3 ? toast.t / 0.3 : (toast.t > 2.0 ? Math.max(0, (2.6 - toast.t) / 0.6) : 1);
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.fillStyle = getVar("--sweep");
+  ctx.shadowColor = getVar("--sweep"); ctx.shadowBlur = 16;
+  ctx.font = "600 18px ui-monospace, monospace";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(toast.text, room.x + room.w / 2, room.y + room.h * 0.16);
+  ctx.restore();
+}
+function render() {
+  ctx.clearRect(0, 0, W, H);
+  drawGrid(); drawRoomBorder(); drawObstacles(); drawExit();
+  drawGhosts(); drawPrize(); drawSweep(); drawPlayer(); drawToast();
+}
+function updateHUD() {
+  el.round.textContent = round;
+  el.ghosts.textContent = ghosts.length;
+  const movesLeft = CFG.GC_MOVES - (round % CFG.GC_MOVES);   // moves until the next scan
+  const armed = ghosts.length > CFG.GC_KEEP;
+  el.gc.textContent = movesLeft + " mv";
+  el.gc.style.color = armed ? (movesLeft <= 2 ? getVar("--sweep") : "") : getVar("--dim");
+}
+
+/* ---------- Main loop (fixed logic step for stable ghost sync) ---------- */
+let last = performance.now(), acc = 0;
+const STEP = 1 / 60;
+function loop(now) {
+  let dt = (now - last) / 1000; last = now;
+  if (dt > 0.1) dt = 0.1;
+  acc += dt;
+  while (acc >= STEP) { update(STEP); acc -= STEP; }
+  render();
+  if (mode === STATE.PLAYING) updateHUD();
+  requestAnimationFrame(loop);
+}
+
+/* ---------- Input ---------- */
+function toLocal(e) { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function onPointerMove(e) { const p = toLocal(e); pointer.x = p.x; pointer.y = p.y; }
+canvas.addEventListener("pointerdown", (e) => { pointer.active = true; onPointerMove(e); canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener("pointermove", onPointerMove);
+canvas.addEventListener("pointerup",   () => { pointer.active = false; });
+canvas.addEventListener("pointercancel", () => { pointer.active = false; });
+
+/* ---------- Buttons ---------- */
+document.getElementById("startBtn").addEventListener("click", resetGame);
+document.getElementById("restartBtn").addEventListener("click", resetGame);
+el.mute.addEventListener("click", () => {
+  const m = !Sound.isMuted();
+  Sound.setMuted(m);
+  el.mute.innerHTML = m ? "&#9834; OFF" : "&#9834; ON";
+  el.mute.style.color = m ? getVar("--dim") : getVar("--ink");
+});
+
+/* ---------- CSS var reader ---------- */
+const _vars = {};
+function getVar(name) {
+  if (!_vars[name]) _vars[name] = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return _vars[name];
+}
+
+/* ---------- Boot ---------- */
+resize();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
