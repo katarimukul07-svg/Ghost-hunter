@@ -536,6 +536,13 @@ function pointInObstacles(px,py,pad){
     if (px>o.x-pad && px<o.x+o.w+pad && py>o.y-pad && py<o.y+o.h+pad) return true;
   return false;
 }
+/* The exit is a permanent ghost-free safe zone: every round starts with the
+   player still standing where the last one ended (at the exit), and every
+   ghost's patrol resyncs to phase 0 there too — without this, that overlap
+   could kill the player the instant a new round begins. */
+function inExitZone(px,py,pad){
+  return px>exit.x-pad && px<exit.x+exit.w+pad && py>exit.y-pad && py<exit.y+exit.h+pad;
+}
 function resolveCircleRect(cx,cy,r,o){
   const nx=clamp(cx,o.x,o.x+o.w), ny=clamp(cy,o.y,o.y+o.h);
   const dx=cx-nx, dy=cy-ny, d=Math.hypot(dx,dy);
@@ -796,7 +803,7 @@ function update(dt) {
   if (sweep){ sweep.t += dt/CFG.SWEEP_TIME; if (sweep.t>=1){ if (ghosts.length>CFG.GC_KEEP) ghosts.shift(); sweep=null; } }
 
   if (grace>0) grace--;
-  else {
+  else if (!inExitZone(player.x, player.y, CFG.GHOST_R)) {
     const rr=CFG.PLAYER_R+CFG.GHOST_R;
     for (const g of ghosts){
       const pos=ghostPos(g);
