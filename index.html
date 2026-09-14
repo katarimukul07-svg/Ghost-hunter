@@ -340,6 +340,7 @@ function makeObstacleLayout(count) {
   const out = [];
   const exitHalf = (CFG.EXIT_W/room.w)/2 + 0.05;
   const exitBand = (CFG.EXIT_H/room.h) + 0.07;
+  const atMax = count >= CFG.OBSTACLES_MAX;   // shapes stay plain rects until the cap is hit
   let tries = 0;
   while (out.length < count && tries < 500) {
     tries++;
@@ -356,7 +357,7 @@ function makeObstacleLayout(count) {
       ampX: horiz ? (0.05+Math.random()*0.04) : 0,
       ampY: horiz ? 0 : (0.05+Math.random()*0.05),
       freq: 0.4+Math.random()*0.5, dir: Math.random()<0.5?-1:1,
-      shape: OBSTACLE_SHAPES[Math.floor(Math.random()*OBSTACLE_SHAPES.length)] });
+      shape: atMax ? OBSTACLE_SHAPES[Math.floor(Math.random()*OBSTACLE_SHAPES.length)] : "rect" });
   }
   return out;
 }
@@ -539,7 +540,9 @@ function completeRound() {
   if (wantObstacles !== obstacleLayout.length){
     obstacleLayout = makeObstacleLayout(wantObstacles);
     buildObstacles();
-    toast = { text:"\u26A0 NEW OBSTACLE!", t:0 };
+    toast = (wantObstacles >= CFG.OBSTACLES_MAX)
+      ? { text:"\u26A0 MAX OBSTACLES \u2014 SHAPES SHIFT!", t:0 }
+      : { text:"\u26A0 NEW OBSTACLE!", t:0 };
   }
   spawnPrize(); Sound.complete();
 }
