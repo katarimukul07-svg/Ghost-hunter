@@ -68,6 +68,8 @@
   .tab.active { color:var(--bg); background:var(--sweep); border-color:var(--sweep);
                 box-shadow:0 0 12px rgba(198,107,255,.4); }
   .tab:active { transform:scale(.96); }
+  #shopPreview { width:100%; max-width:280px; height:90px; border-radius:10px;
+    background:rgba(255,255,255,.03); border:1px solid var(--dim); }
 
   #hud {
     position:absolute; top:0; left:0; right:0; display:flex;
@@ -116,6 +118,7 @@
   <div id="shopScreen" class="overlay hidden">
     <h1 style="color:var(--sweep);text-shadow:0 0 14px rgba(198,107,255,.55)">SHOP</h1>
     <div class="sub" id="shopCoinLine" style="color:var(--prize)">&#9670; 0 coins</div>
+    <canvas id="shopPreview" width="280" height="90"></canvas>
     <div class="tabs" id="shopTabs">
       <button class="tab" data-cat="colors">DOT COLOR</button>
       <button class="tab" data-cat="trail">TRAIL FX</button>
@@ -324,6 +327,12 @@ let unlockedTrail = [], unlockedGhostSkin = [], unlockedDeathFX = [];
 let hintSeen = false;
 let C = {};
 
+/* ---------- Shop preview panel state ---------- */
+let previewTab = "colors";
+let previewColor = SKINS[0].id, previewTrail = TRAILS[0].id, previewGhostColor = GHOST_SKINS[0].id, previewDeath = DEATH_FX[0].id;
+let previewPhase = 0, previewDeathT = 0, previewTrailPath = [];
+let previewParticles = [], previewShockwaves = [];
+
 /* ---------- DOM ---------- */
 const el = {
   hud:document.getElementById("hud"),
@@ -342,7 +351,7 @@ const el = {
   coinLine:document.getElementById("coinLine"),
   shop:document.getElementById("shopScreen"), shopBtn:document.getElementById("shopBtn"),
   shopBack:document.getElementById("shopBackBtn"), shopCoinLine:document.getElementById("shopCoinLine"),
-  shopTabs:document.getElementById("shopTabs"),
+  shopTabs:document.getElementById("shopTabs"), shopPreview:document.getElementById("shopPreview"),
   shopColors:document.getElementById("shopColors"), shopTrail:document.getElementById("shopTrail"),
   shopGhost:document.getElementById("shopGhost"), shopDeath:document.getElementById("shopDeath"),
 };
@@ -494,43 +503,46 @@ function updateObstacles(dt){
 }
 
 /* ---------- Particles / shake ---------- */
-function burst(x,y,color,n){
+function burst(arr,x,y,color,n){
   for (let i=0;i<n;i++){
     const a=Math.random()*Math.PI*2, sp=1+Math.random()*4.5;
-    particles.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, color, r:1.5+Math.random()*2.5 });
+    arr.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, color, r:1.5+Math.random()*2.5 });
   }
 }
 const CONFETTI_COLORS = ["#ffd23f","#ff5ca8","#3d7bff","#39ff9e","#b06bff","#ff8a2b"];
-function burstMulti(x,y,colors,n){
+function burstMulti(arr,x,y,colors,n){
   for (let i=0;i<n;i++){
     const a=Math.random()*Math.PI*2, sp=1+Math.random()*4.5;
     const color = colors[Math.floor(Math.random()*colors.length)];
-    particles.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, color, r:1.5+Math.random()*2.5 });
+    arr.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, color, r:1.5+Math.random()*2.5 });
   }
 }
-function burstImplode(x,y,color,n){
+function burstImplode(arr,x,y,color,n){
   for (let i=0;i<n;i++){
     const a=Math.random()*Math.PI*2, r=30+Math.random()*40, sp=2+Math.random()*3;
-    particles.push({ x:x+Math.cos(a)*r, y:y+Math.sin(a)*r, vx:-Math.cos(a)*sp, vy:-Math.sin(a)*sp, life:1, color, r:1.5+Math.random()*2.5 });
+    arr.push({ x:x+Math.cos(a)*r, y:y+Math.sin(a)*r, vx:-Math.cos(a)*sp, vy:-Math.sin(a)*sp, life:1, color, r:1.5+Math.random()*2.5 });
+  }
+}
+function runDeathFX(fx, arr, shockArr, x, y, ghostColor){
+  switch (fx){
+    case "shockwave":
+      burst(arr,x,y,playerColor,16);
+      shockArr.push({ x, y, t:0 });
+      break;
+    case "confetti":
+      burstMulti(arr,x,y,CONFETTI_COLORS,30);
+      break;
+    case "implode":
+      burstImplode(arr,x,y,ghostColor,22);
+      burst(arr,x,y,playerColor,10);
+      break;
+    default:
+      burst(arr,x,y,playerColor,26);
+      burst(arr,x,y,ghostColor,12);
   }
 }
 function playDeathFX(x,y){
-  switch (selectedDeathFX){
-    case "shockwave":
-      burst(x,y,playerColor,16);
-      shockwaves.push({ x, y, t:0 });
-      break;
-    case "confetti":
-      burstMulti(x,y,CONFETTI_COLORS,30);
-      break;
-    case "implode":
-      burstImplode(x,y,selectedGhostSkin,22);
-      burst(x,y,playerColor,10);
-      break;
-    default:
-      burst(x,y,playerColor,26);
-      burst(x,y,selectedGhostSkin,12);
-  }
+  runDeathFX(selectedDeathFX, particles, shockwaves, x, y, selectedGhostSkin);
 }
 function updateEffects(dt){
   for (let i=particles.length-1;i>=0;i--){
@@ -568,7 +580,7 @@ function update(dt) {
   if (prize && !hasPrize){
     const rr=CFG.PLAYER_R+CFG.PRIZE_R;
     if (dist2(player.x,player.y,prize.x,prize.y) < rr*rr){
-      burst(prize.x, prize.y, C.prize, 16);
+      burst(particles, prize.x, prize.y, C.prize, 16);
       collectCoin(prize.x, prize.y);            // +1 coin (currency)
       if (navigator.vibrate) navigator.vibrate(18);
       hasPrize=true; prize=null; Sound.pickup();
@@ -594,12 +606,12 @@ function update(dt) {
 }
 
 /* ---------- Render ---------- */
-function glow(x,y,r,color,alpha){
-  ctx.globalAlpha = 0.22*alpha; ctx.fillStyle = color;
-  ctx.beginPath(); ctx.arc(x,y,r*2.1,0,Math.PI*2); ctx.fill();
-  ctx.globalAlpha = 0.92*alpha;
-  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
-  ctx.globalAlpha = 1;
+function glow(targetCtx,x,y,r,color,alpha){
+  targetCtx.globalAlpha = 0.22*alpha; targetCtx.fillStyle = color;
+  targetCtx.beginPath(); targetCtx.arc(x,y,r*2.1,0,Math.PI*2); targetCtx.fill();
+  targetCtx.globalAlpha = 0.92*alpha;
+  targetCtx.beginPath(); targetCtx.arc(x,y,r,0,Math.PI*2); targetCtx.fill();
+  targetCtx.globalAlpha = 1;
 }
 function drawGrid(){
   ctx.strokeStyle=C.grid; ctx.lineWidth=1; const gap=40; ctx.beginPath();
@@ -646,7 +658,7 @@ function drawGhosts(){
     for (let k=1;k<p.length;k+=3) ctx.lineTo(p[k].x,p[k].y);
     ctx.stroke(); ctx.globalAlpha=1;
     const flick=(i===0 && sweep)?(0.45+0.4*Math.sin(performance.now()/40)):1;
-    glow(pos.x,pos.y,CFG.GHOST_R,selectedGhostSkin,flick);
+    glow(ctx,pos.x,pos.y,CFG.GHOST_R,selectedGhostSkin,flick);
   }
 }
 function drawSweep(){
@@ -678,7 +690,7 @@ function drawTrail(){
 }
 function drawPlayer(){
   const blink=(grace>0 && Math.floor(frame/4)%2===0)?0.45:1;
-  glow(player.x,player.y,CFG.PLAYER_R,playerColor,blink);
+  glow(ctx,player.x,player.y,CFG.PLAYER_R,playerColor,blink);
   if (hasPrize){
     ctx.globalAlpha=blink; ctx.fillStyle=C.prize;
     ctx.beginPath(); ctx.arc(player.x,player.y,CFG.PLAYER_R*0.42,0,Math.PI*2); ctx.fill();
@@ -731,6 +743,65 @@ function render(){
   drawParticles(); drawShockwaves(); drawPops(); drawToast();
   ctx.restore();
 }
+function setPreviewItem(cat, id){
+  if (cat==="colors") previewColor = id;
+  else if (cat==="trail") previewTrail = id;
+  else if (cat==="ghost") previewGhostColor = id;
+  else if (cat==="death"){ previewDeath = id; previewDeathT = 999; }   // force an immediate replay
+}
+function drawShopPreview(){
+  const pctx = el.shopPreview.getContext("2d");
+  const w = el.shopPreview.width, h = el.shopPreview.height, cx = w/2, cy = h/2;
+  pctx.clearRect(0,0,w,h);
+  if (previewTab==="colors"){
+    const pulse = 1+Math.sin(performance.now()/200)*0.12;
+    glow(pctx, cx, cy, 14*pulse, previewColor, 1);
+  } else if (previewTab==="trail"){
+    previewPhase += 0.05;
+    const rx=90, ry=26;
+    const px = cx + Math.cos(previewPhase)*rx, py = cy + Math.sin(previewPhase)*ry;
+    previewTrailPath.push({ x:px, y:py });
+    if (previewTrailPath.length>40) previewTrailPath.shift();
+    const span = previewTrail==="long" ? 30 : 16;
+    const n = previewTrailPath.length, start = Math.max(0,n-span);
+    for (let i=start;i<n;i++){
+      const t=(i-start)/span;
+      let color = playerColor;
+      if (previewTrail==="rainbow"){ const hue=((i/n)*300+performance.now()/12)%360; color="hsl("+hue+",90%,60%)"; }
+      pctx.globalAlpha=0.2*t; pctx.fillStyle=color;
+      pctx.beginPath(); pctx.arc(previewTrailPath[i].x,previewTrailPath[i].y,8*(0.35+0.5*t),0,Math.PI*2); pctx.fill();
+    }
+    pctx.globalAlpha=1;
+    if (previewTrail==="sparkle" && Math.random()<0.5){
+      const a=Math.random()*Math.PI*2, r2=6+Math.random()*8;
+      pctx.globalAlpha=0.7; pctx.fillStyle="#fff";
+      pctx.beginPath(); pctx.arc(px+Math.cos(a)*r2, py+Math.sin(a)*r2, 1+Math.random()*1.4, 0, Math.PI*2); pctx.fill();
+      pctx.globalAlpha=1;
+    }
+    glow(pctx, px, py, 8, playerColor, 1);
+  } else if (previewTab==="ghost"){
+    const flick = 0.55+0.4*Math.sin(performance.now()/180);
+    glow(pctx, cx, cy, 12, previewGhostColor, flick);
+  } else if (previewTab==="death"){
+    previewDeathT += 1/60;
+    if (previewDeathT > 1.3){ previewDeathT=0; runDeathFX(previewDeath, previewParticles, previewShockwaves, cx, cy, selectedGhostSkin); }
+    for (let i=previewParticles.length-1;i>=0;i--){
+      const p=previewParticles[i];
+      p.x+=p.vx; p.y+=p.vy; p.vx*=0.93; p.vy*=0.93; p.life-=(1/60)*1.5;
+      if (p.life<=0){ previewParticles.splice(i,1); continue; }
+      pctx.globalAlpha=Math.max(0,p.life); pctx.fillStyle=p.color;
+      pctx.beginPath(); pctx.arc(p.x,p.y,p.r,0,Math.PI*2); pctx.fill();
+    }
+    pctx.globalAlpha=1;
+    for (let i=previewShockwaves.length-1;i>=0;i--){
+      const s=previewShockwaves[i]; s.t+=(1/60)/0.6;
+      if (s.t>=1){ previewShockwaves.splice(i,1); continue; }
+      const r = 4+s.t*32;
+      pctx.save(); pctx.globalAlpha=Math.max(0,1-s.t); pctx.strokeStyle=playerColor;
+      pctx.lineWidth=2; pctx.beginPath(); pctx.arc(s.x,s.y,r,0,Math.PI*2); pctx.stroke(); pctx.restore();
+    }
+  }
+}
 function updateHUD(){
   el.round.textContent = round; el.coins.textContent = coins;
   const movesLeft = CFG.GC_MOVES - (round % CFG.GC_MOVES);
@@ -747,6 +818,7 @@ function loop(now){
   while (acc>=STEP){ if (!paused) update(STEP); updateEffects(STEP); acc-=STEP; }
   render();
   if (mode===STATE.PLAYING && !paused) updateHUD();
+  if (!el.shop.classList.contains("hidden")) drawShopPreview();
   requestAnimationFrame(loop);
 }
 
@@ -764,7 +836,7 @@ function refreshCoinLine(){
 }
 function applyColorUI(){ el.hintDot.style.color = playerColor; }
 function applyGhostUI(){ if (el.hintGhost) el.hintGhost.style.color = selectedGhostSkin; }
-function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch){
+function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch, previewCat){
   container.innerHTML = "";
   items.forEach(item => {
     const owned = ownedArr.includes(item.id);
@@ -775,16 +847,17 @@ function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel
     const price = document.createElement("div"); price.className = "price";
     price.textContent = owned ? (item.id===getSel() ? "\u2713" : "") : ("\u25C6" + item.cost);
     b.addEventListener("click", () => {
+      setPreviewItem(previewCat, item.id);                       // always preview what's tapped
       if (ownedArr.includes(item.id)) {                          // already owned -> select
         setSel(item.id);
-        renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch);
+        renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch, previewCat);
       } else if (coins >= item.cost) {                           // buy it
         coins -= item.cost; saveCoins();
         ownedArr.push(item.id); saveOwnedList(ownedKey, ownedArr);
         setSel(item.id);
         if (navigator.vibrate) navigator.vibrate(20);
         refreshShopCoinLine();
-        renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch);
+        renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch, previewCat);
       } else {                                                   // can't afford -> flash price red
         price.style.color = C.ghost; setTimeout(()=>{ price.style.color = ""; }, 450);
       }
@@ -795,13 +868,13 @@ function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel
 }
 function buildShopAll(){
   renderShopCategory(el.shopColors, SKINS, unlocked, "echoSteps.unlocked",
-    ()=>playerColor, (v)=>{ playerColor=v; ss("echoSteps.color",v); applyColorUI(); }, true);
+    ()=>playerColor, (v)=>{ playerColor=v; ss("echoSteps.color",v); applyColorUI(); }, true, "colors");
   renderShopCategory(el.shopTrail, TRAILS, unlockedTrail, "echoSteps.trailOwned",
-    ()=>selectedTrail, (v)=>{ selectedTrail=v; ss("echoSteps.trail",v); }, false);
+    ()=>selectedTrail, (v)=>{ selectedTrail=v; ss("echoSteps.trail",v); }, false, "trail");
   renderShopCategory(el.shopGhost, GHOST_SKINS, unlockedGhostSkin, "echoSteps.ghostOwned",
-    ()=>selectedGhostSkin, (v)=>{ selectedGhostSkin=v; ss("echoSteps.ghostSkin",v); applyGhostUI(); }, true);
+    ()=>selectedGhostSkin, (v)=>{ selectedGhostSkin=v; ss("echoSteps.ghostSkin",v); applyGhostUI(); }, true, "ghost");
   renderShopCategory(el.shopDeath, DEATH_FX, unlockedDeathFX, "echoSteps.deathOwned",
-    ()=>selectedDeathFX, (v)=>{ selectedDeathFX=v; ss("echoSteps.deathfx",v); }, false);
+    ()=>selectedDeathFX, (v)=>{ selectedDeathFX=v; ss("echoSteps.deathfx",v); }, false, "death");
 }
 function refreshShopCoinLine(){
   el.shopCoinLine.textContent = "\u25C6 " + coins + " coins";
@@ -810,6 +883,11 @@ function setShopTab(cat){
   const map = { colors:el.shopColors, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath };
   Object.keys(map).forEach(k => map[k].classList.toggle("hidden", k!==cat));
   el.shopTabs.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.cat===cat));
+  previewTab = cat;
+  if (cat==="colors") previewColor = playerColor;
+  else if (cat==="trail") previewTrail = selectedTrail;
+  else if (cat==="ghost") previewGhostColor = selectedGhostSkin;
+  else if (cat==="death") setPreviewItem("death", selectedDeathFX);
 }
 function openShop(){
   refreshShopCoinLine(); buildShopAll(); setShopTab("colors");
