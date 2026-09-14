@@ -68,8 +68,8 @@
   .tab.active { color:var(--bg); background:var(--sweep); border-color:var(--sweep);
                 box-shadow:0 0 12px rgba(198,107,255,.4); }
   .tab:active { transform:scale(.96); }
-  #shopPreview { width:100%; max-width:280px; height:90px; border-radius:10px;
-    background:rgba(255,255,255,.03); border:1px solid var(--dim); }
+  #shopPreview { width:100%; max-width:280px; height:100px; border-radius:6px;
+    background:var(--bg); border:1px solid var(--player); box-shadow:0 0 10px rgba(41,224,255,.3); }
 
   #hud {
     position:absolute; top:0; left:0; right:0; display:flex;
@@ -118,7 +118,8 @@
   <div id="shopScreen" class="overlay hidden">
     <h1 style="color:var(--sweep);text-shadow:0 0 14px rgba(198,107,255,.55)">SHOP</h1>
     <div class="sub" id="shopCoinLine" style="color:var(--prize)">&#9670; 0 coins</div>
-    <canvas id="shopPreview" width="280" height="90"></canvas>
+    <label class="mlabel">PREVIEW</label>
+    <canvas id="shopPreview" width="280" height="100"></canvas>
     <div class="tabs" id="shopTabs">
       <button class="tab" data-cat="colors">DOT COLOR</button>
       <button class="tab" data-cat="trail">TRAIL FX</button>
@@ -749,10 +750,17 @@ function setPreviewItem(cat, id){
   else if (cat==="ghost") previewGhostColor = id;
   else if (cat==="death"){ previewDeath = id; previewDeathT = 999; }   // force an immediate replay
 }
+function drawPreviewGrid(pctx,w,h){
+  pctx.strokeStyle=C.grid; pctx.lineWidth=1; const gap=20; pctx.beginPath();
+  for (let x=0;x<=w;x+=gap){ pctx.moveTo(x,0); pctx.lineTo(x,h); }
+  for (let y=0;y<=h;y+=gap){ pctx.moveTo(0,y); pctx.lineTo(w,y); }
+  pctx.stroke();
+}
 function drawShopPreview(){
   const pctx = el.shopPreview.getContext("2d");
   const w = el.shopPreview.width, h = el.shopPreview.height, cx = w/2, cy = h/2;
   pctx.clearRect(0,0,w,h);
+  drawPreviewGrid(pctx,w,h);
   if (previewTab==="colors"){
     const pulse = 1+Math.sin(performance.now()/200)*0.12;
     glow(pctx, cx, cy, 14*pulse, previewColor, 1);
