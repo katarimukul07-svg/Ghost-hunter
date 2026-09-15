@@ -1,0 +1,14 @@
+{
+  "appId": "com.mukulkatari.echosteps",
+  "appName": "Echo Steps",
+  "webDir": "dist",
+  "backgroundColor": "#070b10",
+  "ios": {
+    "contentInset": "never",
+    "preferredContentMode": "mobile"
+  },
+  "android": {
+    "backgroundColor": "#070b10",
+    "allowMixedContent": false
+  }
+}

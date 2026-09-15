@@ -11,7 +11,7 @@ This repository is managed as a release project, not as a collection of direct e
 5. Review the changed-file list and diff before merging.
 6. Merge only when automated checks pass and the change has a clear rollback commit.
 
-The CI/CD workflow runs structural validation and Playwright smoke tests in desktop and mobile Chromium. The GitHub Pages deployment job depends on that test job and cannot run when tests fail.
+The CI/CD workflow runs structural validation, Playwright smoke tests in desktop and mobile Chromium, an Android API 36 build, and an iOS simulator build. The existing protected status is now an aggregate gate and cannot pass unless every platform job succeeds. GitHub Pages deployment depends on that gate.
 
 Routine engineering decisions may be made without owner interruption. Ask the owner only for material product direction, spending, credentials, legal/privacy declarations, or final store-submission approval.
 
@@ -45,6 +45,8 @@ npm install
 npx playwright install chromium
 npm test
 npm run serve
+npm run cap:sync
+npm run android:debug
 ```
 
 The live web build is <https://katarimukul07-svg.github.io/Ghost-hunter/> and the release plan is maintained in [ROADMAP.md](ROADMAP.md).

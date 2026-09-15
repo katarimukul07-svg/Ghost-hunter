@@ -1,21 +1,37 @@
 {
   "name": "echo-steps-garbage-collector",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "A minimalist arcade survival game where your past moves become enemies.",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "cap:sync": "npm run build && cap sync",
+    "cap:android": "npm run cap:sync && cap open android",
+    "cap:ios": "npm run cap:sync && cap open ios",
+    "android:debug": "npm run cap:sync && cd android && ./gradlew assembleDebug",
     "test": "npm run validate && npm run test:browser",
     "test:static": "npm run validate",
     "test:browser": "playwright test",
     "validate": "node scripts/validate.mjs",
-    "serve": "python3 -m http.server 4173"
+    "serve": "npm run build && python3 -m http.server 4173 --directory dist"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.5.2",
     "@playwright/test": "1.63.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/app": "8.1.1",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/ios": "8.5.2",
+    "@capacitor/status-bar": "8.0.3"
+  },
+  "overrides": {
+    "uuid": "11.1.1"
   }
 }
