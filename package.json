@@ -1,0 +1,21 @@
+{
+  "name": "echo-steps-garbage-collector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A minimalist arcade survival game where your past moves become enemies.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "npm run validate && npm run test:browser",
+    "test:static": "npm run validate",
+    "test:browser": "playwright test",
+    "validate": "node scripts/validate.mjs",
+    "serve": "python3 -m http.server 4173"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
