@@ -36,3 +36,45 @@ test("opens the shop and exposes only the guarded reward path", async ({ page })
 
   expect(errors).toEqual([]);
 });
+
+test("requires an active drag and preserves game position across resize", async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto("/?test=1");
+  await page.getByRole("button", { name: "PLAY" }).click();
+
+  const canvas = page.locator("#c");
+  const box = await canvas.boundingBox();
+  expect(box).not.toBeNull();
+
+  const beforeHover = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  await page.mouse.move(beforeHover.player.x + 80, beforeHover.player.y);
+  await page.waitForTimeout(150);
+  const afterHover = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  expect(afterHover.player.x).toBeCloseTo(beforeHover.player.x, 1);
+  expect(afterHover.player.y).toBeCloseTo(beforeHover.player.y, 1);
+
+  await page.mouse.move(beforeHover.player.x, beforeHover.player.y);
+  await page.mouse.down();
+  await page.mouse.move(beforeHover.player.x + 80, beforeHover.player.y);
+  await page.waitForTimeout(150);
+  await page.mouse.up();
+  const afterDrag = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  expect(afterDrag.player.x).toBeGreaterThan(beforeHover.player.x + 10);
+  expect(afterDrag.pointer.active).toBe(false);
+
+  const oldNormalized = {
+    x:(afterDrag.player.x - afterDrag.room.x) / afterDrag.room.w,
+    y:(afterDrag.player.y - afterDrag.room.y) / afterDrag.room.h,
+  };
+  await page.setViewportSize({ width:720, height:960 });
+  await page.waitForTimeout(100);
+  const afterResize = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  const newNormalized = {
+    x:(afterResize.player.x - afterResize.room.x) / afterResize.room.w,
+    y:(afterResize.player.y - afterResize.room.y) / afterResize.room.h,
+  };
+  expect(newNormalized.x).toBeCloseTo(oldNormalized.x, 2);
+  expect(newNormalized.y).toBeCloseTo(oldNormalized.y, 2);
+  expect(errors).toEqual([]);
+});

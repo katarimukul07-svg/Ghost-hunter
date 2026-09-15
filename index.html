@@ -37,6 +37,9 @@
     cursor:pointer; box-shadow:0 0 18px rgba(41,224,255,.5); transition:transform .08s ease;
   }
   button:active { transform:scale(.96); }
+  button:focus-visible, input:focus-visible {
+    outline:2px solid #fff; outline-offset:3px;
+  }
 
   /* player menu */
   .menu { display:flex; flex-direction:column; gap:10px; align-items:center; margin:2px 0; }
@@ -93,7 +96,7 @@
 </head>
 <body>
 <div id="stage">
-  <canvas id="c"></canvas>
+  <canvas id="c" role="application" aria-label="Echo Steps game arena"></canvas>
 
   <div id="hud" class="hidden">
     <div class="hud-stats">
@@ -108,8 +111,8 @@
       </div>
     </div>
     <div style="display:flex;gap:6px">
-      <button id="pauseBtn">&#9208;</button>
-      <button id="muteBtn">&#9834; ON</button>
+      <button id="pauseBtn" aria-label="Pause game" title="Pause game">&#9208;</button>
+      <button id="muteBtn" aria-label="Toggle sound" aria-pressed="false">&#9834; ON</button>
     </div>
   </div>
 
@@ -413,18 +416,56 @@ let obstacleLayout = [];
 let playerSpeed = 8;
 
 function resize() {
+  const previousRoom = { x:room.x, y:room.y, w:room.w, h:room.h };
+  const canRemap = previousRoom.w > 0 && previousRoom.h > 0;
+  const previousExit = canRemap ? {
+    wall:exit.wall,
+    ratio:(exit.wall === "top" || exit.wall === "bottom")
+      ? (exit.x + exit.w/2 - previousRoom.x) / previousRoom.w
+      : (exit.y + exit.h/2 - previousRoom.y) / previousRoom.h,
+  } : null;
+
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   W = canvas.clientWidth; H = canvas.clientHeight;
   canvas.width = Math.round(W*DPR); canvas.height = Math.round(H*DPR);
   ctx.setTransform(DPR,0,0,DPR,0,0);
   room.x = CFG.WALL_MARGIN; room.y = CFG.WALL_MARGIN + CFG.HUD_CLEARANCE;
   room.w = W - CFG.WALL_MARGIN*2; room.h = H - room.y - CFG.WALL_MARGIN;
-  exit.x = room.x + room.w/2 - CFG.EXIT_W/2; exit.y = room.y;
-  exit.w = CFG.EXIT_W; exit.h = CFG.EXIT_H; exit.wall = "top";
+
+  if (canRemap) {
+    const remapPoint = p => {
+      if (!p) return;
+      p.x = room.x + ((p.x - previousRoom.x) / previousRoom.w) * room.w;
+      p.y = room.y + ((p.y - previousRoom.y) / previousRoom.h) * room.h;
+    };
+    remapPoint(player); remapPoint(pointer); remapPoint(prize);
+    currentPath.forEach(remapPoint);
+    ghosts.forEach(g => g.path.forEach(remapPoint));
+    positionExit(previousExit.wall, previousExit.ratio);
+  } else {
+    positionExit("top", 0.5);
+  }
+
   playerSpeed = Math.hypot(room.w, room.h) * CFG.SPEED_FRAC;
   buildObstacles();
 }
 window.addEventListener("resize", resize);
+
+function positionExit(wall, ratio=0.5) {
+  const t = clamp(ratio, 0, 1);
+  exit.wall = wall;
+  if (wall === "top" || wall === "bottom") {
+    exit.w = Math.min(CFG.EXIT_W, room.w);
+    exit.h = Math.min(CFG.EXIT_H, room.h);
+    exit.x = clamp(room.x + room.w*t - exit.w/2, room.x, room.x + room.w - exit.w);
+    exit.y = wall === "top" ? room.y : room.y + room.h - exit.h;
+  } else {
+    exit.w = Math.min(CFG.EXIT_H, room.w);
+    exit.h = Math.min(CFG.EXIT_W, room.h);
+    exit.x = wall === "left" ? room.x : room.x + room.w - exit.w;
+    exit.y = clamp(room.y + room.h*t - exit.h/2, room.y, room.y + room.h - exit.h);
+  }
+}
 
 const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex"];
 function obstacleCountForRound(r) {
@@ -617,6 +658,7 @@ function pop(x, y, text, color){ pops.push({ x, y, text, color, life:1 }); }
 /* ---------- Lifecycle ---------- */
 function resetGame() {
   resize();
+  positionExit("top", 0.5);
   obstacleLayout = makeObstacleLayout(CFG.OBSTACLES_START);
   buildObstacles();
   player.x = room.x+room.w/2; player.y = room.y+room.h/2;
@@ -1136,7 +1178,7 @@ function loop(now){
 function toLocal(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
 function onMove(e){ const p=toLocal(e); pointer.x=p.x; pointer.y=p.y; }
 canvas.addEventListener("pointerdown",(e)=>{ pointer.active=true; onMove(e); canvas.setPointerCapture(e.pointerId); });
-canvas.addEventListener("pointermove", onMove);
+canvas.addEventListener("pointermove", (e)=>{ if (pointer.active) onMove(e); });
 canvas.addEventListener("pointerup", ()=>{ pointer.active=false; });
 canvas.addEventListener("pointercancel", ()=>{ pointer.active=false; });
 
@@ -1237,6 +1279,7 @@ function updateMuteBtn(){
   const m=Sound.isMuted();
   el.mute.innerHTML = m ? "&#9834; OFF" : "&#9834; ON";
   el.mute.style.color = m ? C.dim : C.ink;
+  el.mute.setAttribute("aria-pressed", m ? "true" : "false");
 }
 /* ---------- Retry (revive at same round for coins) ---------- */
 function refreshRetryBtn(){
@@ -1359,7 +1402,7 @@ document.getElementById("shareBtn").addEventListener("click", async ()=>{
 /* ---------- Pause on tab blur ---------- */
 document.addEventListener("visibilitychange", ()=>{
   if (document.hidden && mode===STATE.PLAYING && !paused){
-    paused=true; Sound.stopAmbient(); el.pause.classList.remove("hidden");
+    pointer.active=false; paused=true; Sound.stopAmbient(); el.pause.classList.remove("hidden");
   }
 });
 
@@ -1398,6 +1441,17 @@ refreshCoinLine();
 applyColorUI(); applyGhostUI();
 updateMuteBtn();
 resize();
+if (new URLSearchParams(location.search).has("test")) {
+  Object.defineProperty(window, "__echoStepsTest", {
+    value:Object.freeze({
+      snapshot:()=>({
+        mode, paused, round,
+        player:{...player}, pointer:{...pointer}, room:{...room}, exit:{...exit},
+        prize:prize ? {...prize} : null,
+      }),
+    }),
+  });
+}
 requestAnimationFrame(loop);
 </script>
 <script src="gameplay-fixes.js"></script>
