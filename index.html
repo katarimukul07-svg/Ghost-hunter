@@ -3,13 +3,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#070b10" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="assets/icon-192.png" />
+<link rel="apple-touch-icon" href="assets/icon-192.png" />
 <title>Echo Steps: Garbage Collector</title>
 <style>
   :root {
     --bg:#070b10; --grid:#0e2230; --player:#29e0ff; --ghost:#ff3554;
     --prize:#ffd23f; --exit:#39ff9e; --sweep:#c66bff; --wall:#3d6b7a;
     --ink:#cfe9f5; --dim:#4a6572;
+    --safe-top:env(safe-area-inset-top, 0px); --safe-right:env(safe-area-inset-right, 0px);
+    --safe-bottom:env(safe-area-inset-bottom, 0px); --safe-left:env(safe-area-inset-left, 0px);
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   html,body { height:100%; background:var(--bg); overflow:hidden; }
@@ -23,7 +31,9 @@
   .overlay {
     position:absolute; inset:0; display:flex; flex-direction:column;
     align-items:center; justify-content:center; text-align:center; gap:16px;
-    background:rgba(4,8,12,0.82); backdrop-filter:blur(2px); padding:24px; overflow-y:auto;
+    background:rgba(4,8,12,0.82); backdrop-filter:blur(2px);
+    padding:calc(24px + var(--safe-top)) calc(24px + var(--safe-right))
+            calc(24px + var(--safe-bottom)) calc(24px + var(--safe-left)); overflow-y:auto;
   }
   .hidden { display:none !important; }
   h1 { font-size:clamp(22px,6vw,40px); letter-spacing:1px; color:var(--player);
@@ -77,7 +87,8 @@
 
   #hud {
     position:absolute; top:0; left:0; right:0; display:flex;
-    justify-content:space-between; align-items:center; padding:10px 16px;
+    justify-content:space-between; align-items:center;
+    padding:calc(10px + var(--safe-top)) calc(16px + var(--safe-right)) 10px calc(16px + var(--safe-left));
     font-size:13px; pointer-events:none;
   }
   .hud-stats { display:flex; gap:6px; flex-wrap:wrap; }
@@ -156,18 +167,8 @@
     <div class="swatches hidden" id="shopDeath"></div>
     <div class="swatches hidden" id="shopSound"></div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-      <button id="shopGetCoinsBtn" style="background:var(--prize);box-shadow:0 0 18px rgba(255,210,63,.5)">GET COINS</button>
       <button id="shopBackBtn">BACK</button>
     </div>
-  </div>
-
-  <div id="coinStoreScreen" class="overlay hidden">
-    <h1 style="color:var(--prize);text-shadow:0 0 14px rgba(255,210,63,.55)">GET COINS</h1>
-    <div class="sub" id="storeCoinLine" style="color:var(--prize)">&#9670; 0 coins</div>
-    <div class="sub">Coins buy retries and shop items. Pick a pack:</div>
-    <div id="coinPacks" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:260px"></div>
-    <div class="sub" style="font-size:11px;color:var(--dim)">Demo build &mdash; no real charge yet.</div>
-    <button id="storeBackBtn">BACK</button>
   </div>
 
   <div id="pauseScreen" class="overlay hidden">
@@ -194,13 +195,13 @@
       <button id="restartBtn">PLAY AGAIN</button>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-      <button id="buyCoinsBtn" style="background:var(--exit);box-shadow:0 0 18px rgba(57,255,158,.5)">BUY COINS</button>
       <button id="menuBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">MENU</button>
       <button id="shareBtn" class="chip" style="color:var(--dim)">SHARE</button>
     </div>
   </div>
 </div>
 
+<script src="native-bridge.js"></script>
 <script>
 "use strict";
 
@@ -219,16 +220,6 @@ const CFG = {
   SIZE_EVERY:5, SIZE_GROW:0.10, SIZE_MAX:2.0, EXIT_MOVE_EVERY:5,
   RETRY_COST:100,            // coins to revive at the same round after death
 };
-
-/* Coin packs for the store. Prices are placeholders — no real charge is wired yet;
-   swap purchaseCoins() for a Stripe Checkout / IAP call to make these real. */
-const COIN_PACKS = [
-  { coins:100,   price:"$0.99"  },
-  { coins:200,   price:"$1.99"  },
-  { coins:500,   price:"$3.99"  },
-  { coins:1000,  price:"$6.99"  },
-  { coins:5000,  price:"$24.99", best:true },
-];
 
 /* Player skins — each is a color PLUS a distinct render style (see drawSkin()),
    not just a recolor. `id` stays the hex color so older saves keep matching. */
@@ -429,8 +420,14 @@ function resize() {
   W = canvas.clientWidth; H = canvas.clientHeight;
   canvas.width = Math.round(W*DPR); canvas.height = Math.round(H*DPR);
   ctx.setTransform(DPR,0,0,DPR,0,0);
-  room.x = CFG.WALL_MARGIN; room.y = CFG.WALL_MARGIN + CFG.HUD_CLEARANCE;
-  room.w = W - CFG.WALL_MARGIN*2; room.h = H - room.y - CFG.WALL_MARGIN;
+  const rootStyle = getComputedStyle(document.documentElement);
+  const safe = name => parseFloat(rootStyle.getPropertyValue(name)) || 0;
+  const safeTop = safe("--safe-top"), safeRight = safe("--safe-right");
+  const safeBottom = safe("--safe-bottom"), safeLeft = safe("--safe-left");
+  room.x = CFG.WALL_MARGIN + safeLeft;
+  room.y = CFG.WALL_MARGIN + CFG.HUD_CLEARANCE + safeTop;
+  room.w = W - CFG.WALL_MARGIN*2 - safeLeft - safeRight;
+  room.h = H - room.y - CFG.WALL_MARGIN - safeBottom;
 
   if (canRemap) {
     const remapPoint = p => {
@@ -450,6 +447,7 @@ function resize() {
   buildObstacles();
 }
 window.addEventListener("resize", resize);
+if (window.visualViewport) window.visualViewport.addEventListener("resize", resize);
 
 function positionExit(wall, ratio=0.5) {
   const t = clamp(ratio, 0, 1);
@@ -566,12 +564,15 @@ const el = {
   shopColors:document.getElementById("shopColors"), shopTrail:document.getElementById("shopTrail"),
   shopGhost:document.getElementById("shopGhost"), shopDeath:document.getElementById("shopDeath"),
   shopSound:document.getElementById("shopSound"),
-  shopGetCoins:document.getElementById("shopGetCoinsBtn"),
 };
 
 /* ---------- Helpers ---------- */
 const clamp = (v,lo,hi) => Math.max(lo, Math.min(hi,v));
 const dist2 = (ax,ay,bx,by) => { const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy; };
+function haptic(kind="light"){
+  if (window.EchoStepsNative) window.EchoStepsNative.haptic(kind);
+  else if (navigator.vibrate) navigator.vibrate(kind==="heavy" ? 45 : kind==="medium" ? 25 : 15);
+}
 function pointInObstacles(px,py,pad){
   for (const o of obstacles)
     if (px>o.x-pad && px<o.x+o.w+pad && py>o.y-pad && py<o.y+o.h+pad) return true;
@@ -675,7 +676,6 @@ function resetGame() {
   el.start.classList.add("hidden");
   el.over.classList.add("hidden");
   el.pause.classList.add("hidden");
-  document.getElementById("coinStoreScreen").classList.add("hidden");
   el.hud.classList.remove("hidden");
   Sound.unlock(); Sound.startAmbient();
 }
@@ -710,7 +710,7 @@ function completeRound() {
 function startDeath() {
   mode = STATE.DYING; deathTimer = 0; shake = 16;
   playDeathFX(player.x, player.y);
-  if (navigator.vibrate) navigator.vibrate([25,30,55]);
+  haptic("heavy");
   Sound.death(); Sound.stopAmbient();
 }
 function finalizeDeath() {
@@ -835,7 +835,7 @@ function update(dt) {
     if (dist2(player.x,player.y,prize.x,prize.y) < rr*rr){
       burst(particles, prize.x, prize.y, C.prize, 16);
       collectCoin(prize.x, prize.y);            // +1 coin (currency)
-      if (navigator.vibrate) navigator.vibrate(18);
+      haptic("light");
       hasPrize=true; prize=null; Sound.pickup();
     }
   }
@@ -1207,7 +1207,7 @@ function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel
         coins -= item.cost; saveCoins();
         ownedArr.push(item.id); saveOwnedList(ownedKey, ownedArr);
         setSel(item.id);
-        if (navigator.vibrate) navigator.vibrate(20);
+        haptic("medium");
         refreshShopCoinLine();
         renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch, previewCat);
       } else {                                                   // can't afford -> flash price red
@@ -1253,7 +1253,6 @@ function setShopTab(cat){
   else if (cat==="trail") previewTrail = selectedTrail;
   else if (cat==="ghost") previewGhostColor = selectedGhostSkin;
   else if (cat==="death") setPreviewItem("death", selectedDeathFX);
-  el.shopGetCoins.classList.toggle("hidden", cat==="sound");   // sound packs are free — no coins needed
 }
 let shopReturnTo = "start";   // where BACK sends us: "start" or "pause"
 function openShop(tab){
@@ -1270,7 +1269,6 @@ function showStart(){
   mode = STATE.START;
   el.over.classList.add("hidden"); el.pause.classList.add("hidden"); el.hud.classList.add("hidden");
   el.shop.classList.add("hidden");
-  document.getElementById("coinStoreScreen").classList.add("hidden");
   Sound.stopAmbient();
   refreshCoinLine(); applyColorUI(); applyGhostUI();
   el.start.classList.remove("hidden");
@@ -1289,7 +1287,11 @@ function refreshRetryBtn(){
   btn.style.opacity = (coins >= CFG.RETRY_COST) ? "1" : "0.5";
 }
 function retryRun(){
-  if (coins < CFG.RETRY_COST){ openCoinStore(); return; }   // broke -> go buy coins
+  if (coins < CFG.RETRY_COST){
+    el.overSub.textContent = "Collect more coins in future runs to afford a revive.";
+    haptic("medium");
+    return;
+  }
   coins -= CFG.RETRY_COST; saveCoins();
   player.x = room.x+room.w/2; player.y = room.y+room.h/2;
   pointer.x = player.x; pointer.y = player.y; pointer.active = false;
@@ -1302,60 +1304,11 @@ function retryRun(){
   mode = STATE.PLAYING;
   el.over.classList.add("hidden");
   el.hud.classList.remove("hidden");
-  if (navigator.vibrate) navigator.vibrate(20);
+  haptic("medium");
   Sound.unlock(); Sound.startAmbient();
 }
 
-/* ---------- Coin store ---------- */
-let coinStoreFrom = "start";
-function refreshStoreCoinLine(){
-  document.getElementById("storeCoinLine").textContent = "\u25C6 " + coins + " coins";
-}
-function buildCoinPacks(){
-  const box = document.getElementById("coinPacks"); box.innerHTML = "";
-  COIN_PACKS.forEach(pack => {
-    const b = document.createElement("button");
-    b.style.display="flex"; b.style.justifyContent="space-between"; b.style.alignItems="center";
-    b.style.width="100%"; b.style.gap="10px"; b.style.fontSize="14px";
-    if (pack.best){ b.style.background="var(--exit)"; b.style.boxShadow="0 0 18px rgba(57,255,158,.5)"; }
-    b.innerHTML = "<span>\u25C6 " + pack.coins.toLocaleString() + (pack.best ? " &middot; BEST" : "") +
-                  "</span><span>" + pack.price + "</span>";
-    b.addEventListener("click", () => purchaseCoins(pack));
-    box.appendChild(b);
-  });
-}
-function purchaseCoins(pack){
-  /* PLACEHOLDER — grants coins with no real charge. Replace this body with a real
-     payment call (Stripe Checkout, Google Play / App Store IAP) before shipping. */
-  const ok = confirm("Buy " + pack.coins.toLocaleString() + " coins for " + pack.price + "?\n(Demo build: no real charge.)");
-  if (!ok) return;
-  coins += pack.coins; saveCoins();
-  if (navigator.vibrate) navigator.vibrate(30);
-  refreshStoreCoinLine(); refreshRetryBtn();
-}
-function openCoinStore(){
-  if (mode === STATE.OVER) coinStoreFrom = "over";
-  else if (!el.shop.classList.contains("hidden")) coinStoreFrom = "shop";
-  else coinStoreFrom = "start";
-  refreshStoreCoinLine(); buildCoinPacks();
-  el.over.classList.add("hidden"); el.shop.classList.add("hidden"); el.start.classList.add("hidden");
-  document.getElementById("coinStoreScreen").classList.remove("hidden");
-}
-function closeCoinStore(){
-  document.getElementById("coinStoreScreen").classList.add("hidden");
-  if (coinStoreFrom === "over"){
-    el.over.classList.remove("hidden"); el.totalCoinsOver.textContent = coins; refreshRetryBtn();
-  } else if (coinStoreFrom === "shop"){
-    el.shop.classList.remove("hidden"); refreshShopCoinLine();
-  } else {
-    el.start.classList.remove("hidden"); refreshCoinLine();
-  }
-}
-
 document.getElementById("retryBtn").addEventListener("click", retryRun);
-document.getElementById("buyCoinsBtn").addEventListener("click", openCoinStore);
-document.getElementById("shopGetCoinsBtn").addEventListener("click", openCoinStore);
-document.getElementById("storeBackBtn").addEventListener("click", closeCoinStore);
 document.getElementById("startBtn").addEventListener("click", resetGame);
 document.getElementById("restartBtn").addEventListener("click", resetGame);
 document.getElementById("menuBtn").addEventListener("click", showStart);
@@ -1399,11 +1352,19 @@ document.getElementById("shareBtn").addEventListener("click", async ()=>{
   } catch(e){}
 });
 
-/* ---------- Pause on tab blur ---------- */
-document.addEventListener("visibilitychange", ()=>{
-  if (document.hidden && mode===STATE.PLAYING && !paused){
+/* ---------- Web/native lifecycle ---------- */
+function pauseForInterruption(){
+  if (mode===STATE.PLAYING && !paused){
     pointer.active=false; paused=true; Sound.stopAmbient(); el.pause.classList.remove("hidden");
   }
+}
+document.addEventListener("visibilitychange", ()=>{ if (document.hidden) pauseForInterruption(); });
+window.addEventListener("echosteps:app-state", event => { if (!event.detail.isActive) pauseForInterruption(); });
+window.addEventListener("echosteps:back", ()=>{
+  if (!el.shop.classList.contains("hidden")) { closeShop(); return; }
+  if (!el.pause.classList.contains("hidden") || mode===STATE.OVER) { showStart(); return; }
+  if (mode===STATE.PLAYING) { pauseForInterruption(); return; }
+  if (window.EchoStepsNative) window.EchoStepsNative.exitApp();
 });
 
 /* ---------- Boot ---------- */
@@ -1453,6 +1414,11 @@ if (new URLSearchParams(location.search).has("test")) {
   });
 }
 requestAnimationFrame(loop);
+if ("serviceWorker" in navigator && !(window.EchoStepsNative && window.EchoStepsNative.isNative)) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js").catch(error => {
+    console.warn("Offline cache registration failed", error);
+  }));
+}
 </script>
 <script src="gameplay-fixes.js"></script>
 </body>

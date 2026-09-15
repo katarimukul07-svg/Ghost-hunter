@@ -1,11 +1,10 @@
-/* Echo Steps gameplay fairness + GC + mobile + monetization adapter patch.
+/* Echo Steps gameplay fairness + GC + mobile patch.
    Loaded after the main inline script so it can safely wrap existing game functions. */
 (() => {
   "use strict";
 
   const TOUCH_OFFSET_PX = 52;
   const EXIT_CORRIDOR_PAD = Math.max(30, CFG.PLAYER_R * 2.5);
-  const REWARDED_COIN_AMOUNT = CFG.RETRY_COST;
 
   function rectCircleHit(px, py, r, o) {
     const nx = clamp(px, o.x, o.x + o.w);
@@ -327,68 +326,5 @@
   canvas.addEventListener("pointerdown", applyTouchOffset);
   canvas.addEventListener("pointermove", applyTouchOffset);
 
-  // Revenue-ready seam: the web prototype no longer grants fake paid packs.
-  // A real ad SDK can expose window.EchoStepsAds.showRewarded({placement}) and
-  // resolve true / {rewarded:true} only after the provider confirms completion.
-  async function requestRewardedCoins(button) {
-    const ads = window.EchoStepsAds;
-    if (!ads || typeof ads.showRewarded !== "function") {
-      alert("Rewarded ads are ready to connect, but no ad provider is configured in this web build yet.");
-      return;
-    }
-    button.disabled = true;
-    const old = button.textContent;
-    button.textContent = "LOADING AD...";
-    try {
-      const result = await ads.showRewarded({ placement:"coin_store" });
-      const rewarded = result === true || (result && result.rewarded === true);
-      if (rewarded) {
-        coins += REWARDED_COIN_AMOUNT; saveCoins();
-        if (navigator.vibrate) navigator.vibrate(30);
-        refreshStoreCoinLine(); refreshRetryBtn(); refreshShopCoinLine();
-        button.textContent = "REWARD CLAIMED ✓";
-        setTimeout(() => { button.textContent = old; }, 1200);
-      } else {
-        button.textContent = "AD NOT COMPLETED";
-        setTimeout(() => { button.textContent = old; }, 1200);
-      }
-    } catch (err) {
-      console.error("Rewarded ad failed", err);
-      alert("The rewarded ad could not be shown. Please try again.");
-    } finally {
-      button.disabled = false;
-    }
-  }
-
-  buildCoinPacks = function rewardedFirstCoinStore() {
-    const box = document.getElementById("coinPacks");
-    box.innerHTML = "";
-    const ad = document.createElement("button");
-    ad.style.display = "flex"; ad.style.justifyContent = "space-between"; ad.style.alignItems = "center";
-    ad.style.width = "100%"; ad.style.gap = "10px"; ad.style.fontSize = "14px";
-    ad.style.background = "var(--exit)"; ad.style.boxShadow = "0 0 18px rgba(57,255,158,.5)";
-    ad.innerHTML = "<span>WATCH REWARDED AD</span><span>◆ " + REWARDED_COIN_AMOUNT + "</span>";
-    ad.addEventListener("click", () => requestRewardedCoins(ad));
-    box.appendChild(ad);
-
-    const note = document.createElement("div");
-    note.className = "sub";
-    note.style.fontSize = "11px";
-    note.textContent = window.EchoStepsAds
-      ? "Reward is granted only after the ad provider confirms completion."
-      : "Ad provider not connected yet. Paid coin packs stay disabled in this web prototype.";
-    box.appendChild(note);
-  };
-
-  purchaseCoins = function disabledFakePurchase() {
-    alert("Paid coin packs are disabled in this web prototype. Connect real IAP/checkout before enabling purchases.");
-  };
-
-  const buyCoinsBtn = document.getElementById("buyCoinsBtn");
-  if (buyCoinsBtn) buyCoinsBtn.textContent = "GET COINS";
-  const storeSubs = document.querySelectorAll("#coinStoreScreen .sub");
-  if (storeSubs[1]) storeSubs[1].textContent = "Need a revive? Earn coins with a completed rewarded ad.";
-  if (storeSubs[2]) storeSubs[2].textContent = "Rewarded-ad integration seam is ready; provider credentials are not stored in the game code.";
-
-  console.info("Echo Steps gameplay fixes loaded: shape collisions, stronger GC, safe spawns, touch offset, rewarded-ad seam.");
+  console.info("Echo Steps gameplay fixes loaded: shape collisions, stronger GC, safe spawns, and touch offset.");
 })();

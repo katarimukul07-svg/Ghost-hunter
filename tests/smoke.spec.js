@@ -22,18 +22,46 @@ test("loads the menu and starts a run without runtime errors", async ({ page }) 
   expect(errors).toEqual([]);
 });
 
-test("opens the shop and exposes only the guarded reward path", async ({ page }) => {
+test("opens the shop without purchase or advertising controls", async ({ page }) => {
   const errors = collectPageErrors(page);
 
   await page.goto("/");
   await page.getByRole("button", { name: "SHOP" }).click();
   await expect(page.getByRole("heading", { name: "SHOP" })).toBeVisible();
 
-  await page.getByRole("button", { name: "GET COINS" }).click();
-  await expect(page.getByRole("heading", { name: "GET COINS" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /WATCH REWARDED AD/ })).toBeVisible();
-  await expect(page.locator("#coinPacks button")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: /BUY COINS|GET COINS|WATCH REWARDED AD/ })).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("Demo build");
 
+  expect(errors).toEqual([]);
+});
+
+test("pauses for native lifecycle interruption and handles native Back", async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "PLAY" }).click();
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent("echosteps:app-state", {
+    detail: { isActive:false },
+  })));
+  await expect(page.getByRole("heading", { name: "PAUSED" })).toBeVisible();
+
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent("echosteps:back")));
+  await expect(page.getByRole("heading", { name: "ECHO STEPS" })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("reloads offline after the install cache is ready", async ({ page, context }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto("/");
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await context.setOffline(true);
+  try {
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "ECHO STEPS" })).toBeVisible();
+  } finally {
+    await context.setOffline(false);
+  }
   expect(errors).toEqual([]);
 });
 

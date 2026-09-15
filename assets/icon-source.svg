@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0" stop-color="#132c3c"/>
+      <stop offset="1" stop-color="#070b10"/>
+    </radialGradient>
+    <filter id="cyan"><feGaussianBlur stdDeviation="22"/></filter>
+    <filter id="red"><feGaussianBlur stdDeviation="16"/></filter>
+  </defs>
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
+  <path d="M176 760 C282 598 378 864 500 690 S722 470 848 618" fill="none" stroke="#ff3554" stroke-width="26" stroke-linecap="round" opacity=".28" filter="url(#red)"/>
+  <path d="M176 760 C282 598 378 864 500 690 S722 470 848 618" fill="none" stroke="#ff3554" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="350" cy="430" r="134" fill="#29e0ff" opacity=".25" filter="url(#cyan)"/>
+  <circle cx="350" cy="430" r="86" fill="#07121a" stroke="#29e0ff" stroke-width="28"/>
+  <circle cx="350" cy="430" r="28" fill="#eafcff"/>
+  <path d="M704 242 L792 330 L704 418 L616 330 Z" fill="#ffd23f"/>
+  <path d="M704 270 L764 330 L704 390 L644 330 Z" fill="#fff1a8" opacity=".55"/>
+</svg>

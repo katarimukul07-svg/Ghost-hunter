@@ -4,10 +4,12 @@ A minimalist arcade survival game where every completed route becomes a lethal e
 
 ## Current status
 
-The repository contains a playable web prototype hosted on GitHub Pages. It is being stabilized for a Version 1.0 mobile release; it is not yet an App Store or Google Play release build.
+The repository contains the web game plus Capacitor 8 projects for Android and iOS. Version 1.0 is in release-candidate preparation and still requires protected CI, real-device beta testing, signing, and store-owner approval before submission.
 
 - Live game: <https://katarimukul07-svg.github.io/Ghost-hunter/>
 - Release plan: [ROADMAP.md](ROADMAP.md)
+- Release checklist: [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
+- Store listing draft: [STORE_LISTING.md](STORE_LISTING.md)
 - Development process: [WORKFLOW.md](WORKFLOW.md)
 
 ## Controls
@@ -23,30 +25,38 @@ The repository contains a playable web prototype hosted on GitHub Pages. It is b
 - Every `GC_MOVES` rounds, the Garbage Collector trims old ghosts back to `GC_KEEP` survivors.
 - Obstacles increase, grow, drift, and change shape as the run advances.
 - Progress, coins, cosmetics, sound settings, and best score currently persist in local storage on one device.
-- Paid coin packs are disabled. The code contains an adapter boundary for a future rewarded-ad provider, but no provider is connected yet.
+- Version 1.0 has no paid coin packs, ads, analytics, tracking, accounts, or network dependency.
 
 ## Development
 
-Requirements: Node.js 20 or newer.
+Requirements: Node.js 22 or newer. Native development additionally needs Android Studio 2025.2.1+ with API 36 or macOS with Xcode 26+.
 
 ```bash
 npm install
 npx playwright install chromium
 npm test
 npm run serve
+npm run cap:sync
 ```
 
 Then open <http://localhost:4173>.
 
-`npm test` runs dependency-free structural checks plus desktop and mobile browser smoke tests. CI repeats the same checks for every pull request. Only a tested `main` build is eligible for deployment.
+`npm test` runs structural checks plus desktop and mobile browser smoke tests. CI also compiles an API 36 Android APK and an unsigned iOS simulator build for every pull request. The protected `Static and browser tests` gate succeeds only when all three jobs pass. Only a gated `main` build is eligible for deployment.
 
 ## Repository layout
 
 ```text
 .
 ├── .github/workflows/ci.yml  # gated validation and GitHub Pages deployment
+├── android/                  # Capacitor Android project (API 24–36)
+├── ios/                      # Capacitor iOS project (iOS 15+)
+├── assets/                   # source icon, install icons, and splash artwork
+├── capacitor.config.json     # native application identity and bundled web directory
 ├── gameplay-fixes.js         # temporary fairness/platform patch layer
-├── index.html                # current web prototype
+├── index.html                # current game shell
+├── native-bridge.js          # lifecycle, Android Back, status bar, and haptics adapter
+├── privacy.html              # public privacy policy
+├── support.html              # public support page
 ├── tests/smoke.spec.js       # desktop and mobile browser smoke tests
 ├── scripts/validate.mjs      # dependency-free validation
 ├── ROADMAP.md                # Version 1.0 scope and release gates
@@ -73,4 +83,4 @@ The current tuning values live in `CFG` near the top of the inline game script:
 
 ## Deployment
 
-GitHub Pages deployment is defined in `.github/workflows/ci.yml`. A pull request must pass structural and browser tests; after a tested change reaches `main`, the workflow builds `dist/` and deploys it. Store builds will later be produced through Capacitor rather than loading the hosted website inside an app shell.
+GitHub Pages deployment is defined in `.github/workflows/ci.yml`. A pull request must pass web, Android, and iOS build checks; after a tested change reaches `main`, the workflow builds `dist/` and deploys it. Capacitor packages those same tested local assets into native projects instead of loading the hosted website inside the app.
