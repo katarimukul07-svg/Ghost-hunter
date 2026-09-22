@@ -14,7 +14,7 @@
 <style>
   :root {
     --bg:#070b10; --grid:#0e2230; --player:#29e0ff; --ghost:#ff3554;
-    --prize:#ffd23f; --exit:#39ff9e; --sweep:#c66bff; --wall:#3d6b7a;
+    --prize:#fff15c; --exit:#39ff9e; --sweep:#c66bff; --wall:#3d6b7a;
     --ink:#cfe9f5; --dim:#4a6572;
     --safe-top:env(safe-area-inset-top, 0px); --safe-right:env(safe-area-inset-right, 0px);
     --safe-bottom:env(safe-area-inset-bottom, 0px); --safe-left:env(safe-area-inset-left, 0px);
@@ -137,7 +137,7 @@
     </div>
     <div class="sub">
       Drag to steer your <span id="hintDot" style="color:var(--player)">NODE</span>. Grab the
-      <span style="color:var(--prize)">gold coin</span>, then slip through the
+      <span style="color:var(--prize)">bright yellow diamond</span>, then slip through the
       <span style="color:var(--exit)">exit gate</span> to clear a round.<br><br>
       Every round you clear spawns a <span id="hintGhost" style="color:var(--ghost)">ghost</span> that
       replays your exact path &mdash; forever. One touch ends the run. The exit
@@ -178,7 +178,7 @@
       <button id="pauseSoundBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">SOUND</button>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-      <button id="pauseRestartBtn" style="background:var(--prize);box-shadow:0 0 18px rgba(255,210,63,.5)">RESTART</button>
+      <button id="pauseRestartBtn" style="background:var(--prize);box-shadow:0 0 18px rgba(255,241,92,.5)">RESTART</button>
       <button id="pauseMenuBtn" class="chip" style="color:var(--dim)">MAIN MENU</button>
     </div>
   </div>
@@ -188,10 +188,10 @@
     <div class="stat">You reached round <b id="finalRounds">0</b></div>
     <div class="stat" style="font-size:15px">Best: <span id="bestScore">0</span> rounds &middot; +<span id="finalCoins">0</span> coins</div>
     <div class="stat" style="font-size:16px;color:var(--prize)">&#9670; <b id="totalCoinsOver">0</b> coins banked</div>
-    <div class="sub" id="newBest" style="color:var(--prize);text-shadow:0 0 12px rgba(255,210,63,.6);display:none">&#9733; NEW BEST &#9733;</div>
+    <div class="sub" id="newBest" style="color:var(--prize);text-shadow:0 0 12px rgba(255,241,92,.6);display:none">&#9733; NEW BEST &#9733;</div>
     <div class="sub" id="overSub"></div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-      <button id="retryBtn" style="background:var(--prize);box-shadow:0 0 18px rgba(255,210,63,.5)">RETRY &#9670;100</button>
+      <button id="retryBtn" style="background:var(--prize);box-shadow:0 0 18px rgba(255,241,92,.5)">RETRY &#9670;100</button>
       <button id="restartBtn">PLAY AGAIN</button>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
@@ -1051,10 +1051,19 @@ function drawDepartureZone(){
   ctx.restore();
 }
 function drawPrize(){
-  if (!prize) return; ctx.save();
-  ctx.fillStyle=C.prize; ctx.shadowColor=C.prize; ctx.shadowBlur=18;
-  const pulse=1+Math.sin(performance.now()/200)*0.12;
-  ctx.beginPath(); ctx.arc(prize.x,prize.y,CFG.PRIZE_R*pulse,0,Math.PI*2); ctx.fill();
+  if (!prize) return;
+  const t=performance.now();
+  const pulse=1+Math.sin(t/320)*0.08;
+  const r=CFG.PRIZE_R*pulse, half=r*0.72;
+  ctx.save();
+  ctx.globalAlpha=0.42+0.18*Math.sin(t/320);
+  ctx.strokeStyle="#fffde7"; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(prize.x,prize.y,r*1.75,0,Math.PI*2); ctx.stroke();
+  ctx.globalAlpha=1; ctx.translate(prize.x,prize.y); ctx.rotate(Math.PI/4);
+  ctx.fillStyle=C.prize; ctx.strokeStyle="#fffde7";
+  ctx.shadowColor=C.prize; ctx.shadowBlur=22; ctx.lineWidth=1.5;
+  ctx.fillRect(-half,-half,half*2,half*2);
+  ctx.shadowBlur=0; ctx.strokeRect(-half,-half,half*2,half*2);
   ctx.restore();
 }
 function drawGhosts(){
@@ -1488,6 +1497,10 @@ if (new URLSearchParams(location.search).has("test")) {
       movePlayerTo:(x,y)=>{
         player.x=x; player.y=y; pointer.x=x; pointer.y=y; pointer.active=false;
       },
+      visualRoles:()=>({
+        objective:{shape:"diamond",color:C.prize,motion:"slow-pulse-ring"},
+        ghost:{shape:"circle",color:C.ghost,motion:"flicker"},
+      }),
       step:(count=1)=>{ for(let i=0;i<count;i++) update(STEP); },
     }),
   });
