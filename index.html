@@ -218,6 +218,7 @@ const CFG = {
   RAMP_START:7, GHOST_RAMP:0.01, WALL_DRIFT:0.9,
   OBSTACLES_START:2, OBSTACLES_ADD_EVERY:5, OBSTACLES_MAX:6,
   SIZE_EVERY:5, SIZE_GROW:0.10, SIZE_MAX:2.0, EXIT_MOVE_EVERY:5,
+  EXIT_HANDOFF_TICKS:120, EXIT_SAFE_PAD:32,
   RETRY_COST:100,            // coins to revive at the same round after death
 };
 
@@ -415,6 +416,12 @@ function resize() {
       ? (exit.x + exit.w/2 - previousRoom.x) / previousRoom.w
       : (exit.y + exit.h/2 - previousRoom.y) / previousRoom.h,
   } : null;
+  const previousDeparture = canRemap && departureZone ? {
+    wall:departureZone.wall,
+    ratio:(departureZone.wall === "top" || departureZone.wall === "bottom")
+      ? (departureZone.x + departureZone.w/2 - previousRoom.x) / previousRoom.w
+      : (departureZone.y + departureZone.h/2 - previousRoom.y) / previousRoom.h,
+  } : null;
 
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   W = canvas.clientWidth; H = canvas.clientHeight;
@@ -439,6 +446,7 @@ function resize() {
     currentPath.forEach(remapPoint);
     ghosts.forEach(g => g.path.forEach(remapPoint));
     positionExit(previousExit.wall, previousExit.ratio);
+    if (previousDeparture) positionZone(departureZone, previousDeparture.wall, previousDeparture.ratio);
   } else {
     positionExit("top", 0.5);
   }
@@ -449,21 +457,22 @@ function resize() {
 window.addEventListener("resize", resize);
 if (window.visualViewport) window.visualViewport.addEventListener("resize", resize);
 
-function positionExit(wall, ratio=0.5) {
+function positionZone(zone, wall, ratio=0.5) {
   const t = clamp(ratio, 0, 1);
-  exit.wall = wall;
+  zone.wall = wall;
   if (wall === "top" || wall === "bottom") {
-    exit.w = Math.min(CFG.EXIT_W, room.w);
-    exit.h = Math.min(CFG.EXIT_H, room.h);
-    exit.x = clamp(room.x + room.w*t - exit.w/2, room.x, room.x + room.w - exit.w);
-    exit.y = wall === "top" ? room.y : room.y + room.h - exit.h;
+    zone.w = Math.min(CFG.EXIT_W, room.w);
+    zone.h = Math.min(CFG.EXIT_H, room.h);
+    zone.x = clamp(room.x + room.w*t - zone.w/2, room.x, room.x + room.w - zone.w);
+    zone.y = wall === "top" ? room.y : room.y + room.h - zone.h;
   } else {
-    exit.w = Math.min(CFG.EXIT_H, room.w);
-    exit.h = Math.min(CFG.EXIT_W, room.h);
-    exit.x = wall === "left" ? room.x : room.x + room.w - exit.w;
-    exit.y = clamp(room.y + room.h*t - exit.h/2, room.y, room.y + room.h - exit.h);
+    zone.w = Math.min(CFG.EXIT_H, room.w);
+    zone.h = Math.min(CFG.EXIT_W, room.h);
+    zone.x = wall === "left" ? room.x : room.x + room.w - zone.w;
+    zone.y = clamp(room.y + room.h*t - zone.h/2, room.y, room.y + room.h - zone.h);
   }
 }
+function positionExit(wall, ratio=0.5) { positionZone(exit, wall, ratio); }
 
 const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex"];
 function obstacleCountForRound(r) {
@@ -514,6 +523,7 @@ let mode = STATE.START;
 const player = { x:0, y:0 };
 const pointer = { x:0, y:0, active:false };
 const exit = { x:0, y:0, w:CFG.EXIT_W, h:CFG.EXIT_H, wall:"top" };
+let departureZone = null;
 /* left/right labels are rotated 90deg in drawExit(), so their pre-rotation glyph
    is swapped (down->becomes left, up->becomes right) so the arrow reads correctly */
 const EXIT_ARROW = { top:"▲", bottom:"▼", left:"▼", right:"▲" };
@@ -578,12 +588,33 @@ function pointInObstacles(px,py,pad){
     if (px>o.x-pad && px<o.x+o.w+pad && py>o.y-pad && py<o.y+o.h+pad) return true;
   return false;
 }
-/* The exit is a permanent ghost-free safe zone: every round starts with the
-   player still standing where the last one ended (at the exit), and every
-   ghost's patrol resyncs to phase 0 there too — without this, that overlap
-   could kill the player the instant a new round begins. */
+/* The active exit is ghost-free. When it relocates, the previous exit becomes
+   a short one-way departure zone so the player cannot die during the handoff. */
+function inZone(zone,px,py,pad=0){
+  return !!zone && px>zone.x-pad && px<zone.x+zone.w+pad && py>zone.y-pad && py<zone.y+zone.h+pad;
+}
 function inExitZone(px,py,pad){
-  return px>exit.x-pad && px<exit.x+exit.w+pad && py>exit.y-pad && py<exit.y+exit.h+pad;
+  return inZone(exit,px,py,pad);
+}
+function inDepartureZone(px,py,pad){
+  return inZone(departureZone,px,py,pad);
+}
+function reserveZoneCorridor(zone, pad=CFG.EXIT_SAFE_PAD){
+  if (!zone) return;
+  const x1=zone.x-pad, y1=zone.y-pad, x2=zone.x+zone.w+pad, y2=zone.y+zone.h+pad;
+  for (const o of obstacles){
+    if (!(o.x<x2 && o.x+o.w>x1 && o.y<y2 && o.y+o.h>y1)) continue;
+    if (zone.wall==="top") o.y=Math.max(o.y,y2);
+    else if (zone.wall==="bottom") o.y=Math.min(o.y,y1-o.h);
+    else if (zone.wall==="left") o.x=Math.max(o.x,x2);
+    else if (zone.wall==="right") o.x=Math.min(o.x,x1-o.w);
+    o.x=clamp(o.x,room.x,room.x+room.w-o.w);
+    o.y=clamp(o.y,room.y,room.y+room.h-o.h);
+  }
+}
+function reserveSafeCorridors(){
+  reserveZoneCorridor(exit);
+  reserveZoneCorridor(departureZone);
 }
 function resolveCircleRect(cx,cy,r,o){
   const nx=clamp(cx,o.x,o.x+o.w), ny=clamp(cy,o.y,o.y+o.h);
@@ -665,6 +696,7 @@ function resetGame() {
   player.x = room.x+room.w/2; player.y = room.y+room.h/2;
   pointer.x = player.x; pointer.y = player.y; pointer.active = false;
   ghosts = []; currentPath = []; particles = []; pops = []; shockwaves = [];
+  departureZone = null;
   frame = 0; round = 1; grace = CFG.GRACE_TICKS; runCoins = 0;
   ghostPhase = 0; ghostSpeed = 1; wallTime = 0;
   toast = null; shake = 0; deathTimer = 0; sweep = null;
@@ -693,7 +725,12 @@ function completeRound() {
   if (round>CFG.RAMP_START) ghostSpeed *= (1+CFG.GHOST_RAMP);
   if (round===CFG.RAMP_START+1) toast = { text:"\u26A0 THINGS GET WILD!", t:0 };
   if (round % CFG.GC_MOVES === 0 && ghosts.length > CFG.GC_KEEP && !sweep) { sweep={t:0}; Sound.sweep(); }
-  if (round % CFG.EXIT_MOVE_EVERY === 0){ repositionExit(); toast = { text:"\u21C4 EXIT MOVED!", t:0 }; }
+  if (round % CFG.EXIT_MOVE_EVERY === 0){
+    const oldExit={...exit};
+    repositionExit();
+    departureZone={...oldExit, ticks:CFG.EXIT_HANDOFF_TICKS};
+    toast = { text:"\u21C4 EXIT MOVED \u2014 DEPARTURE SAFE!", t:0 };
+  }
   const wantObstacles = obstacleCountForRound(round);
   const atMaxObstacles = wantObstacles >= CFG.OBSTACLES_MAX;
   // once capped, reshuffle shape+size every OBSTACLES_ADD_EVERY rounds instead of adding more
@@ -705,6 +742,7 @@ function completeRound() {
       ? { text:"\u26A0 OBSTACLES SHIFT SHAPE & SIZE!", t:0 }
       : { text:"\u26A0 NEW OBSTACLE!", t:0 };
   }
+  reserveSafeCorridors();
   spawnPrize(); Sound.complete();
 }
 function startDeath() {
@@ -842,10 +880,16 @@ function update(dt) {
   if (hasPrize && player.x>exit.x && player.x<exit.x+exit.w && player.y>exit.y && player.y<exit.y+exit.h)
     completeRound();
 
+  if (departureZone){
+    departureZone.ticks--;
+    if (departureZone.ticks<=0 || !inDepartureZone(player.x,player.y,CFG.PLAYER_R)) departureZone=null;
+  }
+
   if (sweep){ sweep.t += dt/CFG.SWEEP_TIME; if (sweep.t>=1){ if (ghosts.length>CFG.GC_KEEP) ghosts.shift(); sweep=null; } }
 
   if (grace>0) grace--;
-  else if (!inExitZone(player.x, player.y, CFG.GHOST_R)) {
+  else if (!inExitZone(player.x, player.y, CFG.GHOST_R) &&
+           !inDepartureZone(player.x, player.y, CFG.GHOST_R)) {
     const rr=CFG.PLAYER_R+CFG.GHOST_R;
     for (const g of ghosts){
       const pos=ghostPos(g);
@@ -988,6 +1032,24 @@ function drawExit(){
   }
   ctx.restore();
 }
+function drawDepartureZone(){
+  if (!departureZone) return;
+  const life=clamp(departureZone.ticks/CFG.EXIT_HANDOFF_TICKS,0,1);
+  const pulse=0.55+0.25*Math.sin(performance.now()/110);
+  const cx=departureZone.x+departureZone.w/2, cy=departureZone.y+departureZone.h/2;
+  ctx.save();
+  ctx.globalAlpha=Math.max(0.18,life)*pulse;
+  ctx.strokeStyle=C.exit; ctx.shadowColor=C.exit; ctx.shadowBlur=12; ctx.lineWidth=2;
+  ctx.setLineDash([8,6]);
+  ctx.strokeRect(departureZone.x,departureZone.y,departureZone.w,departureZone.h);
+  ctx.setLineDash([]); ctx.shadowBlur=0; ctx.globalAlpha=Math.max(0.3,life);
+  ctx.fillStyle=C.exit; ctx.font="11px ui-monospace, monospace";
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  if (departureZone.wall==="left" || departureZone.wall==="right"){
+    ctx.translate(cx,cy); ctx.rotate(Math.PI/2); ctx.fillText("SAFE \u2014 MOVE",0,0);
+  } else ctx.fillText("SAFE \u2014 MOVE",cx,cy);
+  ctx.restore();
+}
 function drawPrize(){
   if (!prize) return; ctx.save();
   ctx.fillStyle=C.prize; ctx.shadowColor=C.prize; ctx.shadowBlur=18;
@@ -1082,7 +1144,7 @@ function render(){
   ctx.clearRect(0,0,W,H);
   ctx.save();
   if (shake>0.3) ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
-  drawGrid(); drawRoomBorder(); drawObstacles(); drawExit();
+  drawGrid(); drawRoomBorder(); drawObstacles(); drawDepartureZone(); drawExit();
   drawGhosts(); drawPrize(); drawSweep();
   if (mode===STATE.PLAYING){ drawTrail(); drawPlayer(); drawHint(); }
   drawParticles(); drawShockwaves(); drawPops(); drawToast();
@@ -1299,6 +1361,7 @@ function retryRun(){
   grace = CFG.GRACE_TICKS*2;                                  // extra grace on revive
   hasPrize = false; paused = false;
   particles = []; pops = []; shockwaves = []; sweep = null;
+  departureZone = null;
   spawnPrize();
   toast = { text:"\u21BB REVIVED \u2014 GHOSTS STILL HUNT", t:0 };
   mode = STATE.PLAYING;
@@ -1408,8 +1471,24 @@ if (new URLSearchParams(location.search).has("test")) {
       snapshot:()=>({
         mode, paused, round,
         player:{...player}, pointer:{...pointer}, room:{...room}, exit:{...exit},
+        departureZone:departureZone ? {...departureZone} : null,
         prize:prize ? {...prize} : null,
       }),
+      prepareExitHandoff:()=>{
+        round=CFG.EXIT_MOVE_EVERY-1;
+        player.x=exit.x+exit.w/2; player.y=exit.y+exit.h/2;
+        pointer.x=player.x; pointer.y=player.y; pointer.active=false;
+        currentPath=[{x:player.x,y:player.y}]; hasPrize=true;
+        completeRound();
+      },
+      putGhostOnPlayer:()=>{
+        ghosts=[{path:[{x:player.x,y:player.y}]}];
+        grace=0;
+      },
+      movePlayerTo:(x,y)=>{
+        player.x=x; player.y=y; pointer.x=x; pointer.y=y; pointer.active=false;
+      },
+      step:(count=1)=>{ for(let i=0;i<count;i++) update(STEP); },
     }),
   });
 }

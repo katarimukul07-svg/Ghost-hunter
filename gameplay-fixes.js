@@ -4,7 +4,6 @@
   "use strict";
 
   const TOUCH_OFFSET_PX = 52;
-  const EXIT_CORRIDOR_PAD = Math.max(30, CFG.PLAYER_R * 2.5);
 
   function rectCircleHit(px, py, r, o) {
     const nx = clamp(px, o.x, o.x + o.w);
@@ -151,29 +150,10 @@
     return obstacles.some(o => circleHitsObstacle(px, py, pad, o));
   };
 
-  function reserveExitCorridor() {
-    const x1 = exit.x - EXIT_CORRIDOR_PAD, y1 = exit.y - EXIT_CORRIDOR_PAD;
-    const x2 = exit.x + exit.w + EXIT_CORRIDOR_PAD, y2 = exit.y + exit.h + EXIT_CORRIDOR_PAD;
-    for (const o of obstacles) {
-      if (!(o.x < x2 && o.x + o.w > x1 && o.y < y2 && o.y + o.h > y1)) continue;
-      if (exit.wall === "top") {
-        o.y = Math.max(o.y, y2);
-      } else if (exit.wall === "bottom") {
-        o.y = Math.min(o.y, y1 - o.h);
-      } else if (exit.wall === "left") {
-        o.x = Math.max(o.x, x2);
-      } else if (exit.wall === "right") {
-        o.x = Math.min(o.x, x1 - o.w);
-      }
-      o.x = clamp(o.x, room.x, room.x + room.w - o.w);
-      o.y = clamp(o.y, room.y, room.y + room.h - o.h);
-    }
-  }
-
   const updateObstaclesBase = updateObstacles;
   updateObstacles = function guardedObstacleUpdate(dt) {
     updateObstaclesBase(dt);
-    reserveExitCorridor();
+    reserveSafeCorridors();
   };
 
   function buildReachableMap(clearance) {
@@ -276,7 +256,7 @@
     toast = { text:"⚠ GRID LOCKED — RESHUFFLING", t:0 };
     obstacleLayout = makeObstacleLayout(obstacleCountForRound(round));
     buildObstacles();
-    reserveExitCorridor();
+    reserveSafeCorridors();
     setTimeout(() => { if (mode === STATE.PLAYING && !prize && !hasPrize) spawnPrize(); }, 0);
   };
 

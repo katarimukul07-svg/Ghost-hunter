@@ -106,3 +106,53 @@ test("requires an active drag and preserves game position across resize", async 
   expect(newNormalized.y).toBeCloseTo(oldNormalized.y, 2);
   expect(errors).toEqual([]);
 });
+
+test("keeps the old exit safe only for the relocation handoff", async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto("/?test=1");
+  await page.getByRole("button", { name: "PLAY" }).click();
+  await page.evaluate(() => window.__echoStepsTest.prepareExitHandoff());
+
+  const handoff = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  expect(handoff.round).toBe(5);
+  expect(handoff.departureZone).not.toBeNull();
+  expect(handoff.exit.x !== handoff.departureZone.x || handoff.exit.y !== handoff.departureZone.y).toBe(true);
+
+  await page.evaluate(() => {
+    window.__echoStepsTest.putGhostOnPlayer();
+    window.__echoStepsTest.step();
+  });
+  expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).mode).toBe(1);
+
+  await page.evaluate(() => {
+    const state=window.__echoStepsTest.snapshot();
+    window.__echoStepsTest.movePlayerTo(state.room.x+state.room.w/2,state.room.y+state.room.h/2);
+    window.__echoStepsTest.step();
+  });
+  expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).departureZone).toBeNull();
+
+  await page.evaluate(() => {
+    window.__echoStepsTest.putGhostOnPlayer();
+    window.__echoStepsTest.step();
+  });
+  expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).mode).toBe(3);
+  expect(errors).toEqual([]);
+});
+
+test("expires exit handoff protection after two seconds", async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto("/?test=1");
+  await page.getByRole("button", { name: "PLAY" }).click();
+  await page.evaluate(() => {
+    window.__echoStepsTest.prepareExitHandoff();
+    window.__echoStepsTest.putGhostOnPlayer();
+    window.__echoStepsTest.step(120);
+  });
+
+  const expired = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  expect(expired.departureZone).toBeNull();
+  expect(expired.mode).toBe(3);
+  expect(errors).toEqual([]);
+});
