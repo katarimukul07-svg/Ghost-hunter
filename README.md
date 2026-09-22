@@ -16,7 +16,7 @@ The repository contains the web game plus Capacitor 8 projects for Android and i
 
 - Desktop: click and drag to steer the node.
 - Mobile: drag with one finger; the control target is offset above the finger for visibility.
-- Collect the yellow prize, then enter the green exit.
+- Collect the pulsing yellow diamond, then enter the green exit. Red flickering circles are ghosts.
 - Avoid obstacles and the echoes replaying earlier routes.
 
 ## Core systems

@@ -156,3 +156,24 @@ test("expires exit handoff protection after two seconds", async ({ page }) => {
   expect(expired.mode).toBe(3);
   expect(errors).toEqual([]);
 });
+
+test("distinguishes the objective from red circular ghosts", async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto("/?test=1");
+  await expect(page.locator("#startScreen")).toContainText("bright yellow diamond");
+
+  const roles = await page.evaluate(() => window.__echoStepsTest.visualRoles());
+  expect(roles.objective).toEqual({
+    shape:"diamond",
+    color:"#fff15c",
+    motion:"slow-pulse-ring",
+  });
+  expect(roles.ghost).toEqual({
+    shape:"circle",
+    color:"#ff3554",
+    motion:"flicker",
+  });
+  expect(roles.objective.color).not.toBe(roles.ghost.color);
+  expect(errors).toEqual([]);
+});
