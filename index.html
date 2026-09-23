@@ -60,30 +60,38 @@
     padding:9px 14px; width:210px; outline:none;
   }
   #nameInput:focus { border-color:var(--player); }
-  .swatches { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; max-width:290px; }
+  .swatches { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; max-width:390px; }
   .skin { display:flex; flex-direction:column; align-items:center; gap:4px; }
   .price { font-size:10px; color:var(--prize); min-height:12px; letter-spacing:.5px; }
   .slabel { font-size:9px; color:var(--dim); letter-spacing:.5px; }
-  .swatch { width:30px; height:30px; border-radius:50%; border:2px solid transparent;
+  .swatch { width:42px; height:42px; border-radius:50%; border:2px solid transparent;
             cursor:pointer; padding:0; box-shadow:none; }
   .swatch:active { transform:scale(.9); }
   .swatch.sel { border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.25); }
   .swatch.locked { opacity:.4; }
-  .chip { min-width:70px; padding:9px 12px; border-radius:8px; background:rgba(255,255,255,.05);
+  .chip { min-width:88px; padding:11px 14px; border-radius:8px; background:rgba(255,255,255,.05);
           border:1px solid var(--dim); color:var(--ink); font-size:11px; letter-spacing:.5px; box-shadow:none; }
   .chip:active { transform:scale(.96); }
   .chip.sel { border-color:#fff; background:rgba(255,255,255,.15); box-shadow:0 0 0 2px rgba(255,255,255,.2); }
   .chip.locked { opacity:.4; }
 
   /* shop */
-  .tabs { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:4px 0; }
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:4px 0; max-width:440px; }
   .tab { font-size:11px; padding:8px 14px; background:rgba(255,255,255,.05); color:var(--dim);
          border:1px solid var(--dim); box-shadow:none; border-radius:8px; letter-spacing:1px; }
   .tab.active { color:var(--bg); background:var(--sweep); border-color:var(--sweep);
                 box-shadow:0 0 12px rgba(198,107,255,.4); }
   .tab:active { transform:scale(.96); }
-  #shopPreview { width:100%; max-width:280px; height:100px; border-radius:6px;
+  #shopPreview { width:min(92vw,360px); height:120px; border-radius:8px;
     background:var(--bg); border:1px solid var(--player); box-shadow:0 0 10px rgba(41,224,255,.3); }
+  #shopHint { min-height:22px; max-width:38ch; }
+
+  @media (max-width:520px) {
+    .overlay { gap:13px; }
+    .tabs { flex-wrap:nowrap; justify-content:flex-start; width:min(92vw,390px); overflow-x:auto; padding:3px; }
+    .tab { flex:0 0 auto; }
+    .swatches { max-width:94vw; }
+  }
 
   #hud {
     position:absolute; top:0; left:0; right:0; display:flex;
@@ -118,7 +126,7 @@
         <span class="value" id="hudCoins">0</span><span class="label">COINS</span>
       </div>
       <div class="hud-stat" style="border-left-color:var(--sweep)">
-        <span class="value" id="hudGc">10 mv</span><span class="label">SWEEP</span>
+        <span class="value" id="hudGc">10</span><span class="label">GC IN</span>
       </div>
     </div>
     <div style="display:flex;gap:6px">
@@ -136,14 +144,11 @@
       <input id="nameInput" maxlength="12" placeholder="Player" autocomplete="off" />
     </div>
     <div class="sub">
-      Drag to steer your <span id="hintDot" style="color:var(--player)">NODE</span>. Grab the
-      <span style="color:var(--prize)">bright yellow diamond</span>, then slip through the
-      <span style="color:var(--exit)">exit gate</span> to clear a round.<br><br>
-      Every round you clear spawns a <span id="hintGhost" style="color:var(--ghost)">ghost</span> that
-      replays your exact path &mdash; forever. One touch ends the run. The exit
-      <b>relocates every 5 rounds</b>, and past <b>round 7</b> the grid destabilizes.<br><br>
-      Every 10 completed rounds, the Garbage Collector removes
-      <b>4, then 3, then 2, then 1</b> old ghosts. Later sweeps remove 1.
+      Drag your <span id="hintDot" style="color:var(--player)">NODE</span> to the
+      <span style="color:var(--prize)">yellow diamond</span>, then escape through the
+      <span style="color:var(--exit)">green gate</span>.<br><br>
+      Each cleared round creates a <span id="hintGhost" style="color:var(--ghost)">red echo</span>
+      that repeats your path. Don&rsquo;t touch it.
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="startBtn">PLAY</button>
@@ -155,7 +160,7 @@
     <h1 style="color:var(--sweep);text-shadow:0 0 14px rgba(198,107,255,.55)">SHOP</h1>
     <div class="sub" id="shopCoinLine" style="color:var(--prize)">&#9670; 0 coins</div>
     <label class="mlabel">PREVIEW</label>
-    <canvas id="shopPreview" width="280" height="100"></canvas>
+    <canvas id="shopPreview" width="360" height="120"></canvas>
     <div class="tabs" id="shopTabs">
       <button class="tab" data-cat="colors">DOT COLOR</button>
       <button class="tab" data-cat="trail">TRAIL FX</button>
@@ -168,6 +173,7 @@
     <div class="swatches hidden" id="shopGhost"></div>
     <div class="swatches hidden" id="shopDeath"></div>
     <div class="swatches hidden" id="shopSound"></div>
+    <div class="sub" id="shopHint">Tap an item to preview it. Owned items can be equipped instantly.</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="shopBackBtn">BACK</button>
     </div>
@@ -214,7 +220,7 @@
 
 const CFG = {
   WALL_MARGIN:16, HUD_CLEARANCE:46, PLAYER_R:12,
-  SPEED_FRAC:0.020,          // player speed as a fraction of screen size
+  SPEED_FRAC:0.026,          // responsive without snapping instantly to the pointer
   GHOST_R:9, PRIZE_R:11, EXIT_W:150, EXIT_H:44,
   GC_MOVES:10, GC_REMOVE_START:4, GC_REMOVE_MIN:1, SWEEP_TIME:0.7, GRACE_TICKS:36,
   RAMP_START:7, GHOST_RAMP:0.01, WALL_DRIFT:0.9,
@@ -586,7 +592,7 @@ const el = {
   shopTabs:document.getElementById("shopTabs"), shopPreview:document.getElementById("shopPreview"),
   shopColors:document.getElementById("shopColors"), shopTrail:document.getElementById("shopTrail"),
   shopGhost:document.getElementById("shopGhost"), shopDeath:document.getElementById("shopDeath"),
-  shopSound:document.getElementById("shopSound"),
+  shopSound:document.getElementById("shopSound"), shopHint:document.getElementById("shopHint"),
 };
 
 /* ---------- Helpers ---------- */
@@ -732,6 +738,12 @@ function trimPathAtExit(path){
   return path.slice(0, end);
 }
 function completeRound() {
+  const clearedRound = round;
+  burst(particles, exit.x+exit.w/2, exit.y+exit.h/2, C.exit, 24);
+  shockwaves.push({ x:exit.x+exit.w/2, y:exit.y+exit.h/2, t:0 });
+  pop(exit.x+exit.w/2, exit.y+exit.h/2, "ROUND " + clearedRound + " CLEAR", C.exit);
+  haptic("medium");
+  if (!hintSeen && clearedRound===1){ hintSeen=true; ss("echoSteps.hint","1"); }
   ghosts.push({ path: trimPathAtExit(currentPath) });
   round++; currentPath = []; frame = 0; ghostPhase = 0;
   const completedRounds = round - 1;
@@ -889,10 +901,12 @@ function update(dt) {
   if (prize && !hasPrize){
     const rr=CFG.PLAYER_R+CFG.PRIZE_R;
     if (dist2(player.x,player.y,prize.x,prize.y) < rr*rr){
-      burst(particles, prize.x, prize.y, C.prize, 16);
+      burst(particles, prize.x, prize.y, C.prize, 26);
+      shockwaves.push({ x:prize.x, y:prize.y, t:0 });
       collectCoin(prize.x, prize.y);            // +1 coin (currency)
-      haptic("light");
+      haptic("medium");
       hasPrize=true; prize=null; Sound.pickup();
+      toast = { text:"TARGET SECURED — REACH THE EXIT", t:0 };
     }
   }
   if (hasPrize && player.x>exit.x && player.x<exit.x+exit.w && player.y>exit.y && player.y<exit.y+exit.h)
@@ -915,7 +929,6 @@ function update(dt) {
     }
   }
 
-  if (!hintSeen && round===1 && frame>210){ hintSeen=true; ss("echoSteps.hint","1"); }
   if (toast){ toast.t+=dt; if (toast.t>2.6) toast=null; }
   ghostPhase += ghostSpeed; frame++;
 }
@@ -1146,9 +1159,14 @@ function drawPops(){
 function drawHint(){
   if (hintSeen || round!==1) return;
   const a=0.45+0.45*Math.sin(performance.now()/300);
-  ctx.globalAlpha=a; ctx.fillStyle=C.ink; ctx.font="600 15px ui-monospace, monospace";
+  const target = hasPrize ? { x:exit.x+exit.w/2, y:exit.y+exit.h/2 } : prize;
+  if (target){
+    ctx.save(); ctx.globalAlpha=a*0.35; ctx.strokeStyle=hasPrize?C.exit:C.prize;
+    ctx.setLineDash([6,8]); ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(player.x,player.y); ctx.lineTo(target.x,target.y); ctx.stroke(); ctx.restore();
+  }
+  ctx.globalAlpha=a; ctx.fillStyle=hasPrize?C.exit:C.ink; ctx.font="600 15px ui-monospace, monospace";
   ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.fillText("drag to move", player.x, player.y-30);
+  ctx.fillText(hasPrize?"NOW REACH THE GREEN EXIT":"DRAG TO THE YELLOW DIAMOND", player.x, player.y-30);
   ctx.globalAlpha=1;
 }
 function drawShockwaves(){
@@ -1248,7 +1266,7 @@ function updateHUD(){
   const completedRounds = round - 1;
   const movesLeft = CFG.GC_MOVES - (completedRounds % CFG.GC_MOVES);
   const armed = ghosts.length > 0;
-  el.gc.textContent = movesLeft + " mv";
+  el.gc.textContent = String(movesLeft);
   el.gc.style.color = armed ? (movesLeft<=2 ? C.sweep : "") : C.dim;
 }
 
@@ -1343,6 +1361,14 @@ function setShopTab(cat){
   else if (cat==="trail") previewTrail = selectedTrail;
   else if (cat==="ghost") previewGhostColor = selectedGhostSkin;
   else if (cat==="death") setPreviewItem("death", selectedDeathFX);
+  const hints = {
+    colors:"Choose the shape and color of your NODE.",
+    trail:"Preview the trail that follows your movement.",
+    ghost:"Change how your dangerous echoes appear.",
+    death:"Preview the effect shown when an echo catches you.",
+    sound:"Tap a sound pack to hear and equip it for free.",
+  };
+  el.shopHint.textContent = hints[cat] || "Tap an item to preview it.";
 }
 let shopReturnTo = "start";   // where BACK sends us: "start" or "pause"
 function openShop(tab){
@@ -1499,6 +1525,7 @@ if (new URLSearchParams(location.search).has("test")) {
       snapshot:()=>({
         mode, paused, round,
         player:{...player}, pointer:{...pointer}, room:{...room}, exit:{...exit},
+        playerSpeed,
         departureZone:departureZone ? {...departureZone} : null,
         prize:prize ? {...prize} : null,
         ghostCount:ghosts.length,
