@@ -6,6 +6,38 @@ function collectPageErrors(page) {
   return errors;
 }
 
+test.beforeEach(async ({ page }, testInfo) => {
+  if (!testInfo.title.includes("first launch tutorial")) {
+    await page.addInitScript(() => localStorage.setItem("echoSteps.tutorial.v1", "complete"));
+  }
+});
+
+test("first launch tutorial is automatic, skippable, remembered, and replayable", async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto("/");
+  await expect(page.locator("#tutorialScreen")).toBeVisible();
+  await expect(page.getByRole("heading", { name:"YOU ARE THE BLUE NODE" })).toBeVisible();
+  await expect(page.locator("#tutorialKicker")).toHaveText("STEP 1 OF 7");
+  await expect(page.getByRole("button", { name:"SKIP" })).toBeVisible();
+
+  await page.getByRole("button", { name:"NEXT" }).click();
+  await expect(page.getByRole("heading", { name:"COLLECT THE YELLOW TARGET" })).toBeVisible();
+
+  await page.getByRole("button", { name:"SKIP" }).click();
+  await expect(page.getByRole("heading", { name:"ECHO STEPS" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("echoSteps.tutorial.v1"))).toBe("complete");
+
+  await page.reload();
+  await expect(page.locator("#tutorialScreen")).toBeHidden();
+  await page.getByRole("button", { name:"Open tutorial" }).click();
+  await expect(page.locator("#tutorialScreen")).toBeVisible();
+  await expect(page.getByRole("heading", { name:"YOU ARE THE BLUE NODE" })).toBeVisible();
+  await expect(page.getByRole("button", { name:"CLOSE" })).toBeVisible();
+
+  expect(errors).toEqual([]);
+});
+
 test("loads the menu and starts a run without runtime errors", async ({ page }) => {
   const errors = collectPageErrors(page);
 
