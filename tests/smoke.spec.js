@@ -177,3 +177,41 @@ test("distinguishes the objective from red circular ghosts", async ({ page }) =>
   expect(roles.objective.color).not.toBe(roles.ghost.color);
   expect(errors).toEqual([]);
 });
+
+test("runs progressively stronger garbage collection after each tenth completed round", async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto("/?test=1");
+  await page.getByRole("button", { name: "PLAY" }).click();
+
+  const policies = await page.evaluate(() => [9, 10, 20, 30, 40, 50]
+    .map((completed) => ({ completed, ...window.__echoStepsTest.gcPolicy(completed) })));
+  expect(policies).toEqual([
+    { completed:9, shouldSweep:false, keep:4 },
+    { completed:10, shouldSweep:true, keep:4 },
+    { completed:20, shouldSweep:true, keep:3 },
+    { completed:30, shouldSweep:true, keep:2 },
+    { completed:40, shouldSweep:true, keep:1 },
+    { completed:50, shouldSweep:true, keep:1 },
+  ]);
+
+  await page.evaluate(() => {
+    for (let completed = 0; completed < 9; completed++) window.__echoStepsTest.completeRound();
+  });
+  let state = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  expect(state.round).toBe(10);
+  expect(state.ghostCount).toBe(9);
+  expect(state.sweep).toBeNull();
+
+  await page.evaluate(() => window.__echoStepsTest.completeRound());
+  state = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  expect(state.round).toBe(11);
+  expect(state.ghostCount).toBe(10);
+  expect(state.sweep).toMatchObject({ keep:4, completedRounds:10 });
+
+  await page.evaluate(() => window.__echoStepsTest.step(43));
+  state = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  expect(state.sweep).toBeNull();
+  expect(state.ghostCount).toBe(4);
+  expect(errors).toEqual([]);
+});

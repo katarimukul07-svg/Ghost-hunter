@@ -261,21 +261,22 @@
   };
 
   // The original sweep removes one ghost. Keep its animation/timing, then collect
-  // every excess old ghost so the board actually returns to GC_KEEP survivors.
+  // every excess old ghost so the board returns to this milestone's survivor cap.
   const updateBase = update;
   update = function strongerGarbageCollector(dt) {
     const sweepWasActive = !!sweep;
+    const sweepKeep = sweep ? sweep.keep : null;
     updateBase(dt);
-    if (sweepWasActive && !sweep && ghosts.length > CFG.GC_KEEP) {
-      ghosts.splice(0, ghosts.length - CFG.GC_KEEP);
-      toast = { text:"♻ MEMORY CLEANED — " + CFG.GC_KEEP + " ECHOES KEPT", t:0 };
+    if (sweepWasActive && !sweep && ghosts.length > sweepKeep) {
+      ghosts.splice(0, ghosts.length - sweepKeep);
+      toast = { text:"♻ MEMORY CLEANED — " + sweepKeep + " ECHO" + (sweepKeep === 1 ? "" : "ES") + " KEPT", t:0 };
     }
   };
 
   const drawGhostsBase = drawGhosts;
   drawGhosts = function drawGcTargets() {
     if (!sweep) { drawGhostsBase(); return; }
-    const collectCount = Math.max(0, ghosts.length - CFG.GC_KEEP);
+    const collectCount = Math.max(0, ghosts.length - sweep.keep);
     for (let i = 0; i < ghosts.length; i++) {
       const g = ghosts[i], pos = ghostPos(g); if (!pos) continue;
       ctx.strokeStyle = selectedGhostSkin; ctx.globalAlpha = 0.10; ctx.lineWidth = 2;
