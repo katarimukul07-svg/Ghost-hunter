@@ -142,8 +142,8 @@
       Every round you clear spawns a <span id="hintGhost" style="color:var(--ghost)">ghost</span> that
       replays your exact path &mdash; forever. One touch ends the run. The exit
       <b>relocates every 5 rounds</b>, and past <b>round 7</b> the grid destabilizes.<br><br>
-      Every 10 completed rounds, the Garbage Collector trims the ghosts to
-      <b>4, then 3, then 2, then 1</b> for the rest of the run.
+      Every 10 completed rounds, the Garbage Collector removes
+      <b>4, then 3, then 2, then 1</b> old ghosts. Later sweeps remove 1.
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="startBtn">PLAY</button>
@@ -216,7 +216,7 @@ const CFG = {
   WALL_MARGIN:16, HUD_CLEARANCE:46, PLAYER_R:12,
   SPEED_FRAC:0.020,          // player speed as a fraction of screen size
   GHOST_R:9, PRIZE_R:11, EXIT_W:150, EXIT_H:44,
-  GC_MOVES:10, GC_KEEP_START:4, GC_KEEP_MIN:1, SWEEP_TIME:0.7, GRACE_TICKS:36,
+  GC_MOVES:10, GC_REMOVE_START:4, GC_REMOVE_MIN:1, SWEEP_TIME:0.7, GRACE_TICKS:36,
   RAMP_START:7, GHOST_RAMP:0.01, WALL_DRIFT:0.9,
   OBSTACLES_START:2, OBSTACLES_ADD_EVERY:5, OBSTACLES_MAX:6,
   SIZE_EVERY:5, SIZE_GROW:0.10, SIZE_MAX:2.0, EXIT_MOVE_EVERY:5,
@@ -224,14 +224,14 @@ const CFG = {
   RETRY_COST:100,            // coins to revive at the same round after death
 };
 
-function gcKeepForCompletedRounds(completed) {
+function gcRemoveForCompletedRounds(completed) {
   const sweepNumber = Math.max(1, Math.floor(completed / CFG.GC_MOVES));
-  return Math.max(CFG.GC_KEEP_MIN, CFG.GC_KEEP_START - (sweepNumber - 1));
+  return Math.max(CFG.GC_REMOVE_MIN, CFG.GC_REMOVE_START - (sweepNumber - 1));
 }
 function gcPolicyForCompletedRounds(completed) {
   return {
     shouldSweep: completed > 0 && completed % CFG.GC_MOVES === 0,
-    keep: gcKeepForCompletedRounds(completed),
+    remove: gcRemoveForCompletedRounds(completed),
   };
 }
 
@@ -739,8 +739,8 @@ function completeRound() {
   grace = CFG.GRACE_TICKS; hasPrize = false;
   if (round>CFG.RAMP_START) ghostSpeed *= (1+CFG.GHOST_RAMP);
   if (round===CFG.RAMP_START+1) toast = { text:"\u26A0 THINGS GET WILD!", t:0 };
-  if (gcPolicy.shouldSweep && ghosts.length > gcPolicy.keep && !sweep) {
-    sweep={t:0, keep:gcPolicy.keep, completedRounds};
+  if (gcPolicy.shouldSweep && ghosts.length && !sweep) {
+    sweep={t:0, remove:Math.min(gcPolicy.remove, ghosts.length), completedRounds};
     Sound.sweep();
   }
   if (round % CFG.EXIT_MOVE_EVERY === 0){
@@ -903,7 +903,7 @@ function update(dt) {
     if (departureZone.ticks<=0 || !inDepartureZone(player.x,player.y,CFG.PLAYER_R)) departureZone=null;
   }
 
-  if (sweep){ sweep.t += dt/CFG.SWEEP_TIME; if (sweep.t>=1){ if (ghosts.length>sweep.keep) ghosts.shift(); sweep=null; } }
+  if (sweep){ sweep.t += dt/CFG.SWEEP_TIME; if (sweep.t>=1){ if (ghosts.length) ghosts.shift(); sweep=null; } }
 
   if (grace>0) grace--;
   else if (!inExitZone(player.x, player.y, CFG.GHOST_R) &&
@@ -1247,8 +1247,7 @@ function updateHUD(){
   el.round.textContent = round; el.coins.textContent = coins;
   const completedRounds = round - 1;
   const movesLeft = CFG.GC_MOVES - (completedRounds % CFG.GC_MOVES);
-  const nextKeep = gcKeepForCompletedRounds(completedRounds + movesLeft);
-  const armed = ghosts.length > nextKeep;
+  const armed = ghosts.length > 0;
   el.gc.textContent = movesLeft + " mv";
   el.gc.style.color = armed ? (movesLeft<=2 ? C.sweep : "") : C.dim;
 }

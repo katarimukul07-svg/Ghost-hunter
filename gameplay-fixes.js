@@ -260,23 +260,26 @@
     setTimeout(() => { if (mode === STATE.PLAYING && !prize && !hasPrize) spawnPrize(); }, 0);
   };
 
-  // The original sweep removes one ghost. Keep its animation/timing, then collect
-  // every excess old ghost so the board returns to this milestone's survivor cap.
+  // The original sweep removes one ghost. Keep its animation/timing, then remove
+  // the rest of the exact collection count assigned to this milestone.
   const updateBase = update;
   update = function strongerGarbageCollector(dt) {
     const sweepWasActive = !!sweep;
-    const sweepKeep = sweep ? sweep.keep : null;
+    const sweepRemove = sweep ? sweep.remove : 0;
+    const ghostCountBefore = ghosts.length;
     updateBase(dt);
-    if (sweepWasActive && !sweep && ghosts.length > sweepKeep) {
-      ghosts.splice(0, ghosts.length - sweepKeep);
-      toast = { text:"♻ MEMORY CLEANED — " + sweepKeep + " ECHO" + (sweepKeep === 1 ? "" : "ES") + " KEPT", t:0 };
+    if (sweepWasActive && !sweep) {
+      const removedByBase = ghostCountBefore - ghosts.length;
+      const remaining = Math.max(0, Math.min(sweepRemove, ghostCountBefore) - removedByBase);
+      if (remaining) ghosts.splice(0, remaining);
+      toast = { text:"♻ MEMORY CLEANED — " + sweepRemove + " ECHO" + (sweepRemove === 1 ? "" : "ES") + " CLEARED", t:0 };
     }
   };
 
   const drawGhostsBase = drawGhosts;
   drawGhosts = function drawGcTargets() {
     if (!sweep) { drawGhostsBase(); return; }
-    const collectCount = Math.max(0, ghosts.length - sweep.keep);
+    const collectCount = Math.min(sweep.remove, ghosts.length);
     for (let i = 0; i < ghosts.length; i++) {
       const g = ghosts[i], pos = ghostPos(g); if (!pos) continue;
       ctx.strokeStyle = selectedGhostSkin; ctx.globalAlpha = 0.10; ctx.lineWidth = 2;
