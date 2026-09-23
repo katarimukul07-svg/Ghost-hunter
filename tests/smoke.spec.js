@@ -28,6 +28,7 @@ test("opens the shop without purchase or advertising controls", async ({ page })
   await page.goto("/");
   await page.getByRole("button", { name: "SHOP" }).click();
   await expect(page.getByRole("heading", { name: "SHOP" })).toBeVisible();
+  await expect(page.locator("#shopHint")).toHaveText("Choose the shape and color of your NODE.");
 
   await expect(page.getByRole("button", { name: /BUY COINS|GET COINS|WATCH REWARDED AD/ })).toHaveCount(0);
   await expect(page.locator("body")).not.toContainText("Demo build");
@@ -76,6 +77,8 @@ test("requires an active drag and preserves game position across resize", async 
   expect(box).not.toBeNull();
 
   const beforeHover = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  const roomDiagonal = Math.hypot(beforeHover.room.w, beforeHover.room.h);
+  expect(beforeHover.playerSpeed).toBeGreaterThan(roomDiagonal * 0.025);
   await page.mouse.move(beforeHover.player.x + 80, beforeHover.player.y);
   await page.waitForTimeout(150);
   const afterHover = await page.evaluate(() => window.__echoStepsTest.snapshot());
@@ -161,7 +164,7 @@ test("distinguishes the objective from red circular ghosts", async ({ page }) =>
   const errors = collectPageErrors(page);
 
   await page.goto("/?test=1");
-  await expect(page.locator("#startScreen")).toContainText("bright yellow diamond");
+  await expect(page.locator("#startScreen")).toContainText("yellow diamond");
 
   const roles = await page.evaluate(() => window.__echoStepsTest.visualRoles());
   expect(roles.objective).toEqual({
@@ -175,6 +178,46 @@ test("distinguishes the objective from red circular ghosts", async ({ page }) =>
     motion:"flicker",
   });
   expect(roles.objective.color).not.toBe(roles.ghost.color);
+  expect(errors).toEqual([]);
+});
+
+test("uses a clear garbage collector countdown label", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name:"PLAY" }).click();
+  await expect(page.locator("#hudGc")).toHaveText("10");
+  await expect(page.locator("#hud")).toContainText("GC IN");
+});
+
+test("spawns distinct short-lived double bonuses after the teaching round", async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto("/?test=1");
+  await page.getByRole("button", { name:"PLAY" }).click();
+  await page.evaluate(() => window.__echoStepsTest.completeRound());
+  await page.evaluate(() => window.__echoStepsBonusTest.spawn(2, ["shield", "slow"]));
+
+  let bonusState = await page.evaluate(() => window.__echoStepsBonusTest.snapshot());
+  expect(bonusState.bonuses).toHaveLength(2);
+  expect(new Set(bonusState.bonuses.map((bonus) => bonus.type)).size).toBe(2);
+  expect(Math.hypot(
+    bonusState.bonuses[0].x - bonusState.bonuses[1].x,
+    bonusState.bonuses[0].y - bonusState.bonuses[1].y,
+  )).toBeGreaterThan(150);
+  expect(bonusState.bonuses[0].life).toBe(4.5);
+
+  await page.evaluate(() => {
+    window.__echoStepsBonusTest.movePlayerToBonus(0);
+    window.__echoStepsTest.step();
+  });
+  bonusState = await page.evaluate(() => window.__echoStepsBonusTest.snapshot());
+  expect(bonusState.bonuses).toHaveLength(1);
+  expect(bonusState.shieldCharges).toBe(1);
+
+  await page.evaluate(() => {
+    window.__echoStepsBonusTest.expire();
+    window.__echoStepsTest.step();
+  });
+  expect((await page.evaluate(() => window.__echoStepsBonusTest.snapshot())).bonuses).toHaveLength(0);
   expect(errors).toEqual([]);
 });
 
@@ -217,5 +260,19 @@ test("uses the scheduled garbage collection count after each tenth completed rou
   state = await page.evaluate(() => window.__echoStepsTest.snapshot());
   expect(state.sweep).toBeNull();
   expect(state.ghostCount).toBe(6);
+
+  const expectedGhosts = [[20, 13], [30, 21], [40, 30]];
+  for (const [completedRound, expectedCount] of expectedGhosts) {
+    await page.evaluate(() => {
+      for (let i = 0; i < 10; i++) window.__echoStepsTest.completeRound();
+      const { exit } = window.__echoStepsTest.snapshot();
+      window.__echoStepsTest.movePlayerTo(exit.x + exit.w / 2, exit.y + exit.h / 2);
+      window.__echoStepsTest.step(43);
+    });
+    state = await page.evaluate(() => window.__echoStepsTest.snapshot());
+    expect(state.round).toBe(completedRound + 1);
+    expect(state.sweep).toBeNull();
+    expect(state.ghostCount).toBe(expectedCount);
+  }
   expect(errors).toEqual([]);
 });

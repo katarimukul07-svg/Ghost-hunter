@@ -54,6 +54,10 @@ assert.equal(remoteAssets.length, 0, "the game must remain playable offline with
 
 assert.doesNotMatch(index + fixes, /COIN_PACKS|purchaseCoins|Demo build|BUY COINS|WATCH REWARDED AD/i,
   "prototype commerce and ad UI must not ship");
+assert.match(index, /GC IN/, "garbage collector countdown must use a clear label");
+assert.match(fixes, /BONUS_LIFETIME\s*=\s*4\.5/, "timed bonus window must remain intentionally short");
+assert.match(fixes, /DOUBLE BONUS/, "double bonus decision event is missing");
+assert.match(fixes, /round\s*<\s*2/, "bonuses must not interrupt the teaching round");
 
 assert.equal(packageJson.engines.node, ">=22", "Capacitor 8 requires Node 22+");
 assert.equal(capacitorConfig.webDir, "dist", "native builds must bundle the tested dist directory");
