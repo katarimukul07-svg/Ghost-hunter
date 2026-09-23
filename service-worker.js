@@ -1,4 +1,4 @@
-const CACHE = "echo-steps-v3";
+const CACHE = "echo-steps-v4";
 const OFFLINE_ASSETS = [
   "./",
   "./index.html",

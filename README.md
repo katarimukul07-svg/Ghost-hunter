@@ -22,7 +22,7 @@ The repository contains the web game plus Capacitor 8 projects for Android and i
 ## Core systems
 
 - Completed routes become replaying ghosts.
-- Every `GC_MOVES` rounds, the Garbage Collector trims old ghosts back to `GC_KEEP` survivors.
+- After every 10 completed rounds, the Garbage Collector removes 4 old ghosts, then 3, then 2, and finally 1 at round 40 and each later milestone.
 - Obstacles increase, grow, drift, and change shape as the run advances.
 - Progress, coins, cosmetics, sound settings, and best score currently persist in local storage on one device.
 - Version 1.0 has no paid coin packs, ads, analytics, tracking, accounts, or network dependency.
@@ -73,7 +73,8 @@ The current tuning values live in `CFG` near the top of the inline game script:
 |---|---|
 | `SPEED_FRAC` | Player speed relative to the room diagonal |
 | `GC_MOVES` | Rounds between Garbage Collector sweeps |
-| `GC_KEEP` | Echoes retained after collection |
+| `GC_REMOVE_START` | Echoes removed by the first collection |
+| `GC_REMOVE_MIN` | Minimum echoes removed by later collections |
 | `RAMP_START` | Round where drift and ghost acceleration begin |
 | `GHOST_RAMP` | Per-round ghost-speed multiplier after the ramp starts |
 | `WALL_DRIFT` | Obstacle drift speed |
