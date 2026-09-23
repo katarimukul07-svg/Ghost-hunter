@@ -1,0 +1,36 @@
+name: Open pull request for proposed changes
+
+on:
+  push:
+    branches:
+      - codex/**
+      - fix/**
+      - feature/**
+      - chore/**
+      - release/**
+      - setup/**
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-pull-request:
+    name: Open owner-reviewed pull request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create pull request when one is not already open
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_BRANCH: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          existing="$(gh pr list --repo "$REPOSITORY" --head "$HEAD_BRANCH" --state open --json number --jq 'length')"
+          if [ "$existing" -eq 0 ]; then
+            gh pr create \
+              --repo "$REPOSITORY" \
+              --base main \
+              --head "$HEAD_BRANCH" \
+              --title "Review proposed changes from $HEAD_BRANCH" \
+              --body "Automated pull request. The repository owner must review and approve this change after all required CI checks pass."
+          fi

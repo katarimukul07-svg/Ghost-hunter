@@ -11,6 +11,11 @@ This repository is managed as a release project, not as a collection of direct e
 5. Review the changed-file list and diff before merging.
 6. Merge only when automated checks pass and the change has a clear rollback commit.
 
+Branches under `codex/`, `fix/`, `feature/`, `chore/`, `release/`, or `setup/`
+automatically receive a pull request authored by GitHub Actions. This keeps the
+proposal author separate from the repository owner, so `@katarimukul07-svg` can
+provide the sole required approval. Never merge a pull request automatically.
+
 The CI/CD workflow runs structural validation, Playwright smoke tests in desktop and mobile Chromium, an Android API 36 build, and an iOS simulator build. The existing protected status is now an aggregate gate and cannot pass unless every platform job succeeds. GitHub Pages deployment depends on that gate.
 
 Routine engineering decisions may be made without owner interruption. Ask the owner only for material product direction, spending, credentials, legal/privacy declarations, or final store-submission approval.
