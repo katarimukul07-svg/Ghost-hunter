@@ -3,7 +3,14 @@ name: Validate and deploy game
 on:
   pull_request:
   push:
-    branches: [main]
+    branches:
+      - main
+      - codex/**
+      - fix/**
+      - feature/**
+      - chore/**
+      - release/**
+      - setup/**
   workflow_dispatch:
 
 concurrency:
