@@ -11,6 +11,7 @@ await mkdir(dist, { recursive: true });
 for (const file of [
   "index.html",
   "gameplay-fixes.js",
+  "tutorial.js",
   "native-bridge.js",
   "manifest.webmanifest",
   "service-worker.js",
