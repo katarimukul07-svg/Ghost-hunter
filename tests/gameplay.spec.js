@@ -3,6 +3,27 @@ import { collectPageErrors, completeTutorialForMostTests } from "./helpers.js";
 
 completeTutorialForMostTests(test);
 
+test("a ghost death shows game over, refuses an unaffordable retry, and restarts", async ({ page }) => {
+  const errors = collectPageErrors(page);
+  await page.goto("/?test=1");
+  await page.getByRole("button", { name:"PLAY" }).click();
+  await page.evaluate(() => {
+    window.__echoStepsTest.putGhostOnPlayer();
+    window.__echoStepsTest.step(50);
+  });
+  expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).mode).toBe(2);
+  await expect(page.locator("#overTitle")).toBeVisible();
+  await page.locator("#retryBtn").click();
+  await expect(page.locator("#overSub")).toContainText("Collect more coins");
+  expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).mode).toBe(2);
+  await page.getByRole("button", { name:"PLAY AGAIN" }).click();
+  const restarted = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  expect(restarted.mode).toBe(1);
+  expect(restarted.round).toBe(1);
+  expect(restarted.ghostCount).toBe(0);
+  expect(errors).toEqual([]);
+});
+
 test("requires an active drag and preserves game position across resize", async ({ page }) => {
   const errors = collectPageErrors(page);
 

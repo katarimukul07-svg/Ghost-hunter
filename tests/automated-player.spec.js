@@ -90,3 +90,31 @@ test('dragging straight into a rectangular obstacle cannot cross it', async ({pa
   expect(after.mode).toBe(1);
   expect(errors).toEqual([]);
 });
+
+test('a finger drag moves the player on mobile', async ({page}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'Requires touch emulation');
+  const errors = collectPageErrors(page);
+  await seedGame(page, 511);
+  await page.goto('/?test=1');
+  await page.getByRole('button', {name:'PLAY'}).click();
+  const before = await page.evaluate(() => window.__echoStepsTest.snapshot());
+  const box = await page.locator('#c').boundingBox();
+  const session = await page.context().newCDPSession(page);
+  const x = box.x + before.player.x, y = box.y + before.player.y;
+  try {
+    await session.send('Input.dispatchTouchEvent', {type:'touchStart', touchPoints:[{x,y}]});
+    await session.send('Input.dispatchTouchEvent', {
+      type:'touchMove', touchPoints:[{x:x + 24,y}],
+    });
+    await page.evaluate(() => window.__echoStepsTest.step(4));
+    const during = await page.evaluate(() => window.__echoStepsTest.snapshot());
+    expect(during.pointer.active).toBe(true);
+    expect(during.player.x).toBeGreaterThan(before.player.x);
+    expect(during.mode).toBe(1);
+  } finally {
+    await session.send('Input.dispatchTouchEvent', {type:'touchEnd', touchPoints:[]});
+    await session.detach();
+  }
+  expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).pointer.active).toBe(false);
+  expect(errors).toEqual([]);
+});
