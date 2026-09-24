@@ -149,8 +149,34 @@
 
   const updateObstaclesBase = updateObstacles;
   updateObstacles = function guardedObstacleUpdate(dt) {
+    const previous = obstacles.map(o => ({x:o.x, y:o.y}));
     updateObstaclesBase(dt);
     reserveSafeCorridors();
+    if (!prize) return;
+    const clearance = CFG.PRIZE_R + 24;
+    for (let i = 0; i < obstacles.length; i++) {
+      const o = obstacles[i];
+      if (!circleHitsObstacle(prize.x, prize.y, clearance, o)) continue;
+      const endX = o.x, endY = o.y;
+      const start = previous[i];
+      // Stop a drifting wall at the prize's clearance boundary. The wall
+      // remains there until its normal motion takes it away from the prize.
+      o.x = start.x; o.y = start.y;
+      if (circleHitsObstacle(prize.x, prize.y, clearance, o)) {
+        spawnPrize();
+        return;
+      }
+      let safe = 0, blocked = 1;
+      for (let attempt = 0; attempt < 14; attempt++) {
+        const middle = (safe + blocked) / 2;
+        o.x = start.x + (endX-start.x)*middle;
+        o.y = start.y + (endY-start.y)*middle;
+        if (circleHitsObstacle(prize.x, prize.y, clearance, o)) blocked = middle;
+        else safe = middle;
+      }
+      o.x = start.x + (endX-start.x)*Math.max(0, safe-0.001);
+      o.y = start.y + (endY-start.y)*Math.max(0, safe-0.001);
+    }
   };
 
   function buildReachableMap(clearance) {
