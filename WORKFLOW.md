@@ -41,7 +41,11 @@ A change is complete when:
 
 ## Current technical debt
 
-The prototype currently keeps most HTML, CSS, and game logic in `index.html`, while `gameplay-fixes.js` changes several functions at runtime. This is temporary. The M0 roadmap milestone will replace that patching model with explicit modules and tests before mobile packaging begins.
+The web source is now separated into game, rendering, UI, platform, and style
+boundaries. The files are still loaded as ordered classic scripts to preserve
+the prototype's shared runtime state. Future architectural changes should replace
+those shared globals with explicit module imports incrementally, with the existing
+browser tests acting as the behavior contract.
 
 ## Useful commands
 

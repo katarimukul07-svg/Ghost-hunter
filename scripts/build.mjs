@@ -10,10 +10,6 @@ await mkdir(dist, { recursive: true });
 
 for (const file of [
   "index.html",
-  "gameplay-fixes.js",
-  "background-themes.js",
-  "tutorial.js",
-  "native-bridge.js",
   "manifest.webmanifest",
   "service-worker.js",
   "privacy.html",
@@ -23,5 +19,7 @@ for (const file of [
 }
 
 await cp(path.join(root, "assets"), path.join(dist, "assets"), { recursive: true });
+await cp(path.join(root, "src"), path.join(dist, "src"), { recursive: true });
+await cp(path.join(root, "styles"), path.join(dist, "styles"), { recursive: true });
 
 console.log("Built deployable game in dist/.");

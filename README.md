@@ -51,19 +51,27 @@ Then open <http://localhost:4173>.
 ├── android/                  # Capacitor Android project (API 24–36)
 ├── ios/                      # Capacitor iOS project (iOS 15+)
 ├── assets/                   # source icon, install icons, and splash artwork
+├── src/
+│   ├── game/                 # configuration, arena, state, gameplay, rendering, controls
+│   │   └── systems/          # fairness, garbage collection, and timed bonuses
+│   ├── platform/             # native lifecycle and haptics adapter
+│   ├── rendering/            # selectable arena backgrounds
+│   └── ui/                   # tutorial and menu-facing features
+├── styles/game.css           # web game presentation
 ├── capacitor.config.json     # native application identity and bundled web directory
-├── gameplay-fixes.js         # temporary fairness/platform patch layer
-├── index.html                # current game shell
-├── native-bridge.js          # lifecycle, Android Back, status bar, and haptics adapter
+├── index.html                # small application shell and script composition
 ├── privacy.html              # public privacy policy
 ├── support.html              # public support page
-├── tests/smoke.spec.js       # desktop and mobile browser smoke tests
+├── tests/                    # focused shell, gameplay, bonus, and background browser tests
 ├── scripts/validate.mjs      # dependency-free validation
+├── ARCHITECTURE.md           # source boundaries and runtime composition
 ├── ROADMAP.md                # Version 1.0 scope and release gates
 └── WORKFLOW.md               # contribution and release workflow
 ```
 
-The first Version 1.0 engineering milestone will split the monolithic prototype and fold `gameplay-fixes.js` into tested, owned modules.
+The Version 1.0 web source is organized by responsibility while preserving the
+tested runtime order used by the original prototype. See [ARCHITECTURE.md](ARCHITECTURE.md)
+for module boundaries and the remaining migration work.
 
 ## Gameplay tuning
 
