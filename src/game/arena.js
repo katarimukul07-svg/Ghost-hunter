@@ -75,13 +75,20 @@ function obstacleCountForRound(r) {
   // round 1 -> START; round ADD_EVERY (5) -> START+1; round ADD_EVERY*2 (10) -> START+2; ...
   return Math.min(CFG.OBSTACLES_MAX, CFG.OBSTACLES_START + Math.floor(r/CFG.OBSTACLES_ADD_EVERY));
 }
+function obstacleScaleForRound(r) {
+  return Math.min(CFG.SIZE_MAX, Math.pow(1+CFG.SIZE_GROW, Math.floor(r/CFG.SIZE_EVERY)));
+}
 function buildObstacles() {
+  const scale = obstacleScaleForRound(round);
   obstacles = obstacleLayout.map(o => {
     const bw = o.w*room.w, bh = o.h*room.h;
+    const w = bw*scale, h = bh*scale;
+    const cx = room.x + (o.x + o.w/2)*room.w;
+    const cy = room.y + (o.y + o.h/2)*room.h;
     return {
-      cx: room.x + (o.x + o.w/2)*room.w, cy: room.y + (o.y + o.h/2)*room.h,
-      bw, bh, w:bw, h:bh,
-      x: room.x + o.x*room.w, y: room.y + o.y*room.h,
+      cx, cy, bw, bh, w, h,
+      x: clamp(cx-w/2,room.x,room.x+room.w-w),
+      y: clamp(cy-h/2,room.y,room.y+room.h-h),
       ampX: o.ampX*room.w, ampY: o.ampY*room.h, freq:o.freq, dir:o.dir,
       shape: o.shape,
     };

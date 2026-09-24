@@ -75,6 +75,9 @@ test('generated prize and exit remain reachable into round 30', async ({context}
       const state = await page.evaluate(() => window.__echoStepsTest.snapshot());
       expect.soft(state.prize, `seed ${seed}, round ${round}`).not.toBeNull();
       if (!state.prize) continue;
+      await page.evaluate(() => window.__echoStepsTest.step());
+      expect.soft(await page.evaluate(() => window.__echoStepsTest.prizeHasClearance()),
+        `prize clearance, seed ${seed}, round ${round}`).toBe(true);
       const reached = await checkReachability(page);
       expect.soft(reached.prize, `prize, seed ${seed}, round ${round}`).toBe(true);
       expect.soft(reached.exit, `exit, seed ${seed}, round ${round}`).toBe(true);

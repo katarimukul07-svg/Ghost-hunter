@@ -2,13 +2,14 @@
 function resetGame() {
   resize();
   positionExit("top", 0.5);
+  round = 1;
   obstacleLayout = makeObstacleLayout(CFG.OBSTACLES_START);
   buildObstacles();
   player.x = room.x+room.w/2; player.y = room.y+room.h/2;
   pointer.x = player.x; pointer.y = player.y; pointer.active = false;
   ghosts = []; currentPath = []; particles = []; pops = []; shockwaves = [];
   departureZone = null;
-  frame = 0; round = 1; grace = CFG.GRACE_TICKS; runCoins = 0;
+  frame = 0; grace = CFG.GRACE_TICKS; runCoins = 0;
   ghostPhase = 0; ghostSpeed = 1; wallTime = 0;
   toast = null; shake = 0; deathTimer = 0; sweep = null;
   hasPrize = false; paused = false;
@@ -105,8 +106,7 @@ function ghostPos(g){
 /* ---------- Walls: grow + drift ---------- */
 function updateObstacles(dt){
   if (round>CFG.RAMP_START) wallTime += dt*CFG.WALL_DRIFT;
-  const steps = Math.floor(round/CFG.SIZE_EVERY);
-  const scale = Math.min(CFG.SIZE_MAX, Math.pow(1+CFG.SIZE_GROW, steps));
+  const scale = obstacleScaleForRound(round);
   for (const o of obstacles){
     o.w=o.bw*scale; o.h=o.bh*scale;
     const s=Math.sin(wallTime*o.freq)*o.dir;
