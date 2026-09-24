@@ -51,6 +51,7 @@ if (new URLSearchParams(location.search).has("test")) {
         sweep:sweep ? {...sweep} : null,
       }),
       canStandAt:(x,y)=>!pointInObstacles(x,y,CFG.PLAYER_R+0.5),
+      prizeHasClearance:()=>!prize || !pointInObstacles(prize.x,prize.y,CFG.PRIZE_R+24),
       gcPolicy:(completedRounds)=>gcPolicyForCompletedRounds(completedRounds),
       completeRound:()=>{
         if (!currentPath.length) currentPath=[{x:player.x,y:player.y}];
