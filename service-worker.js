@@ -3,6 +3,7 @@ const OFFLINE_ASSETS = [
   "./",
   "./index.html",
   "./gameplay-fixes.js",
+  "./background-themes.js",
   "./tutorial.js",
   "./native-bridge.js",
   "./manifest.webmanifest",
