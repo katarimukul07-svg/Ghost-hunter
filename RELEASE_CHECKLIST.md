@@ -5,8 +5,10 @@
 - [ ] `npm ci`, static validation, and browser tests pass on the protected pull request.
 - [ ] Capacitor sync succeeds with no remote runtime assets.
 - [ ] Android debug build succeeds in CI at compile/target SDK 36.
+- [ ] Unsigned Android release App Bundle builds in CI; owner signs a separate store upload.
 - [ ] iOS project is synced and builds with Xcode 26 on a macOS runner.
 - [ ] The release commit is tagged only after all required checks pass.
+- [ ] GitHub Pages deployment on the merged release commit passes its live verification.
 
 ## Real-device acceptance
 
