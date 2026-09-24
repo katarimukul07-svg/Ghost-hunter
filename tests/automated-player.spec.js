@@ -36,6 +36,18 @@ test('automated player collects the prize and exits through real controls', asyn
     expect(exited.mode).toBe(1);
     expect(exited.round).toBe(2);
     expect(exited.ghostCount).toBe(1);
+    expect(exited.ghostPlayback[0].pathLength).toBeGreaterThan(5);
+    const positions = await page.evaluate(() => {
+      const samples = [];
+      for (let i = 0; i < 12; i++) {
+        window.__echoStepsTest.step(20);
+        samples.push(window.__echoStepsTest.snapshot().ghostPlayback[0].position);
+      }
+      return samples;
+    });
+    expect(positions.some(p => Math.hypot(p.x - positions[0].x, p.y - positions[0].y) > 15))
+      .toBe(true);
+    expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).mode).toBe(1);
     expect(errors).toEqual([]);
   } catch (error) {
     await testInfo.attach('automated-player-replay', {
@@ -46,8 +58,8 @@ test('automated player collects the prize and exits through real controls', asyn
   }
 });
 
-test('generated prize and exit remain reachable across layouts', async ({context}) => {
-  test.setTimeout(60_000);
+test('generated prize and exit remain reachable into round 30', async ({context}) => {
+  test.setTimeout(90_000);
   for (const seed of [104, 309, 907]) {
     const page = await context.newPage();
     const errors = collectPageErrors(page);
@@ -55,7 +67,7 @@ test('generated prize and exit remain reachable across layouts', async ({context
     await seedGame(page, seed);
     await page.goto('/?test=1');
     await page.getByRole('button', {name:'PLAY'}).click();
-    for (const round of [1, 5, 10]) {
+    for (const round of [1, 5, 10, 20, 30]) {
       while ((await page.evaluate(() => window.__echoStepsTest.snapshot())).round < round) {
         await page.evaluate(() => window.__echoStepsTest.completeRound());
       }

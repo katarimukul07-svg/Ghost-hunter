@@ -43,7 +43,7 @@ Then open <http://localhost:4173>.
 
 `npm test` runs structural checks plus desktop and mobile browser tests. CI also compiles an API 36 Android APK and an unsigned iOS simulator build for every pull request and every change merged into `main`. The protected `Static and browser tests` gate succeeds only when all three jobs pass. Only a gated `main` build is eligible for deployment. After GitHub Pages deploys, CI checks that the live site serves the exact commit and its core game assets; a failed live check marks the deployment job red.
 
-The automated player in `tests/automated-player.spec.js` uses the canvas controls to collect a prize and complete the first round. It also checks routes through seeded layouts, verifies a wall collision, and sends a finger drag on mobile Chromium. Game over and restart are covered separately. Run the browser suite with `npx playwright test`. On failure, Playwright retains a trace and the automated player attaches a JSON replay with the seed, viewport, and recorded moves. The layout and collision fixtures are exposed only when the game loads with `?test=1`.
+The automated player in `tests/automated-player.spec.js` uses the canvas controls to collect a prize and complete the first round, then checks that the recorded path replays as a moving ghost. It also checks routes through seeded layouts up to round 30, verifies a wall collision, and sends a finger drag on mobile Chromium. Game over and restart are covered separately. Run the browser suite with `npx playwright test`. On failure, Playwright retains a trace and the automated player attaches a JSON replay with the seed, viewport, and recorded moves. The layout and collision fixtures are exposed only when the game loads with `?test=1`.
 
 ## Repository layout
 

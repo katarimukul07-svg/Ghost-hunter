@@ -47,6 +47,7 @@ if (new URLSearchParams(location.search).has("test")) {
         hasPrize, coins,
         obstacles:obstacles.map(({x,y,w,h,shape})=>({x,y,w,h,shape})),
         ghostCount:ghosts.length,
+        ghostPlayback:ghosts.map(g=>({position:ghostPos(g),pathLength:g.path.length})),
         sweep:sweep ? {...sweep} : null,
       }),
       gcPolicy:(completedRounds)=>gcPolicyForCompletedRounds(completedRounds),
