@@ -57,6 +57,13 @@ if (new URLSearchParams(location.search).has("test")) {
         if (!currentPath.length) currentPath=[{x:player.x,y:player.y}];
         completeRound();
       },
+      advanceRoundFromExit:()=>{
+        if (mode!==STATE.PLAYING) throw new Error("Cannot advance a stopped game");
+        player.x=exit.x+exit.w/2; player.y=exit.y+exit.h/2;
+        pointer.x=player.x; pointer.y=player.y; pointer.active=false;
+        currentPath=[{x:player.x,y:player.y}]; hasPrize=true;
+        completeRound();
+      },
       prepareExitHandoff:()=>{
         round=CFG.EXIT_MOVE_EVERY-1;
         player.x=exit.x+exit.w/2; player.y=exit.y+exit.h/2;

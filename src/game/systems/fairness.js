@@ -149,8 +149,34 @@
 
   const updateObstaclesBase = updateObstacles;
   updateObstacles = function guardedObstacleUpdate(dt) {
+    const previous = obstacles.map(o => ({x:o.x, y:o.y}));
     updateObstaclesBase(dt);
     reserveSafeCorridors();
+    if (!prize) return;
+    const clearance = CFG.PRIZE_R + 24;
+    for (let i = 0; i < obstacles.length; i++) {
+      const o = obstacles[i];
+      if (!circleHitsObstacle(prize.x, prize.y, clearance, o)) continue;
+      const endX = o.x, endY = o.y;
+      const start = previous[i];
+      // Stop a drifting wall at the prize's clearance boundary. The wall
+      // remains there until its normal motion takes it away from the prize.
+      o.x = start.x; o.y = start.y;
+      if (circleHitsObstacle(prize.x, prize.y, clearance, o)) {
+        spawnPrize();
+        return;
+      }
+      let safe = 0, blocked = 1;
+      for (let attempt = 0; attempt < 14; attempt++) {
+        const middle = (safe + blocked) / 2;
+        o.x = start.x + (endX-start.x)*middle;
+        o.y = start.y + (endY-start.y)*middle;
+        if (circleHitsObstacle(prize.x, prize.y, clearance, o)) blocked = middle;
+        else safe = middle;
+      }
+      o.x = start.x + (endX-start.x)*Math.max(0, safe-0.001);
+      o.y = start.y + (endY-start.y)*Math.max(0, safe-0.001);
+    }
   };
 
   function buildReachableMap(clearance) {
@@ -209,6 +235,15 @@
           if (seen[idx(c, r)]) out.push(cellPoint(c, r));
         }
         return out;
+      },
+      reachesZone(zone) {
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+          if (!seen[idx(c, r)]) continue;
+          const p = cellPoint(c, r);
+          if (p.x > zone.x && p.x < zone.x + zone.w &&
+              p.y > zone.y && p.y < zone.y + zone.h) return true;
+        }
+        return false;
       }
     };
   }
@@ -255,6 +290,37 @@
     buildObstacles();
     reserveSafeCorridors();
     setTimeout(() => { if (mode === STATE.PLAYING && !prize && !hasPrize) spawnPrize(); }, 0);
+  };
+
+  function ensureExitReachable() {
+    const canLeave = () => buildReachableMap(CFG.PLAYER_R + 0.5)?.reachesZone(exit);
+    if (canLeave()) return;
+    const count = obstacleCountForRound(round);
+    for (let attempt = 0; attempt < 20; attempt++) {
+      obstacleLayout = makeObstacleLayout(count);
+      buildObstacles(); reserveSafeCorridors();
+      if (canLeave()) { spawnPrize(); return; }
+    }
+    // If this room is unusually crowded, remove walls one by one. A clear
+    // route matters more than preserving the target obstacle count.
+    while (obstacleLayout.length) {
+      obstacleLayout.pop();
+      buildObstacles(); reserveSafeCorridors();
+      if (canLeave()) { spawnPrize(); return; }
+    }
+    spawnPrize();
+  }
+
+  const completeRoundBase = completeRound;
+  completeRound = function completeReachableRound() {
+    completeRoundBase();
+    ensureExitReachable();
+  };
+
+  const resetGameBase = resetGame;
+  resetGame = function resetReachableGame() {
+    resetGameBase();
+    ensureExitReachable();
   };
 
   // The original sweep removes one ghost. Keep its animation/timing, then remove
