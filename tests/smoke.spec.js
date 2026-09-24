@@ -126,12 +126,14 @@ test("requires an active drag and preserves game position across resize", async 
   expect(afterDrag.player.x).toBeGreaterThan(beforeHover.player.x + 10);
   expect(afterDrag.pointer.active).toBe(false);
 
+  await page.getByRole("button", { name:"Pause game" }).click();
+  await expect.poll(async () => (await page.evaluate(() => window.__echoStepsTest.snapshot())).paused).toBe(true);
+
   const oldNormalized = {
     x:(afterDrag.player.x - afterDrag.room.x) / afterDrag.room.w,
     y:(afterDrag.player.y - afterDrag.room.y) / afterDrag.room.h,
   };
   await page.setViewportSize({ width:720, height:960 });
-  await page.waitForTimeout(100);
   const afterResize = await page.evaluate(() => window.__echoStepsTest.snapshot());
   const newNormalized = {
     x:(afterResize.player.x - afterResize.room.x) / afterResize.room.w,
