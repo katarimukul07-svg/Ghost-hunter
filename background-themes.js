@@ -3,13 +3,14 @@
   "use strict";
 
   const BACKGROUNDS = Object.freeze([
+    { id:"classic", label:"CLASSIC GRID", cost:0 },
     { id:"circuit", label:"CIRCUIT FOUNDRY", cost:0 },
     { id:"orbit", label:"ORBITAL STATION", cost:0 },
     { id:"abyss", label:"ABYSSAL NETWORK", cost:0 },
   ]);
   const BACKGROUND_IDS = BACKGROUNDS.map(theme => theme.id);
   const savedBackground = ls("echoSteps.background");
-  let selectedBackground = BACKGROUND_IDS.includes(savedBackground) ? savedBackground : "circuit";
+  let selectedBackground = BACKGROUND_IDS.includes(savedBackground) ? savedBackground : "classic";
   let previewBackground = selectedBackground;
 
   function fillRect(context, bounds, color) {
@@ -137,6 +138,10 @@
 
   const drawGridBase = drawGrid;
   drawGrid = function drawThemedGrid() {
+    if (selectedBackground === "classic") {
+      drawGridBase();
+      return;
+    }
     drawBackground(ctx,room,selectedBackground);
     ctx.save();
     ctx.globalAlpha=.48;
@@ -147,6 +152,10 @@
   const drawPreviewGridBase = drawPreviewGrid;
   drawPreviewGrid = function drawThemedPreviewGrid(previewContext,w,h) {
     const theme = previewTab === "background" ? previewBackground : selectedBackground;
+    if (theme === "classic") {
+      drawPreviewGridBase(previewContext,w,h);
+      return;
+    }
     drawBackground(previewContext,{x:0,y:0,w,h},theme);
     previewContext.save();
     previewContext.globalAlpha=.46;
@@ -249,5 +258,5 @@
     }),
   });
 
-  console.info("Echo Steps backgrounds loaded: Circuit Foundry, Orbital Station, and Abyssal Network.");
+  console.info("Echo Steps backgrounds loaded: Classic Grid, Circuit Foundry, Orbital Station, and Abyssal Network.");
 })();
