@@ -80,6 +80,7 @@ assert.match(serviceWorker, /tutorial\.js/, "tutorial must be available offline"
 assert.match(tutorial, /echoSteps\.tutorial\.v1/, "tutorial completion must be versioned and persistent");
 assert.match(tutorial, /SKIP/, "first-run tutorial must remain skippable");
 assert.match(tutorial, /tutorialBtn/, "main menu tutorial replay control is missing");
+assert.match(backgrounds, /Classic Grid/);
 assert.match(backgrounds, /Circuit Foundry/);
 assert.match(backgrounds, /Orbital Station/);
 assert.match(backgrounds, /Abyssal Network/);
