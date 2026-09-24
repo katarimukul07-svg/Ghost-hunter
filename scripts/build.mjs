@@ -1,4 +1,4 @@
-import { cp, mkdir, rm } from "node:fs/promises";
+import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -21,5 +21,9 @@ for (const file of [
 await cp(path.join(root, "assets"), path.join(dist, "assets"), { recursive: true });
 await cp(path.join(root, "src"), path.join(dist, "src"), { recursive: true });
 await cp(path.join(root, "styles"), path.join(dist, "styles"), { recursive: true });
+
+await writeFile(path.join(dist, "build-info.json"), JSON.stringify({
+  revision: process.env.GITHUB_SHA || "local",
+}) + "\n");
 
 console.log("Built deployable game in dist/.");

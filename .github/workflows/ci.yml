@@ -148,3 +148,8 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify deployed revision and game assets
+        env:
+          SITE_URL: ${{ steps.deployment.outputs.page_url }}
+          EXPECTED_REVISION: ${{ github.sha }}
+        run: node scripts/verify-deployment.mjs
