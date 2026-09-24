@@ -87,6 +87,45 @@ test('generated prize and exit remain reachable into round 30', async ({context}
   }
 });
 
+test('every generated round remains navigable through round 100', async ({context}, testInfo) => {
+  test.setTimeout(180_000);
+  for (const seed of [104, 309, 907]) {
+    const page = await context.newPage();
+    const errors = collectPageErrors(page);
+    await page.addInitScript(() => localStorage.setItem('echoSteps.tutorial.v1', 'complete'));
+    await seedGame(page, seed);
+    await page.goto('/?test=1');
+    await page.getByRole('button', {name:'PLAY'}).click();
+    try {
+      for (let round = 1; round <= 100; round++) {
+        const state = await page.evaluate(() => window.__echoStepsTest.snapshot());
+        if (state.mode !== 1 || state.round !== round || !state.prize) {
+          throw new Error(`Invalid game state in round ${round}`);
+        }
+        // Advance one tick so newly created obstacles reach their live size.
+        await page.evaluate(() => window.__echoStepsTest.step());
+        const clearance = await page.evaluate(() => window.__echoStepsTest.prizeHasClearance());
+        const reached = await checkReachability(page);
+        if (!clearance || !reached.prize || !reached.exit) {
+          throw new Error(`Blocked layout in round ${round}: ${JSON.stringify({clearance, ...reached})}`);
+        }
+        if (round < 100) await page.evaluate(() => window.__echoStepsTest.advanceRoundFromExit());
+      }
+      expect(errors).toEqual([]);
+    } catch (error) {
+      await testInfo.attach(`round-generator-${testInfo.project.name}-seed-${seed}`, {
+        body:JSON.stringify({seed, viewport:testInfo.project.name,
+          state:await page.evaluate(() => window.__echoStepsTest.snapshot()),
+          error:String(error)}, null, 2),
+        contentType:'application/json',
+      });
+      throw error;
+    } finally {
+      await page.close();
+    }
+  }
+});
+
 test('dragging straight into a rectangular obstacle cannot cross it', async ({page}) => {
   const errors = collectPageErrors(page);
   await seedGame(page, 2718);
