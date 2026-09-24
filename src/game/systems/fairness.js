@@ -235,6 +235,15 @@
           if (seen[idx(c, r)]) out.push(cellPoint(c, r));
         }
         return out;
+      },
+      reachesZone(zone) {
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+          if (!seen[idx(c, r)]) continue;
+          const p = cellPoint(c, r);
+          if (p.x > zone.x && p.x < zone.x + zone.w &&
+              p.y > zone.y && p.y < zone.y + zone.h) return true;
+        }
+        return false;
       }
     };
   }
@@ -281,6 +290,37 @@
     buildObstacles();
     reserveSafeCorridors();
     setTimeout(() => { if (mode === STATE.PLAYING && !prize && !hasPrize) spawnPrize(); }, 0);
+  };
+
+  function ensureExitReachable() {
+    const canLeave = () => buildReachableMap(CFG.PLAYER_R + 0.5)?.reachesZone(exit);
+    if (canLeave()) return;
+    const count = obstacleCountForRound(round);
+    for (let attempt = 0; attempt < 20; attempt++) {
+      obstacleLayout = makeObstacleLayout(count);
+      buildObstacles(); reserveSafeCorridors();
+      if (canLeave()) { spawnPrize(); return; }
+    }
+    // If this room is unusually crowded, remove walls one by one. A clear
+    // route matters more than preserving the target obstacle count.
+    while (obstacleLayout.length) {
+      obstacleLayout.pop();
+      buildObstacles(); reserveSafeCorridors();
+      if (canLeave()) { spawnPrize(); return; }
+    }
+    spawnPrize();
+  }
+
+  const completeRoundBase = completeRound;
+  completeRound = function completeReachableRound() {
+    completeRoundBase();
+    ensureExitReachable();
+  };
+
+  const resetGameBase = resetGame;
+  resetGame = function resetReachableGame() {
+    resetGameBase();
+    ensureExitReachable();
   };
 
   // The original sweep removes one ghost. Keep its animation/timing, then remove
