@@ -32,6 +32,8 @@ Sound.setMuted(ls("echoSteps.mute")==="1");
 refreshCoinLine();
 applyColorUI(); applyGhostUI();
 updateMuteBtn();
+window.addEventListener("resize", resize);
+if (window.visualViewport) window.visualViewport.addEventListener("resize", resize);
 resize();
 if (new URLSearchParams(location.search).has("test")) {
   Object.defineProperty(window, "__echoStepsTest", {
