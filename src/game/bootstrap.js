@@ -47,8 +47,10 @@ if (new URLSearchParams(location.search).has("test")) {
         hasPrize, coins,
         obstacles:obstacles.map(({x,y,w,h,shape})=>({x,y,w,h,shape})),
         ghostCount:ghosts.length,
+        ghostPlayback:ghosts.map(g=>({position:ghostPos(g),pathLength:g.path.length})),
         sweep:sweep ? {...sweep} : null,
       }),
+      canStandAt:(x,y)=>!pointInObstacles(x,y,CFG.PLAYER_R+0.5),
       gcPolicy:(completedRounds)=>gcPolicyForCompletedRounds(completedRounds),
       completeRound:()=>{
         if (!currentPath.length) currentPath=[{x:player.x,y:player.y}];
