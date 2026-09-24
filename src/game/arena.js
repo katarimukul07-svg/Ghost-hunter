@@ -54,9 +54,6 @@ function resize() {
   playerSpeed = Math.hypot(room.w, room.h) * CFG.SPEED_FRAC;
   buildObstacles();
 }
-window.addEventListener("resize", resize);
-if (window.visualViewport) window.visualViewport.addEventListener("resize", resize);
-
 function positionZone(zone, wall, ratio=0.5) {
   const t = clamp(ratio, 0, 1);
   zone.wall = wall;

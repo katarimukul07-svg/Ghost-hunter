@@ -32,6 +32,8 @@ Sound.setMuted(ls("echoSteps.mute")==="1");
 refreshCoinLine();
 applyColorUI(); applyGhostUI();
 updateMuteBtn();
+window.addEventListener("resize", resize);
+if (window.visualViewport) window.visualViewport.addEventListener("resize", resize);
 resize();
 if (new URLSearchParams(location.search).has("test")) {
   Object.defineProperty(window, "__echoStepsTest", {
@@ -42,6 +44,8 @@ if (new URLSearchParams(location.search).has("test")) {
         playerSpeed,
         departureZone:departureZone ? {...departureZone} : null,
         prize:prize ? {...prize} : null,
+        hasPrize, coins,
+        obstacles:obstacles.map(({x,y,w,h,shape})=>({x,y,w,h,shape})),
         ghostCount:ghosts.length,
         sweep:sweep ? {...sweep} : null,
       }),
@@ -63,6 +67,12 @@ if (new URLSearchParams(location.search).has("test")) {
       },
       movePlayerTo:(x,y)=>{
         player.x=x; player.y=y; pointer.x=x; pointer.y=y; pointer.active=false;
+      },
+      installCollisionFixture:()=>{
+        const x=player.x+45, y=player.y-30, w=50, h=60;
+        obstacles=[{x,y,w,h,bw:w,bh:h,cx:x+w/2,cy:y+h/2,
+          ampX:0,ampY:0,freq:0,dir:1,shape:'rect'}];
+        return {x,y,w,h,playerRadius:CFG.PLAYER_R};
       },
       visualRoles:()=>({
         objective:{shape:"diamond",color:C.prize,motion:"slow-pulse-ring"},
