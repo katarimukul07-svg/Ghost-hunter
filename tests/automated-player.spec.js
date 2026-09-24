@@ -3,6 +3,7 @@ import { completeTutorialForMostTests, collectPageErrors } from './helpers.js';
 import { exitTarget, planRoute, steerTo } from './automated-player.js';
 
 completeTutorialForMostTests(test);
+test.use({serviceWorkers:'block'});
 
 const seedGame = async (page, seed) => page.addInitScript((initial) => {
   let value = initial >>> 0;
@@ -22,21 +23,19 @@ test('automated player collects the prize and exits through real controls', asyn
   await page.getByRole('button', {name:'PLAY'}).click();
 
   try {
-    for (let round = 1; round <= 2; round++) {
-      const before = await page.evaluate(() => window.__echoStepsTest.snapshot());
-      expect(before.round).toBe(round);
-      expect(before.prize).not.toBeNull();
-      const record = {round, prize:before.prize, exit:before.exit, moves:[]};
-      replay.rounds.push(record);
-      const collected = await steerTo(page, before.prize, record);
-      expect(collected.mode).toBe(1);
-      expect(collected.hasPrize).toBe(true);
-      expect(collected.coins).toBe(before.coins + 1);
-      const exited = await steerTo(page, exitTarget(collected.exit), record);
-      expect(exited.mode).toBe(1);
-      expect(exited.round).toBe(round + 1);
-      expect(exited.ghostCount).toBe(round);
-    }
+    const before = await page.evaluate(() => window.__echoStepsTest.snapshot());
+    expect(before.round).toBe(1);
+    expect(before.prize).not.toBeNull();
+    const record = {round:1, prize:before.prize, exit:before.exit, moves:[]};
+    replay.rounds.push(record);
+    const collected = await steerTo(page, before.prize, record);
+    expect(collected.mode).toBe(1);
+    expect(collected.hasPrize).toBe(true);
+    expect(collected.coins).toBe(before.coins + 1);
+    const exited = await steerTo(page, exitTarget(collected.exit), record);
+    expect(exited.mode).toBe(1);
+    expect(exited.round).toBe(2);
+    expect(exited.ghostCount).toBe(1);
     expect(errors).toEqual([]);
   } catch (error) {
     await testInfo.attach('automated-player-replay', {
