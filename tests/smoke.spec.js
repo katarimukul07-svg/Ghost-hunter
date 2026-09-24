@@ -126,12 +126,14 @@ test("requires an active drag and preserves game position across resize", async 
   expect(afterDrag.player.x).toBeGreaterThan(beforeHover.player.x + 10);
   expect(afterDrag.pointer.active).toBe(false);
 
+  await page.getByRole("button", { name:"Pause game" }).click();
+  await expect.poll(async () => (await page.evaluate(() => window.__echoStepsTest.snapshot())).paused).toBe(true);
+
   const oldNormalized = {
     x:(afterDrag.player.x - afterDrag.room.x) / afterDrag.room.w,
     y:(afterDrag.player.y - afterDrag.room.y) / afterDrag.room.h,
   };
   await page.setViewportSize({ width:720, height:960 });
-  await page.waitForTimeout(100);
   const afterResize = await page.evaluate(() => window.__echoStepsTest.snapshot());
   const newNormalized = {
     x:(afterResize.player.x - afterResize.room.x) / afterResize.room.w,
@@ -306,5 +308,30 @@ test("uses the scheduled garbage collection count after each tenth completed rou
     expect(state.sweep).toBeNull();
     expect(state.ghostCount).toBe(expectedCount);
   }
+  expect(errors).toEqual([]);
+});
+
+
+test("offers three free backgrounds and remembers the selected environment", async ({ page }) => {
+  const errors = collectPageErrors(page);
+
+  await page.goto("/?test=1");
+  await page.getByRole("button", { name:"SHOP" }).click();
+  await page.getByRole("button", { name:"BACKGROUND" }).click();
+
+  await expect(page.getByRole("button", { name:"CIRCUIT FOUNDRY" })).toBeVisible();
+  await expect(page.getByRole("button", { name:"ORBITAL STATION" })).toBeVisible();
+  await expect(page.getByRole("button", { name:"ABYSSAL NETWORK" })).toBeVisible();
+  await expect(page.locator("#shopHint")).toContainText("All launch backgrounds are free");
+
+  await page.getByRole("button", { name:"ORBITAL STATION" }).click();
+  let state=await page.evaluate(() => window.__echoStepsBackgroundTest.snapshot());
+  expect(state.available).toEqual(["circuit","orbit","abyss"]);
+  expect(state.selected).toBe("orbit");
+  expect(await page.evaluate(() => localStorage.getItem("echoSteps.background"))).toBe("orbit");
+
+  await page.reload();
+  state=await page.evaluate(() => window.__echoStepsBackgroundTest.snapshot());
+  expect(state.selected).toBe("orbit");
   expect(errors).toEqual([]);
 });
