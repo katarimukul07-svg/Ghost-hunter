@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { completeTutorialForMostTests, collectPageErrors } from './helpers.js';
-import { exitTarget, planRoute, steerTo } from './automated-player.js';
+import { exitTarget, steerTo } from './automated-player.js';
+import { checkReachability } from './reachability.js';
 
 completeTutorialForMostTests(test);
 test.use({serviceWorkers:'block'});
@@ -74,9 +75,9 @@ test('generated prize and exit remain reachable into round 30', async ({context}
       const state = await page.evaluate(() => window.__echoStepsTest.snapshot());
       expect.soft(state.prize, `seed ${seed}, round ${round}`).not.toBeNull();
       if (!state.prize) continue;
-      expect.soft(planRoute(state, state.prize), `prize, seed ${seed}, round ${round}`).not.toBeNull();
-      expect.soft(planRoute({...state, player:state.prize}, exitTarget(state.exit)),
-        `exit, seed ${seed}, round ${round}`).not.toBeNull();
+      const reached = await checkReachability(page);
+      expect.soft(reached.prize, `prize, seed ${seed}, round ${round}`).toBe(true);
+      expect.soft(reached.exit, `exit, seed ${seed}, round ${round}`).toBe(true);
     }
     expect(errors, `seed ${seed}`).toEqual([]);
     await page.close();

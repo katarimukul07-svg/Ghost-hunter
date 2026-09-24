@@ -50,6 +50,7 @@ if (new URLSearchParams(location.search).has("test")) {
         ghostPlayback:ghosts.map(g=>({position:ghostPos(g),pathLength:g.path.length})),
         sweep:sweep ? {...sweep} : null,
       }),
+      canStandAt:(x,y)=>!pointInObstacles(x,y,CFG.PLAYER_R+0.5),
       gcPolicy:(completedRounds)=>gcPolicyForCompletedRounds(completedRounds),
       completeRound:()=>{
         if (!currentPath.length) currentPath=[{x:player.x,y:player.y}];
