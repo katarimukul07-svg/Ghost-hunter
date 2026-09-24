@@ -43,6 +43,8 @@ Then open <http://localhost:4173>.
 
 `npm test` runs structural checks plus desktop and mobile browser smoke tests. CI also compiles an API 36 Android APK and an unsigned iOS simulator build for every pull request. The protected `Static and browser tests` gate succeeds only when all three jobs pass. Only a gated `main` build is eligible for deployment.
 
+The automated player in `tests/automated-player.spec.js` uses the canvas controls to collect a prize and reach the exit in two rounds. It also checks routes through seeded layouts and verifies a wall collision. Run it alone with `npx playwright test tests/automated-player.spec.js`. On failure, Playwright retains a trace and attaches a JSON replay with the seed, viewport, and recorded moves. The layout and collision fixtures are exposed only when the game loads with `?test=1`.
+
 ## Repository layout
 
 ```text
