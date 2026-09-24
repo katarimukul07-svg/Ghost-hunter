@@ -68,7 +68,7 @@ if (new URLSearchParams(location.search).has("test")) {
         objective:{shape:"diamond",color:C.prize,motion:"slow-pulse-ring"},
         ghost:{shape:"circle",color:C.ghost,motion:"flicker"},
       }),
-      step:(count=1)=>{ for(let i=0;i<count;i++) update(STEP); },
+      step:(count=1)=>{ for(let i=0;i<count;i++) update(CFG.SIMULATION_STEP); },
     }),
   });
 }

@@ -5,15 +5,9 @@
   /* Random, short-lived bonuses. They begin after the teaching round so round 1
      remains calm. A double signal deliberately places two different rewards far
      apart, creating a route choice instead of free loot. */
-  const BONUS_LIFETIME = 4.5;
-  const BONUS_TYPES = Object.freeze({
-    shield:{ label:"1-HIT", color:"#8dff6a", shape:"hex" },
-    slow:{ label:"SLOW", color:"#c66bff", shape:"triangle" },
-    cache:{ label:"+3", color:"#eaf2ff", shape:"square" },
-  });
   let bonuses = [];
   let bonusClock = 0;
-  let nextBonusAt = 6 + Math.random() * 4;
+  let nextBonusAt = CFG.BONUS_FIRST_DELAY + Math.random() * CFG.BONUS_FIRST_JITTER;
   let shieldCharges = 0;
   let slowTime = 0;
   let shieldAbsorbedThisFrame = false;
@@ -21,7 +15,7 @@
   function resetBonuses() {
     bonuses = [];
     bonusClock = 0;
-    nextBonusAt = 6 + Math.random() * 4;
+    nextBonusAt = CFG.BONUS_FIRST_DELAY + Math.random() * CFG.BONUS_FIRST_JITTER;
     shieldCharges = 0;
     slowTime = 0;
   }
@@ -46,14 +40,14 @@
 
   function spawnBonusSignal(forceCount, forcedTypes) {
     if (mode !== STATE.PLAYING || round < 2) return;
-    const count = forceCount || (Math.random() < 0.3 ? 2 : 1);
+    const count = forceCount || (Math.random() < CFG.BONUS_DOUBLE_CHANCE ? 2 : 1);
     const names = forcedTypes || Object.keys(BONUS_TYPES).sort(() => Math.random() - 0.5);
     const spawned = [];
     for (let i = 0; i < count; i++) {
       const point = findBonusPoint(spawned);
       if (!point) break;
       const type = names[i % names.length];
-      spawned.push({ ...point, type, age:0, life:BONUS_LIFETIME });
+      spawned.push({ ...point, type, age:0, life:CFG.BONUS_LIFETIME });
     }
     bonuses.push(...spawned);
     if (spawned.length) {
@@ -67,10 +61,10 @@
       shieldCharges = 1;
       toast = { text:"BUFFER READY — ONE HIT BLOCKED", t:0 };
     } else if (bonus.type === "slow") {
-      slowTime = Math.max(slowTime, 4);
+      slowTime = Math.max(slowTime, CFG.BONUS_SLOW_TIME);
       toast = { text:"ECHO THROTTLE — 4 SECONDS", t:0 };
     } else {
-      coins += 3; runCoins += 3; saveCoins();
+      coins += CFG.BONUS_CACHE_COINS; runCoins += CFG.BONUS_CACHE_COINS; saveCoins();
       pop(bonus.x, bonus.y, "+3 COINS", BONUS_TYPES.cache.color);
       toast = { text:"CACHE COLLECTED — +3 COINS", t:0 };
     }
@@ -120,7 +114,7 @@
       if (bonusClock >= nextBonusAt && bonuses.length === 0) {
         spawnBonusSignal();
         bonusClock = 0;
-        nextBonusAt = 9 + Math.random() * 7;
+        nextBonusAt = CFG.BONUS_REPEAT_DELAY + Math.random() * CFG.BONUS_REPEAT_JITTER;
       }
     }
 

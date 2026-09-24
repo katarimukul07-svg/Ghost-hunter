@@ -2,7 +2,7 @@
 
 /* =========================================================================
  * Echo Steps: Garbage Collector
- * Vanilla HTML5 Canvas. No asset files. Player menu + Phase-1 juice.
+ * Fixed gameplay settings and selectable content. Live run state belongs in state.js.
  * ========================================================================= */
 
 const CFG = {
@@ -15,7 +15,33 @@ const CFG = {
   SIZE_EVERY:5, SIZE_GROW:0.10, SIZE_MAX:2.0, EXIT_MOVE_EVERY:5,
   EXIT_HANDOFF_TICKS:120, EXIT_SAFE_PAD:32,
   RETRY_COST:100,            // coins to revive at the same round after death
+  SIMULATION_STEP:1/60,
+  TOUCH_OFFSET_PX:52,
+  BONUS_LIFETIME:4.5,
+  BONUS_FIRST_DELAY:6,
+  BONUS_FIRST_JITTER:4,
+  BONUS_REPEAT_DELAY:9,
+  BONUS_REPEAT_JITTER:7,
+  BONUS_DOUBLE_CHANCE:0.3,
+  BONUS_SLOW_TIME:4,
+  BONUS_CACHE_COINS:3,
 };
+
+const BONUS_TYPES = Object.freeze({
+  shield:{ label:"1-HIT", color:"#8dff6a", shape:"hex" },
+  slow:{ label:"SLOW", color:"#c66bff", shape:"triangle" },
+  cache:{ label:"+3", color:"#eaf2ff", shape:"square" },
+});
+
+const BACKGROUNDS = Object.freeze([
+  { id:"classic", label:"CLASSIC GRID", cost:0 },
+  { id:"circuit", label:"CIRCUIT FOUNDRY", cost:0 },
+  { id:"orbit", label:"ORBITAL STATION", cost:0 },
+  { id:"abyss", label:"ABYSSAL NETWORK", cost:0 },
+]);
+
+const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex"];
+const CONFETTI_COLORS = ["#ffd23f","#ff5ca8","#3d7bff","#39ff9e","#b06bff","#ff8a2b"];
 
 function gcRemoveForCompletedRounds(completed) {
   const sweepNumber = Math.max(1, Math.floor(completed / CFG.GC_MOVES));

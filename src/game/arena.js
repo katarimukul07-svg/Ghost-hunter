@@ -74,7 +74,6 @@ function positionZone(zone, wall, ratio=0.5) {
 }
 function positionExit(wall, ratio=0.5) { positionZone(exit, wall, ratio); }
 
-const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex"];
 function obstacleCountForRound(r) {
   // round 1 -> START; round ADD_EVERY (5) -> START+1; round ADD_EVERY*2 (10) -> START+2; ...
   return Math.min(CFG.OBSTACLES_MAX, CFG.OBSTACLES_START + Math.floor(r/CFG.OBSTACLES_ADD_EVERY));

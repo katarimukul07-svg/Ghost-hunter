@@ -52,7 +52,7 @@ Then open <http://localhost:4173>.
 ├── ios/                      # Capacitor iOS project (iOS 15+)
 ├── assets/                   # source icon, install icons, and splash artwork
 ├── src/
-│   ├── game/                 # configuration, arena, state, gameplay, rendering, controls
+│   ├── game/                 # fixed settings, arena, state, gameplay, rendering, controls
 │   │   └── systems/          # fairness, garbage collection, and timed bonuses
 │   ├── platform/             # native lifecycle and haptics adapter
 │   ├── rendering/            # selectable arena backgrounds
@@ -75,7 +75,9 @@ for module boundaries and the remaining migration work.
 
 ## Gameplay tuning
 
-The current tuning values live in `CFG` near the top of the inline game script:
+Fixed gameplay settings and selectable content live in `src/game/config.js`.
+Other game files read from that file; values that change during a run remain
+with their owning system or in `src/game/state.js`. `CFG` includes:
 
 | Key | Meaning |
 |---|---|

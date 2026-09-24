@@ -23,6 +23,7 @@ const scriptEntries = await Promise.all(scriptPaths.map(async (relativePath) => 
   await readFile(new URL(`../${relativePath}`, import.meta.url), "utf8"),
 ]));
 const scripts = new Map(scriptEntries);
+const config = scripts.get("src/game/config.js");
 const fairness = scripts.get("src/game/systems/fairness.js");
 const bonuses = scripts.get("src/game/systems/bonuses.js");
 const backgrounds = scripts.get("src/rendering/backgrounds.js");
@@ -78,7 +79,8 @@ assert.equal(remoteAssets.length, 0, "the game must remain playable offline with
 assert.doesNotMatch(sourceBundle, /COIN_PACKS|purchaseCoins|Demo build|BUY COINS|WATCH REWARDED AD/i,
   "prototype commerce and ad UI must not ship");
 assert.match(sourceBundle, /GC IN/, "garbage collector countdown must use a clear label");
-assert.match(bonuses, /BONUS_LIFETIME\s*=\s*4\.5/, "timed bonus window must remain intentionally short");
+assert.match(config, /BONUS_LIFETIME\s*:\s*4\.5/, "timed bonus window must remain intentionally short");
+assert.match(bonuses, /CFG\.BONUS_LIFETIME/, "bonus lifetime must read central configuration");
 assert.match(bonuses, /DOUBLE BONUS/, "double bonus decision event is missing");
 assert.match(bonuses, /round\s*<\s*2/, "bonuses must not interrupt the teaching round");
 assert.match(fairness, /shapeAwareResolve/, "shape-aware collision handling is missing");
@@ -94,10 +96,9 @@ for (const relativePath of [...scriptPaths, "styles/game.css"]) {
 assert.match(tutorial, /echoSteps\.tutorial\.v1/, "tutorial completion must be versioned and persistent");
 assert.match(tutorial, /SKIP/, "first-run tutorial must remain skippable");
 assert.match(tutorial, /tutorialBtn/, "main menu tutorial replay control is missing");
-assert.match(backgrounds, /Classic Grid/);
-assert.match(backgrounds, /Circuit Foundry/);
-assert.match(backgrounds, /Orbital Station/);
-assert.match(backgrounds, /Abyssal Network/);
+for (const label of ["CLASSIC GRID", "CIRCUIT FOUNDRY", "ORBITAL STATION", "ABYSSAL NETWORK"]) {
+  assert.ok(config.includes(label), `${label} must be defined in central configuration`);
+}
 assert.match(backgrounds, /echoSteps\.background/, "selected background must persist locally");
 
 assert.match(androidVariables, /compileSdkVersion\s*=\s*36/, "Android must compile against API 36");

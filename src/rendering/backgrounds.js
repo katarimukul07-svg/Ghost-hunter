@@ -2,12 +2,6 @@
 (() => {
   "use strict";
 
-  const BACKGROUNDS = Object.freeze([
-    { id:"classic", label:"CLASSIC GRID", cost:0 },
-    { id:"circuit", label:"CIRCUIT FOUNDRY", cost:0 },
-    { id:"orbit", label:"ORBITAL STATION", cost:0 },
-    { id:"abyss", label:"ABYSSAL NETWORK", cost:0 },
-  ]);
   const BACKGROUND_IDS = BACKGROUNDS.map(theme => theme.id);
   const savedBackground = ls("echoSteps.background");
   let selectedBackground = BACKGROUND_IDS.includes(savedBackground) ? savedBackground : "classic";
