@@ -28,8 +28,9 @@ These are post-launch options only if retention data supports them.
 
 ### M0 — Stable web build
 
-- Split the monolithic prototype into maintainable presentation, game-core, platform, and bootstrap modules.
-- Fold `gameplay-fixes.js` into owned source code and remove runtime monkey-patching.
+- [x] Split the monolithic prototype into maintainable presentation, game-core, platform, and bootstrap source boundaries.
+- [x] Replace the root-level `gameplay-fixes.js` patch file with owned fairness and bonus system files.
+- Replace shared global bindings with explicit ES module imports after the release-candidate behavior is locked.
 - Add deterministic geometry/game-state unit tests and browser smoke tests.
 - Fix resize/orientation behavior, input-state edge cases, accessibility labels, and long-run memory/performance risks.
 - Remove all prototype purchase copy and inactive storefront UI.
