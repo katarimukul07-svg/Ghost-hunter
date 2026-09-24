@@ -4,6 +4,7 @@ import vm from "node:vm";
 
 const index = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const fixes = await readFile(new URL("../gameplay-fixes.js", import.meta.url), "utf8");
+const backgrounds = await readFile(new URL("../background-themes.js", import.meta.url), "utf8");
 const tutorial = await readFile(new URL("../tutorial.js", import.meta.url), "utf8");
 const nativeBridge = await readFile(new URL("../native-bridge.js", import.meta.url), "utf8");
 const webManifest = JSON.parse(await readFile(new URL("../manifest.webmanifest", import.meta.url), "utf8"));
@@ -38,20 +39,24 @@ const inlineScripts = [...index.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/scrip
 assert.equal(inlineScripts.length, 1, "expected one inline game script");
 new vm.Script(inlineScripts[0], { filename: "index.inline.js" });
 new vm.Script(fixes, { filename: "gameplay-fixes.js" });
+new vm.Script(backgrounds, { filename: "background-themes.js" });
 new vm.Script(tutorial, { filename: "tutorial.js" });
 new vm.Script(nativeBridge, { filename: "native-bridge.js" });
 
 const nativeLoader = '<script src="native-bridge.js"></script>';
 const fixLoader = '<script src="gameplay-fixes.js"></script>';
+const backgroundLoader = '<script src="background-themes.js"></script>';
 const tutorialLoader = '<script src="tutorial.js"></script>';
 assert.equal(index.split(nativeLoader).length - 1, 1, "native bridge must be loaded exactly once");
 assert.equal(index.split(fixLoader).length - 1, 1, "gameplay fixes must be loaded exactly once");
+assert.equal(index.split(backgroundLoader).length - 1, 1, "background themes must be loaded exactly once");
 assert.equal(index.split(tutorialLoader).length - 1, 1, "tutorial must be loaded exactly once");
 assert.ok(
   index.indexOf(fixLoader) > index.lastIndexOf("</script>", index.indexOf(fixLoader) - 1),
   "gameplay fixes must load after the main inline game script",
 );
-assert.ok(index.indexOf(tutorialLoader) > index.indexOf(fixLoader), "tutorial must load after gameplay fixes");
+assert.ok(index.indexOf(backgroundLoader) > index.indexOf(fixLoader), "background themes must load after gameplay fixes");
+assert.ok(index.indexOf(tutorialLoader) > index.indexOf(backgroundLoader), "tutorial must load after background themes");
 assert.ok(index.indexOf(nativeLoader) < index.indexOf("<script>"), "native bridge must load before the game");
 
 const remoteAssets = [...index.matchAll(/<(?:script|link)[^>]+(?:src|href)=["'](https?:\/\/[^"']+)/gi)];
@@ -70,10 +75,15 @@ assert.match(capacitorConfig.appId, /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*){2,}$/i, "
 assert.equal(webManifest.orientation, "portrait", "installed web app must stay portrait");
 assert.match(serviceWorker, /index\.html/);
 assert.match(serviceWorker, /gameplay-fixes\.js/);
+assert.match(serviceWorker, /background-themes\.js/, "background themes must be available offline");
 assert.match(serviceWorker, /tutorial\.js/, "tutorial must be available offline");
 assert.match(tutorial, /echoSteps\.tutorial\.v1/, "tutorial completion must be versioned and persistent");
 assert.match(tutorial, /SKIP/, "first-run tutorial must remain skippable");
 assert.match(tutorial, /tutorialBtn/, "main menu tutorial replay control is missing");
+assert.match(backgrounds, /Circuit Foundry/);
+assert.match(backgrounds, /Orbital Station/);
+assert.match(backgrounds, /Abyssal Network/);
+assert.match(backgrounds, /echoSteps\.background/, "selected background must persist locally");
 
 assert.match(androidVariables, /compileSdkVersion\s*=\s*36/, "Android must compile against API 36");
 assert.match(androidVariables, /targetSdkVersion\s*=\s*36/, "Android must target API 36");
