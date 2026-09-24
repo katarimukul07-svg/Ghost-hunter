@@ -122,7 +122,6 @@ function burst(arr,x,y,color,n){
     arr.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, color, r:1.5+Math.random()*2.5 });
   }
 }
-const CONFETTI_COLORS = ["#ffd23f","#ff5ca8","#3d7bff","#39ff9e","#b06bff","#ff8a2b"];
 function burstMulti(arr,x,y,colors,n){
   for (let i=0;i<n;i++){
     const a=Math.random()*Math.PI*2, sp=1+Math.random()*4.5;

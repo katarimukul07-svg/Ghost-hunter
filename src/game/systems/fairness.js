@@ -1,7 +1,6 @@
 (() => {
   "use strict";
 
-  const TOUCH_OFFSET_PX = 52;
 
   function rectCircleHit(px, py, r, o) {
     const nx = clamp(px, o.x, o.x + o.w);
@@ -303,7 +302,7 @@
     if (e.pointerType !== "touch" || mode !== STATE.PLAYING || paused) return;
     const p = toLocal(e);
     pointer.x = clamp(p.x, room.x + CFG.PLAYER_R, room.x + room.w - CFG.PLAYER_R);
-    pointer.y = clamp(p.y - TOUCH_OFFSET_PX, room.y + CFG.PLAYER_R, room.y + room.h - CFG.PLAYER_R);
+    pointer.y = clamp(p.y - CFG.TOUCH_OFFSET_PX, room.y + CFG.PLAYER_R, room.y + room.h - CFG.PLAYER_R);
   }
   canvas.addEventListener("pointerdown", applyTouchOffset);
   canvas.addEventListener("pointermove", applyTouchOffset);

@@ -1,9 +1,12 @@
 /* ---------- Loop ---------- */
 let last = performance.now(), acc = 0;
-const STEP = 1/60;
 function loop(now){
   let dt=(now-last)/1000; last=now; if (dt>0.1) dt=0.1; acc+=dt;
-  while (acc>=STEP){ if (!paused) update(STEP); updateEffects(STEP); acc-=STEP; }
+  while (acc>=CFG.SIMULATION_STEP){
+    if (!paused) update(CFG.SIMULATION_STEP);
+    updateEffects(CFG.SIMULATION_STEP);
+    acc-=CFG.SIMULATION_STEP;
+  }
   render();
   if (mode===STATE.PLAYING && !paused) updateHUD();
   if (!el.shop.classList.contains("hidden")) drawShopPreview();

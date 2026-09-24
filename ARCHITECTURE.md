@@ -11,7 +11,9 @@ network API in Version 1.0.
 
 - `index.html` contains the accessible application shell and ordered script composition.
 - `styles/game.css` owns the visual presentation and responsive safe-area rules.
-- `src/game/` owns game configuration, arena layout, state, lifecycle, rendering,
+- `src/game/config.js` owns fixed tuning values and selectable content. Other
+  systems read them there; live positions, scores, and timers remain runtime state.
+- `src/game/` owns arena layout, state, lifecycle, rendering,
   controls, and bootstrap behavior.
 - `src/game/systems/` owns collision fairness, safe spawning, garbage collection,
   touch assistance, and timed bonuses.
