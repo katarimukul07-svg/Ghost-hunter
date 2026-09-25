@@ -209,6 +209,12 @@
     ss("echoSteps.background",id);
     haptic("light");
   }
+  window.addEventListener("echosteps:save-changed", event => {
+    if (event.detail.key !== "echoSteps.background") return;
+    const saved = ls("echoSteps.background");
+    selectedBackground = BACKGROUND_IDS.includes(saved) ? saved : "classic";
+    previewBackground = selectedBackground;
+  });
 
   const buildShopAllBase=buildShopAll;
   buildShopAll=function buildShopWithBackgrounds() {

@@ -27,6 +27,7 @@ The repository contains the web game plus Capacitor 8 projects for Android and i
 - After every 10 completed rounds, the Garbage Collector removes 4 old ghosts, then 3, then 2, and finally 1 at round 40 and each later milestone.
 - Obstacles increase, grow, drift, and change shape as the run advances.
 - Progress, coins, cosmetics, sound settings, and best score currently persist in local storage on one device.
+- An optional account and non-economic sync client is built but disabled by default. It requires reviewed backend, privacy, and deletion setup before activation.
 - Version 1.0 has no paid coin packs, ads, analytics, tracking, accounts, or network dependency.
 
 ## Development

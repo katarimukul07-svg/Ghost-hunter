@@ -4,8 +4,9 @@
 
 Echo Steps is an offline-first client application. The same tested web bundle is
 deployed to GitHub Pages and packaged locally by Capacitor for Android and iOS.
-There is no application backend, remote database, account service, or required
-network API in Version 1.0.
+The default build has no active account service or required network API. An
+optional cloud-save client is present but remains disabled until a production
+identity service, privacy/deletion flow, and recovery plan are approved.
 
 ## Source boundaries
 
@@ -20,6 +21,7 @@ network API in Version 1.0.
 - `src/rendering/` owns optional arena themes.
 - `src/ui/` owns guided and menu-facing experiences such as the tutorial.
 - `src/platform/` isolates Capacitor lifecycle, Back-button, status-bar, and haptic behavior.
+- `src/cloud/` owns optional email sign-in and non-economic cloud-save sync.
 - `tests/` groups browser behavior by product concern.
 
 ## Load order
@@ -43,7 +45,7 @@ a successful `main` build to GitHub Pages.
 
 ## Future backend boundary
 
-If cloud saves, accounts, leaderboards, purchases, or server-verified rewards are
-introduced, their API contract should remain separate from the deterministic game
-core. The client must continue to launch and play offline when those services are
+Cloud saves are limited to a personal best and settings. Coins, paid items, and
+competitive scores require a server-owned economy and verification service.
+The client must continue to launch and play offline when those services are
 unavailable.
