@@ -68,9 +68,11 @@ the client checks; that role bypasses RLS.
 | Player A | RPC with >4 KB settings | Rejected. |
 | No JWT | RPC | Denied. |
 
-Before a production rollout, automate these requests as integration tests
-against a disposable project and require them in CI. Do not claim this migration
-is production verified merely because static validation or game tests pass.
+The `supabase/tests/001_player_saves.test.sql` pgTAP suite now runs in CI
+against a disposable local database and gates the existing aggregate release
+check. Repeat its authorization checks against a disposable hosted staging
+project before production activation. Do not claim this migration is deployed
+or production verified merely because local database and game tests pass.
 
 ## Account and purchase governance
 

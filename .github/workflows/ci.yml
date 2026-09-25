@@ -15,6 +15,20 @@ permissions:
   contents: read
 
 jobs:
+  database:
+    name: Database authorization
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v2
+        with:
+          version: 2.84.2
+      - name: Start disposable local database and apply migrations
+        run: supabase db start
+      - name: Verify authorization, isolation, and conflicts
+        run: supabase test db
+
   web:
     name: Web quality
     runs-on: ubuntu-latest
@@ -112,7 +126,7 @@ jobs:
   test:
     name: Static and browser tests
     if: always()
-    needs: [web, android, ios]
+    needs: [web, android, ios, database]
     runs-on: ubuntu-latest
     steps:
       - name: Require every release check
@@ -120,10 +134,12 @@ jobs:
           WEB_RESULT: ${{ needs.web.result }}
           ANDROID_RESULT: ${{ needs.android.result }}
           IOS_RESULT: ${{ needs.ios.result }}
+          DATABASE_RESULT: ${{ needs.database.result }}
         run: |
           test "$WEB_RESULT" = "success"
           test "$ANDROID_RESULT" = "success"
           test "$IOS_RESULT" = "success"
+          test "$DATABASE_RESULT" = "success"
 
   deploy:
     name: Deploy GitHub Pages
