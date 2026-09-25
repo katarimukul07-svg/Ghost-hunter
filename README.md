@@ -11,6 +11,8 @@ The repository contains the web game plus Capacitor 8 projects for Android and i
 - Release checklist: [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
 - Store listing draft: [STORE_LISTING.md](STORE_LISTING.md)
 - Development process: [WORKFLOW.md](WORKFLOW.md)
+- Backend foundation and release gates: [docs/BACKEND_PLAN.md](docs/BACKEND_PLAN.md)
+- Owner-controlled automation design: [docs/PROJECT_AUTOMATION.md](docs/PROJECT_AUTOMATION.md)
 
 ## Controls
 
