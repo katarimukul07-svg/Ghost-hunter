@@ -6,8 +6,7 @@
     "accountBtn", "accountScreen", "accountStatus", "accountEmailForm",
     "accountEmail", "accountCodeForm", "accountCode", "accountChoices",
     "accountUseDevice", "accountUseCloud", "accountSignedIn", "accountSync",
-    "accountSignOut", "accountDelete", "accountBack",
-  ].map(id => [id, document.getElementById(id)]));
+    "accountSignOut", "accountDelete", "accountBack", "leaderboardBtn",\n    "leaderboardScreen", "leaderboardStatus", "leaderboardRows", "leaderboardTabs", "leaderboardBack",\n  ].map(id => [id, document.getElementById(id)]));
   const keys = Object.freeze({
     name:"echoSteps.name", color:"echoSteps.color", trail:"echoSteps.trail",
     ghostSkin:"echoSteps.ghostSkin", deathfx:"echoSteps.deathfx",
@@ -239,6 +238,31 @@
     if (event.detail.key === "echoSteps.bestRounds" || Object.values(keys).includes(event.detail.key)) scheduleSync();
   });
   window.addEventListener("online", () => { if (ready) scheduleSync(); });
+  async function openLeaderboard(board="world") {
+    if (!session || !ready) {
+      show(el.start, false); show(ui.accountScreen, true);
+      status("Sign in to enter the verified worldwide leaderboard.");
+      return;
+    }
+    show(el.start, false); show(ui.leaderboardScreen, true);
+    ui.leaderboardStatus.textContent = "Loading verified scores…";
+    const rows = await getLeaderboard(board, null, 50);
+    ui.leaderboardRows.replaceChildren(...rows.map(row => {
+      const item=document.createElement("div"); item.className="leaderboard-row";
+      const rank=document.createElement("span"); rank.className="rank"; rank.textContent="#" + row.rank;
+      const name=document.createElement("span"); name.textContent=row.display_name || "Player";
+      const country=document.createElement("span"); country.className="country"; country.textContent=row.country_code || "—";
+      const score=document.createElement("span"); score.className="score"; score.textContent=row.score;
+      item.append(rank,name,country,score); return item;
+    }));
+    ui.leaderboardStatus.textContent = rows.length ? "Verified ranked runs only." : "No verified scores yet. Set the first one.";
+    ui.leaderboardTabs.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active",tab.dataset.board===board));
+  }
+  ui.leaderboardBtn.addEventListener("click",()=>openLeaderboard("world"));
+  ui.leaderboardTabs.addEventListener("click",event=>{
+    const tab=event.target.closest("[data-board]"); if (tab) openLeaderboard(tab.dataset.board);
+  });
+  ui.leaderboardBack.addEventListener("click",()=>{ show(ui.leaderboardScreen,false); show(el.start,true); });
   ui.accountBtn.addEventListener("click", () => {
     if (mode !== STATE.START) return;
     show(el.start, false); show(ui.accountScreen, true);
@@ -317,7 +341,6 @@
     if (value?.enabled && /^https:\/\/[^/?#]+\.supabase\.co$/.test(value.url)
       && typeof value.publishableKey === "string" && value.publishableKey.startsWith("sb_publishable_")) {
       config = value;
-      show(ui.accountBtn, true);
-    }
+      show(ui.accountBtn, true); show(ui.leaderboardBtn, true);\n    }
   }).catch(() => { /* Offline guest play needs no configuration request. */ });
 })();
