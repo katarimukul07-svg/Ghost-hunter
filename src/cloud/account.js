@@ -346,6 +346,7 @@
     if (value?.enabled && /^https:\/\/[^/?#]+\.supabase\.co$/.test(value.url)
       && typeof value.publishableKey === "string" && value.publishableKey.startsWith("sb_publishable_")) {
       config = value;
-      show(ui.accountBtn, true); show(ui.leaderboardBtn, true);\n    }
+      show(ui.accountBtn, true); show(ui.leaderboardBtn, true);
+    }
   }).catch(() => { /* Offline guest play needs no configuration request. */ });
 })();
