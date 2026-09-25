@@ -209,6 +209,7 @@ function pauseForInterruption(){
 document.addEventListener("visibilitychange", ()=>{ if (document.hidden) pauseForInterruption(); });
 window.addEventListener("echosteps:app-state", event => { if (!event.detail.isActive) pauseForInterruption(); });
 window.addEventListener("echosteps:back", ()=>{
+  if (window.EchoStepsCloud && window.EchoStepsCloud.close()) return;
   if (!el.shop.classList.contains("hidden")) { closeShop(); return; }
   if (!el.pause.classList.contains("hidden") || mode===STATE.OVER) { showStart(); return; }
   if (mode===STATE.PLAYING) { pauseForInterruption(); return; }

@@ -53,7 +53,34 @@
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="startBtn">PLAY</button>
       <button id="shopBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">SHOP</button>
+      <button id="accountBtn" class="chip hidden">CLOUD SAVE</button>
     </div>
+  </div>
+
+  <div id="accountScreen" class="overlay hidden" aria-label="Cloud save account">
+    <h1>CLOUD SAVE</h1>
+    <p class="sub" id="accountStatus" role="status" aria-live="polite">Sign in to protect your personal best and settings.</p>
+    <p class="sub">Coins and purchased cosmetics remain on this device. You can always play offline.</p>
+    <form id="accountEmailForm" class="menu">
+      <label class="mlabel" for="accountEmail">EMAIL</label>
+      <input id="accountEmail" type="email" autocomplete="email" required maxlength="254" />
+      <button type="submit">SEND CODE</button>
+    </form>
+    <form id="accountCodeForm" class="menu hidden">
+      <label class="mlabel" for="accountCode">EMAIL CODE</label>
+      <input id="accountCode" inputmode="numeric" autocomplete="one-time-code" required pattern="[0-9]{6,8}" maxlength="8" />
+      <button type="submit">SIGN IN</button>
+    </form>
+    <div id="accountChoices" class="menu hidden">
+      <button id="accountUseDevice" type="button">USE THIS DEVICE</button>
+      <button id="accountUseCloud" type="button">RESTORE CLOUD SAVE</button>
+    </div>
+    <div id="accountSignedIn" class="menu hidden">
+      <button id="accountSync" type="button">SYNC NOW</button>
+      <button id="accountSignOut" class="chip" type="button">SIGN OUT</button>
+      <button id="accountDelete" class="chip" type="button">DELETE ACCOUNT</button>
+    </div>
+    <button id="accountBack" class="chip" type="button">BACK</button>
   </div>
 
   <div id="shopScreen" class="overlay hidden">
@@ -122,5 +149,6 @@
 <script src="src/game/systems/bonuses.js"></script>
 <script src="src/rendering/backgrounds.js"></script>
 <script src="src/ui/tutorial.js"></script>
+<script src="src/cloud/account.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE = "echo-steps-v8";
+const CACHE = "echo-steps-v9";
 const OFFLINE_ASSETS = [
   "./",
   "./index.html",
@@ -16,6 +16,7 @@ const OFFLINE_ASSETS = [
   "./src/game/systems/bonuses.js",
   "./src/rendering/backgrounds.js",
   "./src/ui/tutorial.js",
+  "./src/cloud/account.js",
   "./manifest.webmanifest",
   "./privacy.html",
   "./support.html",
@@ -38,7 +39,8 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
-  if (new URL(event.request.url).origin !== self.location.origin) return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin || url.pathname.endsWith("/cloud-config.json")) return;
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
       const copy = response.clone();

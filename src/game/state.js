@@ -149,7 +149,12 @@ function repositionExit(){
 
 /* ---------- Persistence (guarded) ---------- */
 function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
-function ss(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function ss(k,v){
+  try {
+    localStorage.setItem(k,v);
+    window.dispatchEvent(new CustomEvent("echosteps:save-changed", { detail:{ key:k } }));
+  } catch(e){}
+}
 function loadBestRounds(){ return parseInt(ls("echoSteps.bestRounds"),10) || 0; }
 function saveBestRounds(v){ ss("echoSteps.bestRounds", String(v)); }
 function saveCoins(){ ss("echoSteps.coins", String(coins)); }

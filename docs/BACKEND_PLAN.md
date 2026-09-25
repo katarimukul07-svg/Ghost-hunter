@@ -1,8 +1,8 @@
 # Cloud account and economy implementation plan
 
-Status: foundation proposal in `feature/backend-foundation`. The game still uses
-device-local saves; this branch does not activate accounts, transmit player data,
-or change the privacy policy. Do not connect a production client until the
+Status: the foundation and a disabled account/sync client are implemented. The
+default game still uses device-local saves; account UI does not appear and no
+player data is transmitted. Do not activate a production client until the
 privacy, deletion, recovery, and authorization gates below are complete.
 
 ## Decision record
@@ -91,8 +91,33 @@ or production verified merely because local database and game tests pass.
   easier to restore than consumable coins. The game currently contains no paid
   products, so there is no transaction verification to deploy yet.
 
-## Current next engineering PR
+## Cloud client activation checklist
 
-Build the account UI and sync adapter behind a disabled feature flag, plus
-staging integration tests. Activate it only after production identity, mail,
-deletion, policy, and recovery preparations are reviewed.
+The build writes `dist/cloud-config.json` with `enabled:false` unless
+`ECHO_CLOUD_ACTIVATE=1` is explicitly supplied alongside `ECHO_SUPABASE_URL`
+and `ECHO_SUPABASE_PUBLISHABLE_KEY`. A publishable key is public by design;
+never use a service-role/secret key in the build. The config file is never
+cached by the service worker. The default GitHub Pages/native builds leave
+cloud features off.
+
+Before enabling any player-facing build:
+
+1. Provision a paid production project and separate staging project. Apply
+   reviewed migrations, test RLS with two users, configure custom SMTP and an
+   email template that displays `{{ .Token }}` for numeric code sign-in.
+2. Deploy and exercise `supabase/functions/delete-account` in staging with
+   `ECHO_ALLOWED_ORIGINS` set to the exact game origins. Its service-role key
+   stays in the function runtime. Confirm the in-app deletion button deletes
+   the Auth user, cascades the cloud save, and clears local progress. Define
+   retention of purchase audit records before selling anything. Update the
+   privacy policy and store forms; publish the required web deletion path.
+3. Define backup/restore and support ownership. Verify the hosted staging
+   account UI, expired tokens, conflict handling, account switching, email
+   delivery, a device reinstall, and an offline session.
+4. Review generated `dist/cloud-config.json` and the actual native bundles
+   before setting activation variables in a production build. No privileged
+   credentials belong in that file or the app binary.
+
+The client intentionally keeps tokens in memory only. A player signs in again
+after closing the app, while their local progress remains available offline.
+Coins and owned cosmetics remain device-local pending a server-owned ledger.
