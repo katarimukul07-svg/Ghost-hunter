@@ -34,8 +34,11 @@
   const status = message => { ui.accountStatus.textContent = message; };
   const isOpen = () => !ui.accountScreen.classList.contains("hidden");
   function close() {
-    if (!isOpen()) return false;
+    const accountOpen = isOpen();
+    const leaderboardOpen = !ui.leaderboardScreen.classList.contains("hidden");
+    if (!accountOpen && !leaderboardOpen) return false;
     show(ui.accountScreen, false);
+    show(ui.leaderboardScreen, false);
     show(el.start, true);
     return true;
   }
