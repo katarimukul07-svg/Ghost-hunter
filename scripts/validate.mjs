@@ -118,7 +118,7 @@ assert.match(androidVariables, /compileSdkVersion\s*=\s*36/, "Android must compi
 assert.match(androidVariables, /targetSdkVersion\s*=\s*36/, "Android must target API 36");
 assert.match(androidManifest, /android:screenOrientation="portrait"/, "Android must lock portrait orientation");
 assert.match(androidManifest, /android:allowBackup="false"/, "local progress must not be cloud-backed up");
-assert.doesNotMatch(androidManifest, /android\.permission\.INTERNET/, "ad-free offline release must not request internet");
+assert.match(androidManifest, /android\\.permission\\.INTERNET/, "ranked/account builds require network access");
 
 assert.match(iosInfo, /UIInterfaceOrientationPortrait/, "iOS must support portrait");
 assert.doesNotMatch(iosInfo, /UIInterfaceOrientationLandscape/, "iOS launch build must stay portrait");
