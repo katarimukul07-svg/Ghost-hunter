@@ -6,7 +6,9 @@
     "accountBtn", "accountScreen", "accountStatus", "accountEmailForm",
     "accountEmail", "accountCodeForm", "accountCode", "accountChoices",
     "accountUseDevice", "accountUseCloud", "accountSignedIn", "accountSync",
-    "accountSignOut", "accountDelete", "accountBack", "leaderboardBtn",\n    "leaderboardScreen", "leaderboardStatus", "leaderboardRows", "leaderboardTabs", "leaderboardBack",\n  ].map(id => [id, document.getElementById(id)]));
+    "accountSignOut", "accountDelete", "accountBack", "leaderboardBtn",
+    "leaderboardScreen", "leaderboardStatus", "leaderboardRows", "leaderboardTabs", "leaderboardBack",
+  ].map(id => [id, document.getElementById(id)]));
   const keys = Object.freeze({
     name:"echoSteps.name", color:"echoSteps.color", trail:"echoSteps.trail",
     ghostSkin:"echoSteps.ghostSkin", deathfx:"echoSteps.deathfx",
