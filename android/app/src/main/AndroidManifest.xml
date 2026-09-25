@@ -32,5 +32,6 @@
         </provider>
     </application>
 
-    <uses-permission android:name="android.permission.INTERNET" />\n    <!-- Network is required only when optional account/ranked services are activated. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Network is required only when optional account/ranked services are activated. -->
 </manifest>
