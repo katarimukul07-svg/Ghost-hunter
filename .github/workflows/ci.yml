@@ -42,7 +42,7 @@ jobs:
           retention-days: 7
 
   android:
-    name: Android debug build
+    name: Android debug and release builds
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -69,11 +69,21 @@ jobs:
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
+      - name: Build unsigned release App Bundle
+        working-directory: android
+        run: ./gradlew bundleRelease --no-daemon
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: echo-steps-android-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload unsigned release App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: echo-steps-android-release-unsigned
+          path: android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 14
 

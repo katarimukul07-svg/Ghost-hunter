@@ -37,6 +37,9 @@ const androidVariables = await readFile(new URL("../android/variables.gradle", i
 const androidManifest = await readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8");
 const iosInfo = await readFile(new URL("../ios/App/App/Info.plist", import.meta.url), "utf8");
 const iosPrivacy = await readFile(new URL("../ios/App/App/PrivacyInfo.xcprivacy", import.meta.url), "utf8");
+const androidBuild = await readFile(new URL("../android/app/build.gradle", import.meta.url), "utf8");
+const iosProject = await readFile(new URL("../ios/App/App.xcodeproj/project.pbxproj", import.meta.url), "utf8");
+const releaseListing = await readFile(new URL("../STORE_LISTING.md", import.meta.url), "utf8");
 
 assert.match(index, /<!doctype html>/i, "index.html must declare HTML5");
 assert.match(index, /<meta[^>]+name="viewport"/i, "mobile viewport metadata is required");
@@ -88,6 +91,15 @@ assert.match(fairness, /shapeAwareResolve/, "shape-aware collision handling is m
 assert.equal(packageJson.engines.node, ">=22", "Capacitor 8 requires Node 22+");
 assert.equal(capacitorConfig.webDir, "dist", "native builds must bundle the tested dist directory");
 assert.match(capacitorConfig.appId, /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*){2,}$/i, "invalid app ID");
+assert.match(packageJson.version, /^\d+\.\d+\.\d+$/, "release version must use major.minor.patch");
+assert.ok(androidBuild.includes(`applicationId "${capacitorConfig.appId}"`), "Android application ID differs from Capacitor");
+assert.ok(iosProject.includes(`PRODUCT_BUNDLE_IDENTIFIER = ${capacitorConfig.appId};`), "iOS bundle ID differs from Capacitor");
+assert.ok(androidBuild.includes(`versionName "${packageJson.version}"`), "Android release version differs from package.json");
+assert.ok(iosProject.includes(`MARKETING_VERSION = ${packageJson.version.replace(/\.0$/, "")};`), "iOS release version differs from package.json");
+assert.ok(releaseListing.includes(`Bundle/application ID: \`${capacitorConfig.appId}\``), "store listing app ID differs");
+assert.ok(releaseListing.includes(`Version: ${packageJson.version}`), "store listing version differs");
+assert.match(androidBuild, /versionCode\s+[1-9]\d*/, "Android version code must be positive");
+assert.match(iosProject, /CURRENT_PROJECT_VERSION = [1-9]\d*;/, "iOS build number must be positive");
 assert.equal(webManifest.orientation, "portrait", "installed web app must stay portrait");
 assert.match(serviceWorker, /index\.html/);
 for (const relativePath of [...scriptPaths, "styles/game.css"]) {
