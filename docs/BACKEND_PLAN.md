@@ -105,9 +105,12 @@ Before enabling any player-facing build:
 1. Provision a paid production project and separate staging project. Apply
    reviewed migrations, test RLS with two users, configure custom SMTP and an
    email template that displays `{{ .Token }}` for numeric code sign-in.
-2. Implement and exercise an in-app account-deletion flow backed by an
-   authenticated trusted server function. Define retention of purchase audit
-   records before selling anything. Update privacy policy and store forms.
+2. Deploy and exercise `supabase/functions/delete-account` in staging with
+   `ECHO_ALLOWED_ORIGINS` set to the exact game origins. Its service-role key
+   stays in the function runtime. Confirm the in-app deletion button deletes
+   the Auth user, cascades the cloud save, and clears local progress. Define
+   retention of purchase audit records before selling anything. Update the
+   privacy policy and store forms; publish the required web deletion path.
 3. Define backup/restore and support ownership. Verify the hosted staging
    account UI, expired tokens, conflict handling, account switching, email
    delivery, a device reinstall, and an offline session.

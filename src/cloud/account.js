@@ -6,7 +6,7 @@
     "accountBtn", "accountScreen", "accountStatus", "accountEmailForm",
     "accountEmail", "accountCodeForm", "accountCode", "accountChoices",
     "accountUseDevice", "accountUseCloud", "accountSignedIn", "accountSync",
-    "accountSignOut", "accountBack",
+    "accountSignOut", "accountDelete", "accountBack",
   ].map(id => [id, document.getElementById(id)]));
   const keys = Object.freeze({
     name:"echoSteps.name", color:"echoSteps.color", trail:"echoSteps.trail",
@@ -249,6 +249,22 @@
         method:"POST", headers:{ apikey:config.publishableKey, Authorization:`Bearer ${token}` },
       }); } catch (error) { /* Local session is already cleared. */ }
     }
+  });
+  ui.accountDelete.addEventListener("click", async () => {
+    if (!session || busy || !window.confirm("Permanently delete your cloud account and save? This cannot be undone.")) return;
+    busy = true;
+    try {
+      await request("/functions/v1/delete-account", {
+        method:"POST", authorized:true, data:{ confirm:"DELETE" },
+      });
+      clearSession();
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith("echoSteps.")) localStorage.removeItem(key);
+      }
+      location.reload();
+    } catch (error) {
+      status("Could not delete your account. Your save remains; please retry or contact support.");
+    } finally { busy = false; }
   });
   fetch("cloud-config.json", { cache:"no-store" }).then(response => response.json()).then(value => {
     if (value?.enabled && /^https:\/\/[^/?#]+\.supabase\.co$/.test(value.url)
