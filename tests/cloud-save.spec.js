@@ -35,7 +35,7 @@ async function mockCloud(page, { remote=null, conflict=false }={}) {
 }
 
 async function signIn(page) {
-  await page.getByRole("button", { name:"CLOUD SAVE" }).click();
+  await page.getByRole("button", { name:"ACCOUNT" }).click();
   await page.locator("#accountEmail").fill("player@example.com");
   await page.getByRole("button", { name:"SEND CODE" }).click();
   await page.locator("#accountCode").fill("123456");

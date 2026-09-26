@@ -2,7 +2,7 @@
 
 ## Product direction
 
-Version 1.0 will be a focused, replayable mobile arcade game. The launch build keeps the core hook—each completed route becomes a lethal echo, while the Garbage Collector periodically reduces accumulated danger—and avoids expanding into accounts, multiplayer, or a large content system before the core game is proven.
+Version 1.0 is a focused, replayable mobile arcade game built around worldwide score competition. The launch path keeps the core hook—each completed route becomes a lethal echo, while the Garbage Collector periodically reduces accumulated danger—while adding only the backend needed for secure identity, ranked scores, leaderboards, cloud recovery, and future verified purchases.
 
 ## Version 1.0 scope
 
@@ -65,7 +65,19 @@ Exit criteria: stable closed beta with acceptable crash-free sessions, understan
 
 Exit criteria: approved Version 1.0 on both stores with support, privacy, and rollback procedures ready.
 
-### M4 — Post-launch
+### M4 — Competitive backend
+
+- Add optional account identity without blocking guest play.
+- Use server-owned ranked sessions and sequential round checkpoints; never accept an arbitrary client score.
+- Add worldwide, daily, weekly, seasonal, and country leaderboard support.
+- Add server-owned wallet ledger, entitlements, and idempotent store-transaction records.
+- Add native Apple/Game Center and Google identity only with official platform configuration.
+- Verify every paid transaction server-side with Apple/Google before granting value.
+- Add abuse scoring, rate limits, suspicious-run quarantine, and leaderboard audit tooling before public ranked launch.
+
+Exit criteria: a modified client cannot directly mint currency, grant paid inventory, write leaderboard scores, or redeem one store transaction twice.
+
+### M5 — Post-launch
 
 - Fix launch issues before adding features.
 - Review retention, round completion, death causes, retry usage, ad completion, and cosmetic engagement.

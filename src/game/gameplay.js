@@ -17,6 +17,7 @@ function resetGame() {
   ss("echoSteps.name", playerName);
   spawnPrize();
   mode = STATE.PLAYING;
+  if (window.EchoStepsCloud) window.EchoStepsCloud.startRankedRun();
   el.start.classList.add("hidden");
   el.over.classList.add("hidden");
   el.pause.classList.add("hidden");
@@ -32,6 +33,7 @@ function trimPathAtExit(path){
 }
 function completeRound() {
   const clearedRound = round;
+  if (window.EchoStepsCloud) window.EchoStepsCloud.checkpointRankedRound(clearedRound);
   burst(particles, exit.x+exit.w/2, exit.y+exit.h/2, C.exit, 24);
   shockwaves.push({ x:exit.x+exit.w/2, y:exit.y+exit.h/2, t:0 });
   pop(exit.x+exit.w/2, exit.y+exit.h/2, "ROUND " + clearedRound + " CLEAR", C.exit);
@@ -77,6 +79,7 @@ function startDeath() {
 function finalizeDeath() {
   mode = STATE.OVER;
   const reached = round - 1;
+  if (window.EchoStepsCloud) window.EchoStepsCloud.finishRankedRun();
   const isBest = reached > bestRounds;
   if (isBest){ bestRounds = reached; saveBestRounds(bestRounds); }
   el.finalRounds.textContent = reached;

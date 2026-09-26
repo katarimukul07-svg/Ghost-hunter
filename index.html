@@ -53,7 +53,7 @@
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="startBtn">PLAY</button>
       <button id="shopBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">SHOP</button>
-      <button id="accountBtn" class="chip hidden">CLOUD SAVE</button>
+      <button id="accountBtn" class="chip hidden">ACCOUNT</button>\n      <button id="leaderboardBtn" class="chip hidden">LEADERBOARD</button>
     </div>
   </div>
 
@@ -81,6 +81,19 @@
       <button id="accountDelete" class="chip" type="button">DELETE ACCOUNT</button>
     </div>
     <button id="accountBack" class="chip" type="button">BACK</button>
+  </div>
+
+  <div id="leaderboardScreen" class="overlay hidden" aria-label="Worldwide leaderboard">
+    <h1>LEADERBOARD</h1>
+    <div class="tabs" id="leaderboardTabs">
+      <button class="tab active" data-board="world">WORLD</button>
+      <button class="tab" data-board="daily">DAILY</button>
+      <button class="tab" data-board="weekly">WEEKLY</button>
+      <button class="tab" data-board="seasonal">SEASON</button>
+    </div>
+    <p class="sub" id="leaderboardStatus" role="status">Sign in to compete worldwide.</p>
+    <div id="leaderboardRows" class="leaderboard-rows"></div>
+    <button id="leaderboardBack" class="chip" type="button">BACK</button>
   </div>
 
   <div id="shopScreen" class="overlay hidden">

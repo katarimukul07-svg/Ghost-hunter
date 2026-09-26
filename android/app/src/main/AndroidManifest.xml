@@ -32,5 +32,6 @@
         </provider>
     </application>
 
-    <!-- Version 1.0 has no network, ads, analytics, account, or payment permission. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Network is required only when optional account/ranked services are activated. -->
 </manifest>

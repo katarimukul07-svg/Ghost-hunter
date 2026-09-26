@@ -6,7 +6,8 @@
     "accountBtn", "accountScreen", "accountStatus", "accountEmailForm",
     "accountEmail", "accountCodeForm", "accountCode", "accountChoices",
     "accountUseDevice", "accountUseCloud", "accountSignedIn", "accountSync",
-    "accountSignOut", "accountDelete", "accountBack",
+    "accountSignOut", "accountDelete", "accountBack", "leaderboardBtn",
+    "leaderboardScreen", "leaderboardStatus", "leaderboardRows", "leaderboardTabs", "leaderboardBack",
   ].map(id => [id, document.getElementById(id)]));
   const keys = Object.freeze({
     name:"echoSteps.name", color:"echoSteps.color", trail:"echoSteps.trail",
@@ -29,17 +30,67 @@
   let refreshPromise = null;
   let changedDuringSync = false;
   let sessionEpoch = 0;
+  let rankedRunId = null;
 
   const show = (element, visible) => element.classList.toggle("hidden", !visible);
   const status = message => { ui.accountStatus.textContent = message; };
   const isOpen = () => !ui.accountScreen.classList.contains("hidden");
   function close() {
-    if (!isOpen()) return false;
+    const accountOpen = isOpen();
+    const leaderboardOpen = !ui.leaderboardScreen.classList.contains("hidden");
+    if (!accountOpen && !leaderboardOpen) return false;
     show(ui.accountScreen, false);
+    show(ui.leaderboardScreen, false);
     show(el.start, true);
     return true;
   }
-  window.EchoStepsCloud = Object.freeze({ close });
+  async function startRankedRun() {
+    if (!ready || !session || rankedRunId) return false;
+    try {
+      rankedRunId = await request("/rest/v1/rpc/start_ranked_run", {
+        method:"POST", authorized:true, data:{ new_client_build:"echo-steps-1.0.0" },
+      });
+      return true;
+    } catch (error) {
+      rankedRunId = null;
+      return false;
+    }
+  }
+  async function checkpointRankedRound(completedRound) {
+    if (!rankedRunId || !ready || !session) return false;
+    try {
+      await request("/rest/v1/rpc/checkpoint_ranked_round", {
+        method:"POST", authorized:true, data:{ run_id:rankedRunId, completed_round:completedRound },
+      });
+      return true;
+    } catch (error) {
+      rankedRunId = null;
+      return false;
+    }
+  }
+  async function finishRankedRun() {
+    if (!rankedRunId || !ready || !session) return null;
+    const runId = rankedRunId;
+    rankedRunId = null;
+    try {
+      return await request("/rest/v1/rpc/finish_ranked_run", {
+        method:"POST", authorized:true, data:{ run_id:runId },
+      });
+    } catch (error) { return null; }
+  }
+  async function getLeaderboard(board="world", country=null, limit=20) {
+    if (!ready || !session) return [];
+    try {
+      return await request("/rest/v1/rpc/get_leaderboard", {
+        method:"POST", authorized:true,
+        data:{ board, board_country:country, result_limit:Math.max(1,Math.min(100,limit)) },
+      });
+    } catch (error) { return []; }
+  }
+  window.EchoStepsCloud = Object.freeze({
+    close, startRankedRun, checkpointRankedRound, finishRankedRun, getLeaderboard,
+    isRanked:()=>Boolean(rankedRunId),
+  });
 
   function localSave() {
     const settings = Object.fromEntries(Object.entries(keys).map(([name, key]) =>
@@ -96,7 +147,7 @@
   function clearSession() {
     sessionEpoch++;
     clearTimeout(timer); timer = null; refreshPromise = null;
-    session = null; remote = null; ready = false;
+    session = null; remote = null; ready = false; rankedRunId = null;
     show(ui.accountSignedIn, false);
     show(ui.accountChoices, false);
     show(ui.accountCodeForm, false);
@@ -192,6 +243,31 @@
     if (event.detail.key === "echoSteps.bestRounds" || Object.values(keys).includes(event.detail.key)) scheduleSync();
   });
   window.addEventListener("online", () => { if (ready) scheduleSync(); });
+  async function openLeaderboard(board="world") {
+    if (!session || !ready) {
+      show(el.start, false); show(ui.accountScreen, true);
+      status("Sign in to enter the verified worldwide leaderboard.");
+      return;
+    }
+    show(el.start, false); show(ui.leaderboardScreen, true);
+    ui.leaderboardStatus.textContent = "Loading verified scores…";
+    const rows = await getLeaderboard(board, null, 50);
+    ui.leaderboardRows.replaceChildren(...rows.map(row => {
+      const item=document.createElement("div"); item.className="leaderboard-row";
+      const rank=document.createElement("span"); rank.className="rank"; rank.textContent="#" + row.rank;
+      const name=document.createElement("span"); name.textContent=row.display_name || "Player";
+      const country=document.createElement("span"); country.className="country"; country.textContent=row.country_code || "—";
+      const score=document.createElement("span"); score.className="score"; score.textContent=row.score;
+      item.append(rank,name,country,score); return item;
+    }));
+    ui.leaderboardStatus.textContent = rows.length ? "Verified ranked runs only." : "No verified scores yet. Set the first one.";
+    ui.leaderboardTabs.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active",tab.dataset.board===board));
+  }
+  ui.leaderboardBtn.addEventListener("click",()=>openLeaderboard("world"));
+  ui.leaderboardTabs.addEventListener("click",event=>{
+    const tab=event.target.closest("[data-board]"); if (tab) openLeaderboard(tab.dataset.board);
+  });
+  ui.leaderboardBack.addEventListener("click",()=>{ show(ui.leaderboardScreen,false); show(el.start,true); });
   ui.accountBtn.addEventListener("click", () => {
     if (mode !== STATE.START) return;
     show(el.start, false); show(ui.accountScreen, true);
@@ -270,7 +346,7 @@
     if (value?.enabled && /^https:\/\/[^/?#]+\.supabase\.co$/.test(value.url)
       && typeof value.publishableKey === "string" && value.publishableKey.startsWith("sb_publishable_")) {
       config = value;
-      show(ui.accountBtn, true);
+      show(ui.accountBtn, true); show(ui.leaderboardBtn, true);
     }
   }).catch(() => { /* Offline guest play needs no configuration request. */ });
 })();
