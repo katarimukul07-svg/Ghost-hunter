@@ -51,7 +51,8 @@ begin
     update public.ranked_runs set status='rejected',rejection_reason='invalid_progression' where id=run_id;
     return jsonb_build_object('status','rejected','reason','invalid_progression');
   end if;
-  select e.event_id into existing from public.ranked_events e where e.run_id=run_id and e.sequence=sequence;
+  select e.event_id into existing from public.ranked_events e
+    where e.run_id=checkpoint_ranked_round_v2.run_id and e.sequence=checkpoint_ranked_round_v2.sequence;
   if found then
     if existing=event_id then
       return jsonb_build_object('status','duplicate','verified_rounds',r.verified_rounds,'expected_sequence',r.verified_rounds+1);
@@ -59,7 +60,8 @@ begin
     update public.ranked_runs set status='rejected',rejection_reason='conflicting_event' where id=run_id;
     return jsonb_build_object('status','rejected','reason','conflicting_event');
   end if;
-  if exists(select 1 from public.ranked_events e where e.run_id=run_id and e.event_id=checkpoint_ranked_round_v2.event_id) then
+  if exists(select 1 from public.ranked_events e
+    where e.run_id=checkpoint_ranked_round_v2.run_id and e.event_id=checkpoint_ranked_round_v2.event_id) then
     update public.ranked_runs set status='rejected',rejection_reason='reused_event_id' where id=run_id;
     return jsonb_build_object('status','rejected','reason','reused_event_id');
   end if;
