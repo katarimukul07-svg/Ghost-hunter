@@ -38,7 +38,10 @@ select is((select rejection_reason from public.ranked_runs where id=(select id f
 select is(public.checkpoint_ranked_round_v2((select id from bad_run),1,1,'30000000-0000-4000-8000-000000000005')->>'status','rejected','rejected checkpoint blocked');
 select is(public.finish_ranked_run_v2((select id from bad_run),0)->>'status','rejected','rejected finish blocked');
 select is((select count(*) from public.ranked_runs where id=(select id from bad_run) and status='finished'),0::bigint,'rejected run off leaderboard');
+reset role;
 select is((select count(*) from public.ranked_events where run_id=(select id from test_run) and sequence=1),1::bigint,'duplicate inserted once');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
 create temporary table scripted_run(id uuid);
 insert into scripted_run select (public.start_ranked_run_v2('script','10000000-0000-4000-8000-000000000003')->>'run_id')::uuid;
 select is(public.checkpoint_ranked_round_v2((select id from scripted_run),1,1,'30000000-0000-4000-8000-000000000011')->>'status','accepted','scripted direct checkpoint 1 accepted');
