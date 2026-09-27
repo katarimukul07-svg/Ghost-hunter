@@ -17,6 +17,7 @@ permissions:
 jobs:
   open-pull-request:
     name: Open owner-reviewed pull request
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
       - name: Create pull request when one is not already open

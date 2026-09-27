@@ -47,3 +47,39 @@ test("does not issue an admin deletion when Auth rejects the token", async () =>
   assert.equal(result.status, 401);
   assert.equal(calls.length, 1);
 });
+
+for (const label of ['random', 'expired', 'forged', 'revoked', 'missing claims']) {
+  test(`provider rejects ${label} bearer: no admin call or provider detail leaked`, async () => {
+    let calls=0;
+    const result=await handleDeleteAccount(makeRequest({confirm:'DELETE'},label.replaceAll(' ','-')),environment,async()=>{
+      calls++; return Response.json({message:'internal SQL /private/path credential-detail'},{status:401});
+    });
+    assert.equal(result.status,401); assert.equal(calls,1);
+    assert.doesNotMatch(await result.text(),/SQL|private|credential-detail/);
+  });
+}
+test('malformed bearer, invalid JSON, null body and dangerous methods fail before provider',async()=>{
+  const noNetwork=()=>{throw Error('must not call');};
+  for (const authorization of ['Basic fixture','Bearer','Bearer a b']) {
+    const r=new Request('https://demo.supabase.co',{method:'POST',headers:{authorization},body:'{"confirm":"DELETE"}'});
+    assert.equal((await handleDeleteAccount(r,environment,noNetwork)).status,401);
+  }
+  for (const body of ['{','null','[]','{"confirm":1}']) {
+    const r=new Request('https://demo.supabase.co',{method:'POST',headers:{authorization:'Bearer fixture'},body});
+    assert.equal((await handleDeleteAccount(r,environment,noNetwork)).status,400);
+  }
+  for (const method of ['GET','PUT','DELETE','PATCH']) {
+    assert.equal((await handleDeleteAccount(new Request('https://demo.supabase.co',{method}),environment,noNetwork)).status,405);
+  }
+});
+test('provider transport failures return generic no-store errors',async()=>{
+  const result=await handleDeleteAccount(makeRequest({confirm:'DELETE'}),environment,async()=>{throw Error('internal secret /filesystem/path');});
+  assert.equal(result.status,503);
+  assert.equal(result.headers.get('cache-control'),'no-store');
+  assert.doesNotMatch(await result.text(),/secret|filesystem|stack/);
+});
+test('invalid provider user identifier cannot reach admin path',async()=>{
+  let calls=0;
+  const result=await handleDeleteAccount(makeRequest({confirm:'DELETE'}),environment,async()=>{calls++;return Response.json({id:'-'.repeat(36)});});
+  assert.equal(result.status,401); assert.equal(calls,1);
+});

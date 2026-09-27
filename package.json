@@ -15,7 +15,8 @@
     "test:static": "npm run validate",
     "test:browser": "playwright test",
     "validate": "node scripts/validate.mjs",
-    "serve": "npm run build && python3 -m http.server 4173 --directory dist"
+    "serve": "npm run build && python3 -m http.server 4173 --directory dist",
+    "test:security": "node --test tests/security-scan.test.js tests/security-boundaries.test.js && npm run build && node scripts/security-scan.mjs --history --artifacts"
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.2",
