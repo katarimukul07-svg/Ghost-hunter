@@ -1,66 +1,56 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path to public, extensions;
-select plan(13);
-
+select plan(34);
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at)
 values
  ('20000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','rank-a@example.invalid','',now()),
  ('20000000-0000-4000-8000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','rank-b@example.invalid','',now());
-
-select ok((select relrowsecurity from pg_class where oid='public.ranked_runs'::regclass),'ranked runs use RLS');
-select ok(not has_table_privilege('authenticated','public.ranked_runs','INSERT'),'client cannot insert ranked scores');
-select ok(not has_table_privilege('authenticated','public.wallet_ledger','INSERT'),'client cannot mint currency');
-select ok(not has_table_privilege('authenticated','public.entitlements','INSERT'),'client cannot grant entitlements');
-select ok(not has_table_privilege('authenticated','public.store_transactions','SELECT'),'store evidence is not client-readable');
-
+select ok((select relrowsecurity from pg_class where oid='public.ranked_runs'::regclass),'ranked RLS');
+select ok((select relrowsecurity from pg_class where oid='public.ranked_events'::regclass),'event RLS');
+select ok(not has_table_privilege('authenticated','public.ranked_runs','INSERT'),'no direct scores');
+select ok(not has_table_privilege('authenticated','public.ranked_events','INSERT'),'no direct events');
+select ok(not has_table_privilege('authenticated','public.wallet_ledger','INSERT'),'no currency mint');
+select ok(not has_table_privilege('authenticated','public.entitlements','INSERT'),'no entitlement grant');
+select ok(not has_table_privilege('authenticated','public.store_transactions','SELECT'),'no store evidence read');
+select ok(not has_function_privilege('authenticated','public.start_ranked_run(text)','EXECUTE'),'legacy start revoked');
+select ok(not has_function_privilege('authenticated','public.checkpoint_ranked_round(uuid,integer)','EXECUTE'),'legacy checkpoint revoked');
+select ok(not has_function_privilege('authenticated','public.finish_ranked_run(uuid)','EXECUTE'),'legacy finish revoked');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
-select lives_ok($$select public.set_player_profile('Pilot A','us')$$,'player can set allowlisted profile');
+select lives_ok($$select public.set_player_profile('Pilot A','us')$$,'profile update');
 create temporary table test_run(id uuid);
-insert into test_run select public.start_ranked_run('test-build');
-select results_eq($$select count(*) from public.ranked_runs$$,array[1::bigint],'player sees own active run');
-select throws_ok($$select public.start_ranked_run('test-build')$$,'55000','Active ranked run already exists','duplicate active run blocked');
-
+insert into test_run select (public.start_ranked_run_v2('test-build','10000000-0000-4000-8000-000000000001')->>'run_id')::uuid;
+select is((public.start_ranked_run_v2('test-build','10000000-0000-4000-8000-000000000001')->>'run_id')::uuid,(select id from test_run),'duplicate start same run');
+select is(public.checkpoint_ranked_round_v2((select id from test_run),1,1,'30000000-0000-4000-8000-000000000001')->>'status','accepted','first checkpoint');
+select is(public.checkpoint_ranked_round_v2((select id from test_run),1,1,'30000000-0000-4000-8000-000000000001')->>'status','duplicate','duplicate checkpoint');
+select is(public.checkpoint_ranked_round_v2((select id from test_run),3,3,'30000000-0000-4000-8000-000000000003')->>'status','expected_sequence','gap recoverable');
+select is(public.finish_ranked_run_v2((select id from test_run),2)->>'status','expected_sequence','premature finish refused');
+select is(public.checkpoint_ranked_round_v2((select id from test_run),2,2,'30000000-0000-4000-8000-000000000002')->>'status','accepted','second checkpoint');
+select is(public.finish_ranked_run_v2((select id from test_run),2)->>'status','finished','finish after ack');
+select is(public.finish_ranked_run_v2((select id from test_run),2)->>'score','2','duplicate finish score');
+select is((select score from public.get_leaderboard('world',null,100) limit 1),2,'leaderboard score');
+create temporary table bad_run(id uuid);
+insert into bad_run select (public.start_ranked_run_v2('test-build','10000000-0000-4000-8000-000000000002')->>'run_id')::uuid;
+select is(public.checkpoint_ranked_round_v2((select id from bad_run),1,999,'30000000-0000-4000-8000-000000000004')->>'status','rejected','invalid progression rejected');
+select is((select status from public.ranked_runs where id=(select id from bad_run)),'rejected','rejection persisted');
+select is((select rejection_reason from public.ranked_runs where id=(select id from bad_run)),'invalid_progression','rejection reason persisted');
+select is(public.checkpoint_ranked_round_v2((select id from bad_run),1,1,'30000000-0000-4000-8000-000000000005')->>'status','rejected','rejected checkpoint blocked');
+select is(public.finish_ranked_run_v2((select id from bad_run),0)->>'status','rejected','rejected finish blocked');
+select is((select count(*) from public.ranked_runs where id=(select id from bad_run) and status='finished'),0::bigint,'rejected run off leaderboard');
 reset role;
-update public.ranked_runs set last_checkpoint_at=now()-interval '1 second'
-where user_id='20000000-0000-4000-8000-000000000001';
+select is((select count(*) from public.ranked_events where run_id=(select id from test_run) and sequence=1),1::bigint,'duplicate inserted once');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
-select results_eq(
- $$select public.checkpoint_ranked_round((select id from test_run),1)$$,
- array[1::integer],'sequential checkpoint accepted');
-
-reset role;
-update public.ranked_runs set last_checkpoint_at=now()-interval '1 second'
-where user_id='20000000-0000-4000-8000-000000000001';
-set local role authenticated;
-select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
-select throws_ok(
- $$select public.checkpoint_ranked_round((select id from test_run),3)$$,
- '22023','Invalid round sequence','skipped round rejected');
-
--- Rejection is transactional with the raised exception, so explicitly abandon
--- the test run before creating a clean finished score.
-reset role;
-update public.ranked_runs set status='abandoned'
-where user_id='20000000-0000-4000-8000-000000000001' and status='active';
-set local role authenticated;
-select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
-truncate test_run;
-insert into test_run select public.start_ranked_run('test-build-2');
-reset role;
-update public.ranked_runs set verified_rounds=7,last_checkpoint_at=now()-interval '1 second'
-where id=(select id from test_run);
-set local role authenticated;
-select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
-select results_eq($$select public.finish_ranked_run((select id from test_run))$$,array[7::integer],'finish uses server checkpoint score');
-select results_eq(
- $$select score from public.get_leaderboard('world',null,100) limit 1$$,
- array[7::integer],'leaderboard reads verified finished score');
-
+create temporary table scripted_run(id uuid);
+insert into scripted_run select (public.start_ranked_run_v2('script','10000000-0000-4000-8000-000000000003')->>'run_id')::uuid;
+select is(public.checkpoint_ranked_round_v2((select id from scripted_run),1,1,'30000000-0000-4000-8000-000000000011')->>'status','accepted','scripted direct checkpoint 1 accepted');
+select is(public.checkpoint_ranked_round_v2((select id from scripted_run),2,2,'30000000-0000-4000-8000-000000000012')->>'status','accepted','scripted direct checkpoint 2 accepted');
+select is(public.finish_ranked_run_v2((select id from scripted_run),2)->>'status','finished','script without gameplay accepted');
+select is((select count(*) from public.ranked_runs where id=(select id from scripted_run) and status='finished'),1::bigint,'scripted run ranked');
 select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000002',true);
-select results_eq($$select count(*) from public.ranked_runs$$,array[0::bigint],'other player cannot read A run');
-
+select is(public.checkpoint_ranked_round_v2((select id from scripted_run),3,3,'30000000-0000-4000-8000-000000000013')->>'status','unavailable','other user cannot progress run');
+select is(public.finish_ranked_run_v2((select id from scripted_run),2)->>'status','unavailable','other user cannot finish run');
+select is((select count(*) from public.ranked_runs),0::bigint,'other player cannot read runs');
 select * from finish();
 rollback;
