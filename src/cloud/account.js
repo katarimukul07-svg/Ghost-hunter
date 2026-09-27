@@ -30,7 +30,7 @@
   let refreshPromise = null;
   let changedDuringSync = false;
   let sessionEpoch = 0;
-  let rankedRunId = null;
+  let ranked = null;
 
   const show = (element, visible) => element.classList.toggle("hidden", !visible);
   const status = message => { ui.accountStatus.textContent = message; };
@@ -45,38 +45,23 @@
     return true;
   }
   async function startRankedRun() {
-    if (!ready || !session || rankedRunId) return false;
-    try {
-      rankedRunId = await request("/rest/v1/rpc/start_ranked_run", {
-        method:"POST", authorized:true, data:{ new_client_build:"echo-steps-1.0.0" },
-      });
-      return true;
-    } catch (error) {
-      rankedRunId = null;
-      return false;
-    }
+    if (!ready || !session) return false;
+    const previous = ranked?.snapshot();
+    const previousFinish = previous && !["local","finished","rejected"].includes(previous.state)
+      ? ranked.finish() : null;
+    ranked = window.createRankedProtocol((method,data)=>request("/rest/v1/rpc/"+method,
+      {method:"POST",authorized:true,data}));
+    const next = ranked;
+    // A quick replay waits for the prior run's finish without pausing gameplay.
+    Promise.resolve(previousFinish).then(()=>next.start());
+    return true;
   }
   async function checkpointRankedRound(completedRound) {
-    if (!rankedRunId || !ready || !session) return false;
-    try {
-      await request("/rest/v1/rpc/checkpoint_ranked_round", {
-        method:"POST", authorized:true, data:{ run_id:rankedRunId, completed_round:completedRound },
-      });
-      return true;
-    } catch (error) {
-      rankedRunId = null;
-      return false;
-    }
+    return Boolean(ranked && ready && session && ranked.checkpoint(completedRound));
   }
   async function finishRankedRun() {
-    if (!rankedRunId || !ready || !session) return null;
-    const runId = rankedRunId;
-    rankedRunId = null;
-    try {
-      return await request("/rest/v1/rpc/finish_ranked_run", {
-        method:"POST", authorized:true, data:{ run_id:runId },
-      });
-    } catch (error) { return null; }
+    if (!ranked || !ready || !session) return null;
+    return ranked.finish();
   }
   async function getLeaderboard(board="world", country=null, limit=20) {
     if (!ready || !session) return [];
@@ -89,7 +74,7 @@
   }
   window.EchoStepsCloud = Object.freeze({
     close, startRankedRun, checkpointRankedRound, finishRankedRun, getLeaderboard,
-    isRanked:()=>Boolean(rankedRunId),
+    isRanked:()=>Boolean(ranked && !["local","rejected","finished"].includes(ranked.snapshot().state)),
   });
 
   function localSave() {
@@ -147,7 +132,7 @@
   function clearSession() {
     sessionEpoch++;
     clearTimeout(timer); timer = null; refreshPromise = null;
-    session = null; remote = null; ready = false; rankedRunId = null;
+    session = null; remote = null; ready = false; ranked?.cancel(); ranked = null;
     show(ui.accountSignedIn, false);
     show(ui.accountChoices, false);
     show(ui.accountCodeForm, false);
