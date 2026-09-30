@@ -112,3 +112,9 @@ GitHub Pages deployment is defined in `.github/workflows/ci.yml`. A pull request
 
 Ranked checkpoint submissions and the legacy leaderboard are retired. Account
 activation cannot enable them. See [ranked containment and next gates](docs/RANKED_CONTAINMENT.md).
+
+The replay service and native session-storage staging candidate are documented in
+[Ranked service implementation](docs/RANKED_SERVICE_IMPLEMENTATION.md). Store
+listing drafts and remaining physical-device/signing gates are in the
+[store packet](docs/release/STORE_PACKET.md). Default guest play and ranked
+activation remain independently gated until hosted/native evidence is complete.
