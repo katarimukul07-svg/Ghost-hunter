@@ -116,3 +116,30 @@ invoke an authorized bridge or steal a live session. Strict CSP, local bundles,
 output escaping and dependency review remain required. Complete ticket/worker,
 secure-storage and entitlement implementation is a later phase, not delivered by
 this containment PR.
+
+## Main integration and browser failure investigation
+
+Main now includes PR #33. Its merge conflicted only in the cache version and
+security notes; both POC work and containment are preserved. CI then exposed a
+mobile blocked-layout failure at round 35 in both push and PR runs.
+
+A controlled Node probe using the Pixel 7 dimensions (412 by 839) and the actual
+game scripts independently reproduced a disconnected arena for test seed 309 at
+round 75. The old 27px reachability grid checked only free endpoints and could
+jump over blocked space. The generator now uses player-radius spacing, nodes
+inset from the walls, collision samples along connections and a start node
+physically connected to the player. It no longer silently relocates a trapped
+player into a different free component. These checks run at generation time.
+
+The existing browser tests advance simulation ticks explicitly; their seeded
+setup now suppresses background RAF updates so the grid scan observes one stable
+layout. The same independent reachability requirement and three seeds through
+100 rounds remain. The controlled probe passed all 300 mobile layouts after
+repair. The 38 backend tests and six security tests pass locally.
+
+Because gameplay changed, the offline POC ruleset hash and
+`reports/ranked-replay-poc.json` were regenerated. All 20 legitimate fixtures
+replay, all 20 inflated-score variants reject, and the 18,000-tick probe passes.
+The finer grid raises generation/replay cost; short-corpus p95 is about 705ms
+on this machine. These are offline measurements, not Edge capacity or device
+performance evidence. Required CI must pass on the final branch commit.

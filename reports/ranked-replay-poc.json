@@ -1,6 +1,6 @@
 {
   "researchOnly": true,
-  "ruleset": "d2035918af82a5cf921c230cfd43564ed1da5dbe529ee8453e6d2869fdf7b8d1",
+  "ruleset": "20da1845f2ea33f5c8659ec1f955a715393191228a9ac44c1dea7cc76611fcdd",
   "node": "v24.19.0",
   "platform": "linux",
   "arch": "x64",
@@ -9,15 +9,15 @@
   "accepted": 20,
   "falseRejections": 0,
   "scoreForgeriesRejected": 20,
-  "p50Ms": 22.460951000000023,
-  "p95Ms": 33.87526099999968,
+  "p50Ms": 339.5371099999975,
+  "p95Ms": 705.081975000001,
   "maxPayloadBytes": 40131,
-  "peakRssMiB": 170.0234375,
+  "peakRssMiB": 241.9765625,
   "maxTickProbe": {
     "status": "replay_consistent",
     "score": 2,
     "ticks": 18000,
-    "elapsedMs": 201.23548200000005,
+    "elapsedMs": 301.9015529999997,
     "bytes": 854775
   },
   "rows": [
@@ -27,7 +27,7 @@
       "status": "replay_consistent",
       "score": 6,
       "ticks": 251,
-      "elapsedMs": 19.07380599999999,
+      "elapsedMs": 299.340652,
       "bytes": 17906,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -38,7 +38,7 @@
       "status": "replay_consistent",
       "score": 3,
       "ticks": 186,
-      "elapsedMs": 12.544181000000009,
+      "elapsedMs": 144.53262500000005,
       "bytes": 12957,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -49,7 +49,7 @@
       "status": "replay_consistent",
       "score": 1,
       "ticks": 78,
-      "elapsedMs": 11.109850999999992,
+      "elapsedMs": 72.09753999999998,
       "bytes": 5546,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -60,7 +60,7 @@
       "status": "replay_consistent",
       "score": 6,
       "ticks": 336,
-      "elapsedMs": 21.639454,
+      "elapsedMs": 266.2999669999999,
       "bytes": 24013,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -71,7 +71,7 @@
       "status": "replay_consistent",
       "score": 2,
       "ticks": 167,
-      "elapsedMs": 14.473880999999892,
+      "elapsedMs": 178.65036199999986,
       "bytes": 11513,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -82,7 +82,7 @@
       "status": "replay_consistent",
       "score": 1,
       "ticks": 108,
-      "elapsedMs": 12.69680900000003,
+      "elapsedMs": 151.7953749999997,
       "bytes": 7552,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -93,7 +93,7 @@
       "status": "replay_consistent",
       "score": 7,
       "ticks": 286,
-      "elapsedMs": 22.35329999999999,
+      "elapsedMs": 319.8557410000003,
       "bytes": 20081,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -104,7 +104,7 @@
       "status": "replay_consistent",
       "score": 3,
       "ticks": 193,
-      "elapsedMs": 23.72889299999997,
+      "elapsedMs": 410.85369100000025,
       "bytes": 13377,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -115,7 +115,7 @@
       "status": "replay_consistent",
       "score": 1,
       "ticks": 96,
-      "elapsedMs": 8.074580999999966,
+      "elapsedMs": 90.62593300000026,
       "bytes": 6768,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -126,7 +126,7 @@
       "status": "replay_consistent",
       "score": 3,
       "ticks": 244,
-      "elapsedMs": 13.840736000000106,
+      "elapsedMs": 202.85426899999948,
       "bytes": 16787,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -137,7 +137,7 @@
       "status": "replay_consistent",
       "score": 4,
       "ticks": 329,
-      "elapsedMs": 32.90088700000001,
+      "elapsedMs": 705.081975000001,
       "bytes": 23714,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -148,7 +148,7 @@
       "status": "replay_consistent",
       "score": 3,
       "ticks": 171,
-      "elapsedMs": 23.196979000000056,
+      "elapsedMs": 422.1156229999997,
       "bytes": 12388,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -159,7 +159,7 @@
       "status": "replay_consistent",
       "score": 1,
       "ticks": 189,
-      "elapsedMs": 17.302676999999903,
+      "elapsedMs": 229.96534999999858,
       "bytes": 13176,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -170,7 +170,7 @@
       "status": "replay_consistent",
       "score": 3,
       "ticks": 294,
-      "elapsedMs": 25.31250699999987,
+      "elapsedMs": 427.39533800000027,
       "bytes": 21252,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -181,7 +181,7 @@
       "status": "replay_consistent",
       "score": 2,
       "ticks": 195,
-      "elapsedMs": 29.007270999999946,
+      "elapsedMs": 535.7514499999997,
       "bytes": 13543,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -192,7 +192,7 @@
       "status": "replay_consistent",
       "score": 1,
       "ticks": 172,
-      "elapsedMs": 26.75838500000009,
+      "elapsedMs": 503.2813249999999,
       "bytes": 12414,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -203,7 +203,7 @@
       "status": "replay_consistent",
       "score": 2,
       "ticks": 227,
-      "elapsedMs": 22.460951000000023,
+      "elapsedMs": 339.5371099999975,
       "bytes": 16218,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -214,7 +214,7 @@
       "status": "replay_consistent",
       "score": 1,
       "ticks": 173,
-      "elapsedMs": 27.62799700000005,
+      "elapsedMs": 506.7973549999988,
       "bytes": 12197,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -225,7 +225,7 @@
       "status": "replay_consistent",
       "score": 4,
       "ticks": 302,
-      "elapsedMs": 33.87526099999968,
+      "elapsedMs": 568.926706000002,
       "bytes": 21274,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"
@@ -236,7 +236,7 @@
       "status": "replay_consistent",
       "score": 6,
       "ticks": 581,
-      "elapsedMs": 73.27530200000001,
+      "elapsedMs": 1141.2957889999998,
       "bytes": 40131,
       "terminalMode": 3,
       "syntheticScoreForgery": "score_mismatch"

@@ -180,36 +180,42 @@
   };
 
   function buildReachableMap(clearance) {
-    const step = Math.max(24, Math.round(CFG.PLAYER_R * 2.25));
-    const cols = Math.max(2, Math.floor(room.w / step));
-    const rows = Math.max(2, Math.floor(room.h / step));
+    // A coarse 27px grid could jump across a thin blocked gap and certify
+    // an unreachable arena. Keep nodes within the player's wall clearance,
+    // and check the connecting segments as well as the node endpoints.
+    const step = CFG.PLAYER_R;
+    const width = room.w - clearance * 2, height = room.h - clearance * 2;
+    if (width <= 0 || height <= 0) return null;
+    const cols = Math.max(2, Math.ceil(width / step) + 1);
+    const rows = Math.max(2, Math.ceil(height / step) + 1);
     const free = new Uint8Array(cols * rows);
     const seen = new Uint8Array(cols * rows);
     const idx = (c, r) => r * cols + c;
     const cellPoint = (c, r) => ({
-      x: room.x + (c + 0.5) * room.w / cols,
-      y: room.y + (r + 0.5) * room.h / rows,
+      x: room.x + clearance + c * width / (cols - 1),
+      y: room.y + clearance + r * height / (rows - 1),
     });
-
+    const clearSegment = (a, b) => {
+      const samples = Math.max(1, Math.ceil(Math.hypot(b.x-a.x,b.y-a.y) / 3));
+      for (let i=0; i<=samples; i++) {
+        const t=i/samples;
+        if (pointInObstacles(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,clearance)) return false;
+      }
+      return true;
+    };
+    let start = null;
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const p = cellPoint(c, r);
         free[idx(c, r)] = pointInObstacles(p.x, p.y, clearance) ? 0 : 1;
+        const d = dist2(p.x,p.y,player.x,player.y);
+        if (free[idx(c,r)] && d <= step*step*4 && (!start || d < start.d)
+            && clearSegment(player,p)) start={c,r,d};
       }
     }
-
-    let sc = clamp(Math.floor((player.x - room.x) / room.w * cols), 0, cols - 1);
-    let sr = clamp(Math.floor((player.y - room.y) / room.h * rows), 0, rows - 1);
-    if (!free[idx(sc, sr)]) {
-      let best = null;
-      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-        if (!free[idx(c, r)]) continue;
-        const p = cellPoint(c, r), d = dist2(p.x, p.y, player.x, player.y);
-        if (!best || d < best.d) best = {c, r, d};
-      }
-      if (!best) return null;
-      sc = best.c; sr = best.r;
-    }
+    // Do not silently attach a trapped player to another free component.
+    if (!start) return null;
+    const sc=start.c, sr=start.r;
 
     const q = [[sc, sr]];
     seen[idx(sc, sr)] = 1;
@@ -219,14 +225,16 @@
       for (const [nc, nr] of next) {
         if (nc < 0 || nr < 0 || nc >= cols || nr >= rows) continue;
         const k = idx(nc, nr);
-        if (!seen[k] && free[k]) { seen[k] = 1; q.push([nc, nr]); }
+        if (!seen[k] && free[k] && clearSegment(cellPoint(c,r),cellPoint(nc,nr))) {
+          seen[k] = 1; q.push([nc, nr]);
+        }
       }
     }
 
     return {
       reachable(x, y) {
-        const c = clamp(Math.floor((x - room.x) / room.w * cols), 0, cols - 1);
-        const r = clamp(Math.floor((y - room.y) / room.h * rows), 0, rows - 1);
+        const c = clamp(Math.round((x - room.x - clearance) / width * (cols - 1)), 0, cols - 1);
+        const r = clamp(Math.round((y - room.y - clearance) / height * (rows - 1)), 0, rows - 1);
         return !!seen[idx(c, r)];
       },
       candidates() {
