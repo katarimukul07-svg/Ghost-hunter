@@ -7,6 +7,9 @@ completeTutorialForMostTests(test);
 test.use({serviceWorkers:'block'});
 
 const seedGame = async (page, seed) => page.addInitScript((initial) => {
+  // These tests advance explicit simulation ticks. Background RAF updates
+  // would change moving-wall geometry while the independent grid is scanned.
+  window.requestAnimationFrame = () => 0;
   let value = initial >>> 0;
   Math.random = () => {
     value = (Math.imul(value, 1664525) + 1013904223) >>> 0;

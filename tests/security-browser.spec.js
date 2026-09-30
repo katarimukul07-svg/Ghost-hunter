@@ -23,12 +23,13 @@ async function setup(page, expires=3600) {
   await page.locator('#accountUseCloud').click();
   return calls;
 }
-test('profile and leaderboard markup stays text; tokens never persist',async({page,context})=>{
-  await setup(page);
+test('profile markup stays text; retired leaderboard is hidden; tokens never persist',async({page,context})=>{
+  const calls=await setup(page);
   await expect(page.locator('#nameInput')).toHaveValue(payload);
   await page.locator('#accountBack').click();
-  await page.locator('#leaderboardBtn').click();
-  await expect(page.locator('#leaderboardRows')).toContainText(payload);
+  await expect(page.locator('#leaderboardBtn')).toBeHidden();
+  expect(await page.evaluate(()=>window.EchoStepsCloud.getLeaderboard())).toEqual([]);
+  expect(calls.filter(path=>path.endsWith('/get_leaderboard'))).toEqual([]);
   expect(await page.locator('#leaderboardRows img').count()).toBe(0);
   expect(await page.evaluate(()=>window.xssExecuted)).toBeUndefined();
   const storage=await page.evaluate(()=>JSON.stringify({local:{...localStorage},session:{...sessionStorage}}));
@@ -54,11 +55,12 @@ test('refresh completing after sign-out cannot resurrect session or send a save'
   release();
   await page.waitForTimeout(200);
   await page.locator('#accountBack').click();
-  const before=calls.filter(p=>p.endsWith('get_leaderboard')).length;
-  await page.locator('#leaderboardBtn').click();
+  await page.locator('#accountBtn').click();
   await expect(page.locator('#accountEmailForm')).toBeVisible();
-  expect(calls.filter(p=>p.endsWith('get_leaderboard')).length).toBe(before);
+  await expect(page.locator('#accountSignedIn')).toBeHidden();
+  // Force the hidden sync control to test the session boundary, rather than
+  // relying on the permanently disabled leaderboard as a session probe.
+  await page.locator('#accountSync').evaluate(button=>button.click());
+  await page.waitForTimeout(100);
   expect(saveCalls).toBe(1);
-  // Direct public API reveals whether the stale refresh restored a usable session.
-  expect(await page.evaluate(()=>window.EchoStepsCloud.getLeaderboard())).toEqual([]);
 });

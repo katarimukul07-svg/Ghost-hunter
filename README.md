@@ -109,3 +109,6 @@ with their owning system or in `src/game/state.js`. `CFG` includes:
 ## Deployment
 
 GitHub Pages deployment is defined in `.github/workflows/ci.yml`. A pull request must pass web, Android, and iOS build checks; after a tested change reaches `main`, the workflow builds `dist/` and deploys it. Capacitor packages those same tested local assets into native projects instead of loading the hosted website inside the app.
+
+Ranked checkpoint submissions and the legacy leaderboard are retired. Account
+activation cannot enable them. See [ranked containment and next gates](docs/RANKED_CONTAINMENT.md).

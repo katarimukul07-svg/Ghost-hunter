@@ -1,5 +1,14 @@
 # Competitive backend architecture
 
+> **Current status (2026-09-30):** The checkpoint protocol is retired by
+> `20260930210000_ranked_containment.sql`. All seven legacy/ranked/leaderboard
+> RPCs deny `anon`, `authenticated`, and `service_role`. Cloud account activation
+> cannot enable ranked play. The protocol and evidence below are historical;
+> a replay validator must use a separate verified-score store. See
+> [RANKED_CONTAINMENT.md](RANKED_CONTAINMENT.md). This is repository state;
+> deployment to a hosted database must be verified separately.
+
+
 This branch moves Echo Steps toward a worldwide competitive game without trusting the mobile client.
 
 ## Implemented foundation

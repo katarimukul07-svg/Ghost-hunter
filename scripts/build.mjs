@@ -5,6 +5,13 @@ import path from "node:path";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
 
+// Accounts and non-economic saves may be reviewed independently. There is no
+// approved ranked validator in this build, so an activation request must fail
+// rather than reconnecting the forgeable checkpoint protocol.
+if (process.env.ECHO_RANKED_ACTIVATE === "1") {
+  throw new Error("Ranked activation is blocked pending server replay validation");
+}
+
 await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
 
@@ -20,6 +27,9 @@ for (const file of [
 
 await cp(path.join(root, "assets"), path.join(dist, "assets"), { recursive: true });
 await cp(path.join(root, "src"), path.join(dist, "src"), { recursive: true });
+// Retain the protocol source for research tests only; it must not be bundled.
+await rm(path.join(dist, "src/cloud/ranked-protocol.js"), { force: true });
+
 await cp(path.join(root, "styles"), path.join(dist, "styles"), { recursive: true });
 
 const cloudUrl = process.env.ECHO_SUPABASE_URL || "";
@@ -39,6 +49,7 @@ if (cloudEnabled && (!cloudUrl || !cloudKey)) {
 }
 await writeFile(path.join(dist, "cloud-config.json"), JSON.stringify({
   enabled: cloudEnabled,
+  rankedEnabled: false,
   url: cloudEnabled ? cloudUrl : "",
   publishableKey: cloudEnabled ? cloudKey : "",
 }) + "\n");

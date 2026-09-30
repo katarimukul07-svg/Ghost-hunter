@@ -19,3 +19,22 @@ test('build refuses privileged key and invalid project origin without logging va
     assert.equal(r.status,1); assert.ok(!r.stderr.includes(key));
   }
 });
+
+test('cloud activation cannot enable or bundle retired ranked protocol',()=>{
+  const env={...process.env,ECHO_RANKED_ACTIVATE:'0',ECHO_CLOUD_ACTIVATE:'1',ECHO_SUPABASE_URL:'https://demo.supabase.co',ECHO_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fixture'};
+  let r=spawnSync(process.execPath,['scripts/build.mjs'],{cwd:new URL('..',import.meta.url),encoding:'utf8',env});
+  assert.equal(r.status,0,r.stderr);
+  const config=JSON.parse(readFileSync(new URL('../dist/cloud-config.json',import.meta.url),'utf8'));
+  assert.equal(config.enabled,true);
+  assert.equal(config.rankedEnabled,false);
+  assert.throws(()=>readFileSync(new URL('../dist/src/cloud/ranked-protocol.js',import.meta.url)),{code:'ENOENT'});
+  for(const path of ['../dist/index.html','../dist/service-worker.js']) {
+    assert.ok(!readFileSync(new URL(path,import.meta.url),'utf8').includes('src/cloud/ranked-protocol.js'));
+  }
+  r=spawnSync(process.execPath,['scripts/build.mjs'],{cwd:new URL('..',import.meta.url),encoding:'utf8',env:{...env,ECHO_RANKED_ACTIVATE:'1'}});
+  assert.equal(r.status,1);
+  assert.match(r.stderr,/Ranked activation is blocked/);
+  // Restore the normal guest build for subsequent artifact inspection.
+  r=spawnSync(process.execPath,['scripts/build.mjs'],{cwd:new URL('..',import.meta.url),encoding:'utf8',env:{...env,ECHO_CLOUD_ACTIVATE:'0'}});
+  assert.equal(r.status,0,r.stderr);
+});

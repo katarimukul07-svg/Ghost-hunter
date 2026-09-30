@@ -2,7 +2,7 @@
 
 Reviewed against Task 01 merge `01a31e2` on 2026-09-27. Owner: repository owner; implementers must update this register in the PR that adds a surface. “REQUIRED NOW” covers code and regression protection even when optional services are disabled. “REQUIRED BEFORE FEATURE ACTIVATION” is an explicit release prerequisite, not a passing test. “NOT CURRENTLY APPLICABLE” means no application implementation was found, not that the provider can never expose it.
 
-Production ranked activation remains disabled. Cloud/ranked share `ECHO_CLOUD_ACTIVATE`; do not enable cloud alone without revisiting this coupling and the Task 01 forgery result.
+Production ranked activation remains disabled independently of `ECHO_CLOUD_ACTIVATE`. The containment migration revokes legacy ranked and leaderboard RPCs; hosted deployment must be verified separately. See [RANKED_CONTAINMENT.md](RANKED_CONTAINMENT.md).
 
 ## Evidence and existing protections
 
@@ -247,7 +247,7 @@ owners/runs/rulesets, bounds wire bytes/ticks, rejects state-field injection and
 derives scores from pointer inputs. Valid input bots still pass; physical-browser
 attestation, trusted hosted identity, wall-clock pacing, pause grace abuse,
 durable replay receipts, quotas and worker isolation remain activation blockers.
-The existing SQL ranked forgery remains reproducible; no production protection
-claim supersedes that finding. Research inputs contain no account credentials.
+The historical SQL ranked forgery is blocked by the containment migration once
+applied; replay is still not a production scoring service. Research inputs contain no account credentials.
 
-Before cloud activation, record actual project Auth/SMTP/OTP/JWT settings, origin allowlist and Edge deployment/gateway behavior; test A/B with real disposable tokens through HTTP, expiry/revocation, deleted-user requests, enumeration status/timing, GraphQL/Realtime/storage defaults and rate-limit errors. Separate cloud-save activation from ranked activation before enabling accounts. Choose provider/Edge/database abuse limits from measured staging workloads. Approve retention and audit fields (operation, opaque actor/correlation ID, outcome, timestamp; never tokens, OTPs or request bodies). Verify backup plan/PITR availability, set RPO/RTO with the owner, and restore to an isolated project including deletion and ledger reconciliation. No custom WAF, SIEM, cryptography, identity provider or backup system is introduced here.
+Before cloud activation, record actual project Auth/SMTP/OTP/JWT settings, origin allowlist and Edge deployment/gateway behavior; test A/B with real disposable tokens through HTTP, expiry/revocation, deleted-user requests, enumeration status/timing, GraphQL/Realtime/storage defaults and rate-limit errors. Cloud-save activation is separated from ranked activation; ranked cannot be enabled by configuration. Choose provider/Edge/database abuse limits from measured staging workloads. Approve retention and audit fields (operation, opaque actor/correlation ID, outcome, timestamp; never tokens, OTPs or request bodies). Verify backup plan/PITR availability, set RPO/RTO with the owner, and restore to an isolated project including deletion and ledger reconciliation. No custom WAF, SIEM, cryptography, identity provider or backup system is introduced here.

@@ -30,7 +30,6 @@
   let refreshPromise = null;
   let changedDuringSync = false;
   let sessionEpoch = 0;
-  let ranked = null;
 
   const show = (element, visible) => element.classList.toggle("hidden", !visible);
   const status = message => { ui.accountStatus.textContent = message; };
@@ -45,36 +44,23 @@
     return true;
   }
   async function startRankedRun() {
-    if (!ready || !session) return false;
-    const previous = ranked?.snapshot();
-    const previousFinish = previous && !["local","finished","rejected"].includes(previous.state)
-      ? ranked.finish() : null;
-    ranked = window.createRankedProtocol((method,data)=>request("/rest/v1/rpc/"+method,
-      {method:"POST",authorized:true,data}));
-    const next = ranked;
-    // A quick replay waits for the prior run's finish without pausing gameplay.
-    Promise.resolve(previousFinish).then(()=>next.start());
-    return true;
+    // Preserve the gameplay-facing interface, but never reconnect the retired
+    // checkpoint POC, even if a stale or modified cloud config requests ranked.
+    return false;
   }
   async function checkpointRankedRound(completedRound) {
-    return Boolean(ranked && ready && session && ranked.checkpoint(completedRound));
+    return false;
   }
   async function finishRankedRun() {
-    if (!ranked || !ready || !session) return null;
-    return ranked.finish();
+    return null;
   }
   async function getLeaderboard(board="world", country=null, limit=20) {
-    if (!ready || !session) return [];
-    try {
-      return await request("/rest/v1/rpc/get_leaderboard", {
-        method:"POST", authorized:true,
-        data:{ board, board_country:country, result_limit:Math.max(1,Math.min(100,limit)) },
-      });
-    } catch (error) { return []; }
+    // Historical checkpoint counts are not gameplay-verified scores.
+    return [];
   }
   window.EchoStepsCloud = Object.freeze({
     close, startRankedRun, checkpointRankedRound, finishRankedRun, getLeaderboard,
-    isRanked:()=>Boolean(ranked && !["local","rejected","finished"].includes(ranked.snapshot().state)),
+    isRanked:()=>false,
   });
 
   function localSave() {
@@ -132,7 +118,7 @@
   function clearSession() {
     sessionEpoch++;
     clearTimeout(timer); timer = null; refreshPromise = null;
-    session = null; remote = null; ready = false; ranked?.cancel(); ranked = null;
+    session = null; remote = null; ready = false;
     show(ui.accountSignedIn, false);
     show(ui.accountChoices, false);
     show(ui.accountCodeForm, false);
@@ -235,31 +221,7 @@
     if (event.detail.key === "echoSteps.bestRounds" || Object.values(keys).includes(event.detail.key)) scheduleSync();
   });
   window.addEventListener("online", () => { if (ready) scheduleSync(); });
-  async function openLeaderboard(board="world") {
-    if (!session || !ready) {
-      show(el.start, false); show(ui.accountScreen, true);
-      status("Sign in to enter the verified worldwide leaderboard.");
-      return;
-    }
-    show(el.start, false); show(ui.leaderboardScreen, true);
-    ui.leaderboardStatus.textContent = "Loading verified scores…";
-    const rows = await getLeaderboard(board, null, 50);
-    ui.leaderboardRows.replaceChildren(...rows.map(row => {
-      const item=document.createElement("div"); item.className="leaderboard-row";
-      const rank=document.createElement("span"); rank.className="rank"; rank.textContent="#" + row.rank;
-      const name=document.createElement("span"); name.textContent=row.display_name || "Player";
-      const country=document.createElement("span"); country.className="country"; country.textContent=row.country_code || "—";
-      const score=document.createElement("span"); score.className="score"; score.textContent=row.score;
-      item.append(rank,name,country,score); return item;
-    }));
-    ui.leaderboardStatus.textContent = rows.length ? "Verified ranked runs only." : "No verified scores yet. Set the first one.";
-    ui.leaderboardTabs.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active",tab.dataset.board===board));
-  }
-  ui.leaderboardBtn.addEventListener("click",()=>openLeaderboard("world"));
-  ui.leaderboardTabs.addEventListener("click",event=>{
-    const tab=event.target.closest("[data-board]"); if (tab) openLeaderboard(tab.dataset.board);
-  });
-  ui.leaderboardBack.addEventListener("click",()=>{ show(ui.leaderboardScreen,false); show(el.start,true); });
+  // Retired leaderboard controls remain hidden and have no request handlers.
   ui.accountBtn.addEventListener("click", () => {
     if (mode !== STATE.START) return;
     show(el.start, false); show(ui.accountScreen, true);
@@ -338,7 +300,10 @@
     if (value?.enabled && /^https:\/\/[^/?#]+\.supabase\.co$/.test(value.url)
       && typeof value.publishableKey === "string" && value.publishableKey.startsWith("sb_publishable_")) {
       config = value;
-      show(ui.accountBtn, true); show(ui.leaderboardBtn, true);
+      show(ui.accountBtn, true);
+      // Cloud saves do not imply ranked authorization. Keep legacy scores
+      // hidden until a separately reviewed replay-backed client is available.
+      show(ui.leaderboardBtn, false);
     }
   }).catch(() => { /* Offline guest play needs no configuration request. */ });
 })();

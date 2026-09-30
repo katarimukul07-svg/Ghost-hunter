@@ -1,5 +1,11 @@
 # Task 03 — server-verifiable gameplay replay POC
 
+> The stored campaign report was refreshed after the ranked-containment conflict
+> resolution repaired a coarse-grid reachability defect. The new grid costs more
+> than the original PR #33 measurement; figures below describe the refreshed
+> Linux campaign. Browser rows describe the original POC and require CI
+> confirmation on subsequent commits. See [RANKED_CONTAINMENT.md](RANKED_CONTAINMENT.md).
+
 ## OBJECTIVE
 
 **Question:** Can a verifier independently derive a score from bounded pointer
@@ -110,10 +116,10 @@ input traces to their test results. Timing varies by runner.
 | Inflated-score variants | 20/20 rejected | Original inputs with score increased by 100 |
 | Browser-to-Node comparison | 2/2 passed | One completed round per viewport, canvas controls |
 | Observed campaign scores | 1–7 completed rounds | Runs end on ghost collision; no 30-round survival claim |
-| Replay latency | p50 22.46 ms, p95 33.88 ms | Linux x64 Node 24; short campaign cases only |
+| Replay latency | p50 339.54 ms, p95 705.08 ms | Linux x64 Node 24; short campaign cases only |
 | Largest short-run wire body | 40,131 bytes | Uncompressed JSON |
-| Maximum-tick probe | 18,000 ticks, score 2, 201.24 ms, 854,775 bytes | Reach two rounds, then remain in the safe exit for five simulation minutes |
-| Peak process RSS | 170.02 MiB | Whole Node campaign, generation + replay + retained VM allocations; not per request |
+| Maximum-tick probe | 18,000 ticks, score 2, 301.90 ms, 854,775 bytes | Reach two rounds, then remain in the safe exit for five simulation minutes |
+| Peak process RSS | 241.98 MiB | Whole Node campaign, generation + replay + retained VM allocations; not per request |
 | Node suite | 38 passed | 23 previous + 15 replay scenarios |
 | Full browser suite on Mac | 49 passed, 1 existing platform-specific skip | Chromium desktop/mobile; no Android/iOS physical test claim |
 | Security gate | 5 tests passed; no scanner findings | Synthetic input files; no secrets or live player accounts |

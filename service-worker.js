@@ -1,4 +1,4 @@
-const CACHE = "echo-steps-v12";
+const CACHE = "echo-steps-ranked-containment-v2";
 const OFFLINE_ASSETS = [
   "./",
   "./index.html",
@@ -18,7 +18,6 @@ const OFFLINE_ASSETS = [
   "./src/rendering/backgrounds.js",
   "./src/ui/tutorial.js",
   "./src/cloud/account.js",
-  "./src/cloud/ranked-protocol.js",
   "./manifest.webmanifest",
   "./privacy.html",
   "./support.html",
