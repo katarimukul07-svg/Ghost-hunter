@@ -13,6 +13,15 @@ The repository contains the web game plus Capacitor 8 projects for Android and i
 - Development process: [WORKFLOW.md](WORKFLOW.md)
 - Backend foundation and release gates: [docs/BACKEND_PLAN.md](docs/BACKEND_PLAN.md)
 - Owner-controlled automation design: [docs/PROJECT_AUTOMATION.md](docs/PROJECT_AUTOMATION.md)
+- Task 03 gameplay replay evidence and remaining activation gates: [docs/RANKED_GAMEPLAY_POC.md](docs/RANKED_GAMEPLAY_POC.md)
+
+Task 03 adds an offline verifier that replays the real game rules from bounded
+pointer inputs. Browser traces and synthetic attacks are tested in CI; the
+research adapter and verifier are not bundled into the game. Gameplay random
+choices now use a separate reproducible stream so cosmetic draws cannot change
+future layouts. `npm run poc:replay` writes a machine-readable campaign report.
+This proves rule consistency, not human play or production anti-cheat. Existing
+ranked RPCs remain forgeable and production cloud/ranked activation stays off.
 
 ## Controls
 

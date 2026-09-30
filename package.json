@@ -11,12 +11,14 @@
     "cap:ios": "npm run cap:sync && cap open ios",
     "android:debug": "npm run cap:sync && cd android && ./gradlew assembleDebug",
     "test": "npm run validate && npm run test:backend && npm run test:browser",
-    "test:backend": "node --test tests/delete-account.test.js tests/ranked-protocol.test.js",
+    "test:backend": "node --test tests/delete-account.test.js tests/ranked-protocol.test.js tests/ranked-replay.test.js",
     "test:static": "npm run validate",
     "test:browser": "playwright test",
     "validate": "node scripts/validate.mjs",
     "serve": "npm run build && python3 -m http.server 4173 --directory dist",
-    "test:security": "node --test tests/security-scan.test.js tests/security-boundaries.test.js && npm run build && node scripts/security-scan.mjs --history --artifacts"
+    "test:security": "node --test tests/security-scan.test.js tests/security-boundaries.test.js && npm run build && node scripts/security-scan.mjs --history --artifacts",
+    "test:replay": "node --test tests/ranked-replay.test.js",
+    "poc:replay": "node research/ranked-replay/campaign.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.2",
