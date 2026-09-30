@@ -85,7 +85,8 @@ repair authorization with a forward migration. Never grant legacy RPC access.
 
 ## Next phase: replay-backed ranked service
 
-PR #33 is an independent gameplay replay POC and has not been merged here. Extract
+PR #33 has been merged into main and is preserved as an offline gameplay replay
+POC. It does not activate public ranked scoring. Extract
 all production physics, collision order, PRNG use and scoring into a versioned,
 integer/fixed-point deterministic engine shared by frontend and worker. Freeze
 per-tick input semantics and ruleset hashes; compare browser/server traces on

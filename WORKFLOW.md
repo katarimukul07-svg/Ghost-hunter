@@ -59,3 +59,13 @@ npm run android:debug
 ```
 
 The live web build is <https://katarimukul07-svg.github.io/Ghost-hunter/> and the release plan is maintained in [ROADMAP.md](ROADMAP.md).
+# Owner review and branch rules
+
+All changes use feature/fix/release branches; never push directly to `main`.
+Push the branch and let `open-pull-request.yml` create the PR as GitHub Actions.
+Do not create PRs with the owner's personal identity: GitHub forbids author
+self-approval, while this repository requires the owner as code reviewer.
+For a bot-created PR, explicitly dispatch the validation workflow on its exact
+head branch when GitHub's token-created event does not start PR CI. Verify all
+required checks on that SHA before reporting completion. The owner approves and
+merges; never bypass rulesets, self-approve or automatically merge.

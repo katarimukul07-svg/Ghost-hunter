@@ -7,7 +7,7 @@
      apart, creating a route choice instead of free loot. */
   let bonuses = [];
   let bonusClock = 0;
-  let nextBonusAt = CFG.BONUS_FIRST_DELAY + Math.random() * CFG.BONUS_FIRST_JITTER;
+  let nextBonusAt = CFG.BONUS_FIRST_DELAY + gameRandom() * CFG.BONUS_FIRST_JITTER;
   let shieldCharges = 0;
   let slowTime = 0;
   let shieldAbsorbedThisFrame = false;
@@ -15,7 +15,7 @@
   function resetBonuses() {
     bonuses = [];
     bonusClock = 0;
-    nextBonusAt = CFG.BONUS_FIRST_DELAY + Math.random() * CFG.BONUS_FIRST_JITTER;
+    nextBonusAt = CFG.BONUS_FIRST_DELAY + gameRandom() * CFG.BONUS_FIRST_JITTER;
     shieldCharges = 0;
     slowTime = 0;
   }
@@ -31,8 +31,8 @@
   function findBonusPoint(existing) {
     const pad = 42;
     for (let i = 0; i < 100; i++) {
-      const x = room.x + pad + Math.random() * Math.max(1, room.w - pad * 2);
-      const y = room.y + pad + Math.random() * Math.max(1, room.h - pad * 2);
+      const x = room.x + pad + gameRandom() * Math.max(1, room.w - pad * 2);
+      const y = room.y + pad + gameRandom() * Math.max(1, room.h - pad * 2);
       if (validBonusPoint(x, y, existing)) return {x, y};
     }
     return null;
@@ -40,8 +40,8 @@
 
   function spawnBonusSignal(forceCount, forcedTypes) {
     if (mode !== STATE.PLAYING || round < 2) return;
-    const count = forceCount || (Math.random() < CFG.BONUS_DOUBLE_CHANCE ? 2 : 1);
-    const names = forcedTypes || Object.keys(BONUS_TYPES).sort(() => Math.random() - 0.5);
+    const count = forceCount || (gameRandom() < CFG.BONUS_DOUBLE_CHANCE ? 2 : 1);
+    const names = forcedTypes || shuffledBonusTypes();
     const spawned = [];
     for (let i = 0; i < count; i++) {
       const point = findBonusPoint(spawned);
@@ -114,7 +114,7 @@
       if (bonusClock >= nextBonusAt && bonuses.length === 0) {
         spawnBonusSignal();
         bonusClock = 0;
-        nextBonusAt = CFG.BONUS_REPEAT_DELAY + Math.random() * CFG.BONUS_REPEAT_JITTER;
+        nextBonusAt = CFG.BONUS_REPEAT_DELAY + gameRandom() * CFG.BONUS_REPEAT_JITTER;
       }
     }
 

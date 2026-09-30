@@ -6,6 +6,7 @@ const index = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const scriptPaths = [
   "src/platform/native-bridge.js",
   "src/game/config.js",
+  "src/game/random.js",
   "src/game/audio.js",
   "src/game/arena.js",
   "src/game/state.js",

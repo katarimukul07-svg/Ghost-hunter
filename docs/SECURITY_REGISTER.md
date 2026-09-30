@@ -241,4 +241,13 @@ localStorage contains `echoSteps.name`, `bestRounds`, `coins`, `unlocked`, owned
 
 ## Activation obligations
 
+Task 03 adds an **offline research** replay verifier, not a public endpoint or
+score writer. See [RANKED_GAMEPLAY_POC.md](RANKED_GAMEPLAY_POC.md). It binds fixture
+owners/runs/rulesets, bounds wire bytes/ticks, rejects state-field injection and
+derives scores from pointer inputs. Valid input bots still pass; physical-browser
+attestation, trusted hosted identity, wall-clock pacing, pause grace abuse,
+durable replay receipts, quotas and worker isolation remain activation blockers.
+The historical SQL ranked forgery is blocked by the containment migration once
+applied; replay is still not a production scoring service. Research inputs contain no account credentials.
+
 Before cloud activation, record actual project Auth/SMTP/OTP/JWT settings, origin allowlist and Edge deployment/gateway behavior; test A/B with real disposable tokens through HTTP, expiry/revocation, deleted-user requests, enumeration status/timing, GraphQL/Realtime/storage defaults and rate-limit errors. Cloud-save activation is separated from ranked activation; ranked cannot be enabled by configuration. Choose provider/Edge/database abuse limits from measured staging workloads. Approve retention and audit fields (operation, opaque actor/correlation ID, outcome, timestamp; never tokens, OTPs or request bodies). Verify backup plan/PITR availability, set RPO/RTO with the owner, and restore to an isolated project including deletion and ledger reconciliation. No custom WAF, SIEM, cryptography, identity provider or backup system is introduced here.
