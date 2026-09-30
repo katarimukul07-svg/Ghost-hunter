@@ -258,8 +258,8 @@
     };
 
     for (let i = 0; i < 120; i++) {
-      const px = room.x + pad + Math.random() * Math.max(1, room.w - pad * 2);
-      const py = room.y + pad + Math.random() * Math.max(1, room.h - pad * 2);
+      const px = room.x + pad + gameRandom() * Math.max(1, room.w - pad * 2);
+      const py = room.y + pad + gameRandom() * Math.max(1, room.h - pad * 2);
       if (valid(px, py)) { prize = {x:px, y:py}; return; }
     }
 
@@ -268,7 +268,7 @@
       if (options.length) {
         options.sort((a, b) => dist2(b.x,b.y,player.x,player.y) - dist2(a.x,a.y,player.x,player.y));
         const top = options.slice(0, Math.min(8, options.length));
-        prize = top[Math.floor(Math.random() * top.length)];
+        prize = top[Math.floor(gameRandom() * top.length)];
         return;
       }
     }

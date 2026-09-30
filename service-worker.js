@@ -1,10 +1,11 @@
-const CACHE = "echo-steps-v11";
+const CACHE = "echo-steps-v12";
 const OFFLINE_ASSETS = [
   "./",
   "./index.html",
   "./styles/game.css",
   "./src/platform/native-bridge.js",
   "./src/game/config.js",
+  "./src/game/random.js",
   "./src/game/audio.js",
   "./src/game/arena.js",
   "./src/game/state.js",

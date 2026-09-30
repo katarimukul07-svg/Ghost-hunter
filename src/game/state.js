@@ -115,8 +115,8 @@ function resolveCircleRect(cx,cy,r,o){
 function spawnPrize(){
   const pad = CFG.PRIZE_R + 24;
   for (let i=0;i<60;i++){
-    const px = room.x+pad+Math.random()*(room.w-pad*2);
-    const py = room.y+pad+Math.random()*(room.h-pad*2);
+    const px = room.x+pad+gameRandom()*(room.w-pad*2);
+    const py = room.y+pad+gameRandom()*(room.h-pad*2);
     const overExit = px>exit.x-pad && px<exit.x+exit.w+pad && py>exit.y-pad && py<exit.y+exit.h+pad;
     const nearPlayer = dist2(px,py,player.x,player.y) < 90*90;
     if (!overExit && !nearPlayer && !pointInObstacles(px,py,pad)){ prize={x:px,y:py}; return; }
@@ -127,16 +127,16 @@ function repositionExit(){
   const walls = ["top","bottom","left","right"];
   const pad = 16;
   for (let tries=0; tries<40; tries++){
-    const wall = walls[Math.floor(Math.random()*walls.length)];
+    const wall = walls[Math.floor(gameRandom()*walls.length)];
     let w, h, x, y;
     if (wall==="top" || wall==="bottom"){
       w = CFG.EXIT_W; h = CFG.EXIT_H;
-      x = room.x + Math.random()*(room.w-w);
+      x = room.x + gameRandom()*(room.w-w);
       y = wall==="top" ? room.y : room.y+room.h-h;
     } else {
       w = CFG.EXIT_H; h = CFG.EXIT_W;
       x = wall==="left" ? room.x : room.x+room.w-w;
-      y = room.y + Math.random()*(room.h-h);
+      y = room.y + gameRandom()*(room.h-h);
     }
     const overlapsObstacle = obstacles.some(o => x<o.x+o.w+pad && x+w+pad>o.x && y<o.y+o.h+pad && y+h+pad>o.y);
     const nearPlayer = dist2(x+w/2, y+h/2, player.x, player.y) < 130*130;

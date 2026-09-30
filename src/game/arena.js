@@ -101,20 +101,20 @@ function makeObstacleLayout(count) {
   let tries = 0;
   while (out.length < count && tries < 500) {
     tries++;
-    const w = 0.08 + Math.random()*0.05, h = 0.08 + Math.random()*0.06;
-    const x = 0.06 + Math.random()*(1-0.12-w), y = 0.20 + Math.random()*(1-0.28-h);
+    const w = 0.08 + gameRandom()*0.05, h = 0.08 + gameRandom()*0.06;
+    const x = 0.06 + gameRandom()*(1-0.12-w), y = 0.20 + gameRandom()*(1-0.28-h);
     const overExit    = (x < 0.5+exitHalf && x+w > 0.5-exitHalf && y < exitBand);
     const coversStart = (x-0.04 < 0.5 && x+w+0.04 > 0.5 && y-0.04 < 0.5 && y+h+0.04 > 0.5);
     let overlap = false;
     for (const o of out)
       if (x < o.x+o.w+0.03 && x+w+0.03 > o.x && y < o.y+o.h+0.03 && y+h+0.03 > o.y) { overlap=true; break; }
     if (overExit || coversStart || overlap) continue;
-    const horiz = Math.random() < 0.5;
+    const horiz = gameRandom() < 0.5;
     out.push({ x, y, w, h,
-      ampX: horiz ? (0.05+Math.random()*0.04) : 0,
-      ampY: horiz ? 0 : (0.05+Math.random()*0.05),
-      freq: 0.4+Math.random()*0.5, dir: Math.random()<0.5?-1:1,
-      shape: OBSTACLE_SHAPES[Math.floor(Math.random()*OBSTACLE_SHAPES.length)] });
+      ampX: horiz ? (0.05+gameRandom()*0.04) : 0,
+      ampY: horiz ? 0 : (0.05+gameRandom()*0.05),
+      freq: 0.4+gameRandom()*0.5, dir: gameRandom()<0.5?-1:1,
+      shape: OBSTACLE_SHAPES[Math.floor(gameRandom()*OBSTACLE_SHAPES.length)] });
   }
   return out;
 }
