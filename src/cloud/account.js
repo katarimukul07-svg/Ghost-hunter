@@ -141,7 +141,9 @@
     status("Signed out. Local play and device progress are still available.");
   }
   async function request(path, { method="GET", data, authorized=false, retry=true }={}) {
+    const epoch = sessionEpoch;
     if (authorized) await refreshIfNeeded();
+    if (authorized && (epoch !== sessionEpoch || !session)) throw new Error("Sign in again to sync.");
     const response = await fetch(config.url + path, {
       method,
       headers:{
@@ -151,8 +153,10 @@
       },
       ...(data === undefined ? {} : { body:JSON.stringify(data) }),
     });
+    if (authorized && epoch !== sessionEpoch) throw new Error("Sign in again to sync.");
     if (response.status === 401 && authorized && retry && session?.refresh_token) {
       await refreshSession();
+      if (epoch !== sessionEpoch || !session) throw new Error("Sign in again to sync.");
       return request(path, { method, data, authorized, retry:false });
     }
     const result = await response.json().catch(() => null);
@@ -167,12 +171,15 @@
   async function refreshSession() {
     if (!session?.refresh_token) throw new Error("Sign in again to sync.");
     if (!refreshPromise) {
-      refreshPromise = request("/auth/v1/token?grant_type=refresh_token", {
+      const epoch = sessionEpoch;
+      const pending = request("/auth/v1/token?grant_type=refresh_token", {
         method:"POST", data:{ refresh_token:session.refresh_token },
       }).then(result => {
+        if (epoch !== sessionEpoch || !session) throw new Error("Sign in again to sync.");
         if (!result?.access_token || !result?.refresh_token) throw new Error("Sign in again to sync.");
         session = { ...result, expiresAt:Date.now() + (result.expires_in || 3600)*1000 };
-      }).finally(() => { refreshPromise = null; });
+      }).finally(() => { if (refreshPromise === pending) refreshPromise = null; });
+      refreshPromise = pending;
     }
     return refreshPromise;
   }

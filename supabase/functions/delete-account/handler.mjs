@@ -23,18 +23,22 @@ export async function handleDeleteAccount(request, { projectUrl, publicKey, serv
   if (body?.confirm !== "DELETE") return reply(400, "Confirmation required");
 
   // Resolve the caller from Auth, not from a client-supplied ID.
-  const identity = await fetcher(`${projectUrl}/auth/v1/user`, {
-    headers:{ apikey:publicKey, Authorization:authorization },
-  });
-  if (!identity.ok) return reply(401, "Sign in again before deleting your account");
-  const user = await identity.json().catch(() => null);
-  if (typeof user?.id !== "string" || !/^[0-9a-f-]{36}$/i.test(user.id)) return reply(401, "Sign in required");
+  try {
+    const identity = await fetcher(`${projectUrl}/auth/v1/user`, {
+      headers:{ apikey:publicKey, Authorization:authorization },
+    });
+    if (!identity.ok) return reply(401, "Sign in again before deleting your account");
+    const user = await identity.json().catch(() => null);
+    if (typeof user?.id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id)) return reply(401, "Sign in required");
 
-  const deletion = await fetcher(`${projectUrl}/auth/v1/admin/users/${encodeURIComponent(user.id)}`, {
-    method:"DELETE",
-    headers:{ apikey:serviceKey, Authorization:`Bearer ${serviceKey}` },
-  });
-  if (!deletion.ok) return reply(503, "Could not delete account; please retry");
-  // player_saves.user_id references auth.users with ON DELETE CASCADE.
-  return new Response(null, { status:204, headers:{ ...cors, "Cache-Control":"no-store" } });
+    const deletion = await fetcher(`${projectUrl}/auth/v1/admin/users/${encodeURIComponent(user.id)}`, {
+      method:"DELETE",
+      headers:{ apikey:serviceKey, Authorization:`Bearer ${serviceKey}` },
+    });
+    if (!deletion.ok) return reply(503, "Could not delete account; please retry");
+    // player_saves.user_id references auth.users with ON DELETE CASCADE.
+    return new Response(null, { status:204, headers:{ ...cors, "Cache-Control":"no-store" } });
+  } catch {
+    return reply(503, "Deletion service unavailable");
+  }
 }
