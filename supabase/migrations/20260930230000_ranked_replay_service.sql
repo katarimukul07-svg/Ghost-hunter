@@ -116,9 +116,9 @@ returns boolean language plpgsql security definer set search_path='' as $$
 declare r public.ranked_replay_runs;
 begin
  select * into r from public.ranked_replay_runs where id=run for update;
- if not found or r.lease_nonce is distinct from lease or r.lease_version<>version then return false; end if;
+ if not found or lease is null or version is null or r.lease_nonce is distinct from lease or r.lease_version is distinct from version then return false; end if;
  if r.status in ('accepted','rejected') then return r.score is not distinct from computed_score and r.reason is not distinct from rejection; end if;
- if r.status<>'processing' or r.lease_until<=clock_timestamp() then return false; end if;
+ if r.status<>'processing' or r.lease_until is null or r.lease_until<=clock_timestamp() then return false; end if;
  if rejection is not null and rejection not in ('invalid_input','simulation_failed','ruleset_unavailable','resource_limit') then raise exception 'Invalid rejection' using errcode='22023'; end if;
  if rejection is null and (computed_score is null or computed_score not between 0 and 1000000) then raise exception 'Invalid score' using errcode='22023'; end if;
  if rejection is not null and computed_score is not null then raise exception 'Rejected score' using errcode='22023'; end if;

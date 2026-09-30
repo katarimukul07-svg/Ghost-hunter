@@ -26,6 +26,7 @@ select throws_ok($$select public.submit_replay_run('50000000-0000-4000-8000-0000
 with job as(select public.claim_replay_run() as data) update fixture_replay set lease=(job.data->>'lease_nonce')::uuid,version=(job.data->>'lease_version')::integer from job where label='A';
 select is(public.claim_replay_run(),null::jsonb,'live lease cannot be double-claimed');
 select is(public.complete_replay_run((select id from fixture_replay where label='A'),gen_random_uuid(),1,99),false,'wrong worker fence cannot commit');
+select is(public.complete_replay_run((select id from fixture_replay where label='A'),(select lease from fixture_replay where label='A'),null,99),false,'null worker version cannot bypass fence');
 reset role;
 update public.ranked_replay_runs set lease_until=clock_timestamp()-interval '1 second' where id=(select id from fixture_replay where label='A');
 set local role service_role;
