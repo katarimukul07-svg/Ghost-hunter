@@ -1,3 +1,4 @@
+import { build as bundle } from "esbuild";
 import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -30,6 +31,15 @@ await cp(path.join(root, "src"), path.join(dist, "src"), { recursive: true });
 // Retain the protocol source for research tests only; it must not be bundled.
 await rm(path.join(dist, "src/cloud/ranked-protocol.js"), { force: true });
 
+// Bundle only the native adapter; the provider's web path never imports it.
+await bundle({entryPoints:[path.join(root,"src/cloud/secure-storage-native.js")],
+ outfile:path.join(dist,"src/cloud/secure-storage-native.js"),bundle:true,
+ format:"esm",platform:"browser",target:"es2022",minify:true,legalComments:"none"});
+
+await bundle({entryPoints:[path.join(root,"src/cloud/ranked-session.js")],
+ outfile:path.join(dist,"src/cloud/ranked-session.js"),bundle:true,
+ format:"esm",platform:"browser",target:"es2022",minify:true,legalComments:"none"});
+
 await cp(path.join(root, "styles"), path.join(dist, "styles"), { recursive: true });
 
 const cloudUrl = process.env.ECHO_SUPABASE_URL || "";
@@ -47,6 +57,15 @@ if (cloudKey && !cloudKey.startsWith("sb_publishable_")) {
 if (cloudEnabled && (!cloudUrl || !cloudKey)) {
   throw new Error("Cloud activation requires a Supabase URL and publishable key");
 }
+const projectOrigin=cloudUrl || "https://aimdnoixhrfwmwozlkee.supabase.co";
+const parsedProject=new URL(projectOrigin);
+if (parsedProject.origin!==projectOrigin || parsedProject.username || parsedProject.password
+    || !/^[a-z0-9-]+\.supabase\.co$/.test(parsedProject.hostname)) throw new Error("Invalid project origin");
+const csp="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' "+projectOrigin+"; media-src 'self' blob:; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'";
+const {readFile}=await import('node:fs/promises');
+const html=await readFile(path.join(dist,'index.html'),'utf8');
+await writeFile(path.join(dist,'index.html'),html.replace('<meta charset="UTF-8" />','<meta charset="UTF-8" />\n<meta http-equiv="Content-Security-Policy" content="'+csp+'" />'));
+
 await writeFile(path.join(dist, "cloud-config.json"), JSON.stringify({
   enabled: cloudEnabled,
   rankedEnabled: false,

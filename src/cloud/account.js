@@ -21,6 +21,18 @@
     sound:SOUND_PACKS[0].id, mute:"0", background:"classic", hint:"0",
   });
   let config = null;
+  let sessionStore = null;
+  async function getSessionStore() {
+    if (!sessionStore) sessionStore = import('./secure-storage-provider.js').then(module=>
+      module.createSessionStore({native:Boolean(window.EchoStepsNative?.isNative),
+        loadNative:()=>import('./secure-storage-native.js').then(native=>native.nativeStorage(config.url))}));
+    return sessionStore;
+  }
+  async function persistSession(epoch) {
+    const store=await getSessionStore();
+    if(epoch===sessionEpoch && session) await store.set(session);
+  }
+
   let session = null; // Access and refresh tokens deliberately remain in memory only.
   let remote = null;
   let ready = false;
@@ -119,6 +131,10 @@
     sessionEpoch++;
     clearTimeout(timer); timer = null; refreshPromise = null;
     session = null; remote = null; ready = false;
+    // Remove follows any already queued native write; never fall back to plaintext.
+    getSessionStore().then(store=>store.remove()).catch(()=>{
+      status("Signed out. Secure storage could not be cleared; reconnect before signing in again.");
+    });
     show(ui.accountSignedIn, false);
     show(ui.accountChoices, false);
     show(ui.accountCodeForm, false);
@@ -160,10 +176,11 @@
       const epoch = sessionEpoch;
       const pending = request("/auth/v1/token?grant_type=refresh_token", {
         method:"POST", data:{ refresh_token:session.refresh_token },
-      }).then(result => {
+      }).then(async result => {
         if (epoch !== sessionEpoch || !session) throw new Error("Sign in again to sync.");
         if (!result?.access_token || !result?.refresh_token) throw new Error("Sign in again to sync.");
         session = { ...result, expiresAt:Date.now() + (result.expires_in || 3600)*1000 };
+        await persistSession(epoch);
       }).finally(() => { if (refreshPromise === pending) refreshPromise = null; });
       refreshPromise = pending;
     }
@@ -253,6 +270,7 @@
       }
       session = { ...result, expiresAt:Date.now() + (result.expires_in || 3600)*1000 };
       sessionEpoch++;
+      await persistSession(sessionEpoch);
       remote = await readRemote();
       if (remote) showChoices("Choose which personal best and settings to keep. This does not transfer coins or purchased cosmetics.");
       else {
@@ -296,7 +314,7 @@
       status("Could not delete your account. Your save remains; please retry or contact support.");
     } finally { busy = false; }
   });
-  fetch("cloud-config.json", { cache:"no-store" }).then(response => response.json()).then(value => {
+  fetch("cloud-config.json", { cache:"no-store" }).then(response => response.json()).then(async value => {
     if (value?.enabled && /^https:\/\/[^/?#]+\.supabase\.co$/.test(value.url)
       && typeof value.publishableKey === "string" && value.publishableKey.startsWith("sb_publishable_")) {
       config = value;
@@ -304,6 +322,21 @@
       // Cloud saves do not imply ranked authorization. Keep legacy scores
       // hidden until a separately reviewed replay-backed client is available.
       show(ui.leaderboardBtn, false);
+      if (window.EchoStepsNative?.isNative) {
+        try {
+          const saved=await (await getSessionStore()).get();
+          if (saved) {
+            session=saved;sessionEpoch++;
+            // Validate remotely before showing any restored identity.
+            await refreshIfNeeded();
+            const identity=await request('/auth/v1/user',{authorized:true});
+            if(identity?.id!==session.user.id)throw Error('Session identity mismatch');
+            remote=await readRemote();
+            if(remote)showChoices('Choose which personal best and settings to keep. Coins remain local.');
+            else await upload();
+          }
+        } catch { clearSession(); }
+      }
     }
   }).catch(() => { /* Offline guest play needs no configuration request. */ });
 })();

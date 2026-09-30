@@ -21,6 +21,8 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run serve",
+    // Test routes use this exact project origin; account activation stays off.
+    env:{ECHO_SUPABASE_URL:"https://demo.supabase.co",ECHO_SUPABASE_PUBLISHABLE_KEY:"sb_publishable_fixture",ECHO_CLOUD_ACTIVATE:"0"},
     url: "http://127.0.0.1:4173",
     reuseExistingServer: !process.env.CI,
   },
