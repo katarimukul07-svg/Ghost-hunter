@@ -51,8 +51,8 @@ select throws_ok($attack$update public.wallet_ledger set amount=999 where user_i
 select is((select count(*) from public.entitlements where user_id='30000000-0000-4000-8000-000000000002'),0::bigint,'cross-user read 0 entitlements');
 select throws_ok($attack$delete from public.entitlements where user_id='30000000-0000-4000-8000-000000000002'$attack$, '42501', null, 'cross-user delete 0 entitlements');
 select throws_ok($attack$update public.entitlements set source='attacker' where user_id='30000000-0000-4000-8000-000000000002'$attack$, '42501', null, 'cross-user update 0 entitlements');
-select is(public.checkpoint_ranked_round_v2('40000000-0000-4000-8000-000000000002',1,1,gen_random_uuid())->>'status','unavailable','cross-user checkpoint 0');
-select is(public.finish_ranked_run_v2('40000000-0000-4000-8000-000000000002',0)->>'status','unavailable','cross-user finish 0');
+select throws_ok($$select public.checkpoint_ranked_round_v2('40000000-0000-4000-8000-000000000002',1,1,gen_random_uuid())$$,'42501',null,'checkpoint revoked 0');
+select throws_ok($$select public.finish_ranked_run_v2('40000000-0000-4000-8000-000000000002',0)$$,'42501',null,'finish revoked 0');
 select throws_ok($attack$insert into public.wallet_ledger(user_id,idempotency_key,amount,reason) values('30000000-0000-4000-8000-000000000001','attack',999,'attack')$attack$, '42501', null, 'no direct wallet_ledger insert 0');
 select throws_ok($attack$insert into public.entitlements(user_id,entitlement_key,source) values('30000000-0000-4000-8000-000000000001','paid','attack')$attack$, '42501', null, 'no direct entitlements insert 0');
 select throws_ok($attack$insert into public.ranked_runs(user_id,client_build) values('30000000-0000-4000-8000-000000000001','attack')$attack$, '42501', null, 'no direct ranked_runs insert 0');
@@ -79,8 +79,8 @@ select throws_ok($attack$update public.wallet_ledger set amount=999 where user_i
 select is((select count(*) from public.entitlements where user_id='30000000-0000-4000-8000-000000000001'),0::bigint,'cross-user read 1 entitlements');
 select throws_ok($attack$delete from public.entitlements where user_id='30000000-0000-4000-8000-000000000001'$attack$, '42501', null, 'cross-user delete 1 entitlements');
 select throws_ok($attack$update public.entitlements set source='attacker' where user_id='30000000-0000-4000-8000-000000000001'$attack$, '42501', null, 'cross-user update 1 entitlements');
-select is(public.checkpoint_ranked_round_v2('40000000-0000-4000-8000-000000000001',1,1,gen_random_uuid())->>'status','unavailable','cross-user checkpoint 1');
-select is(public.finish_ranked_run_v2('40000000-0000-4000-8000-000000000001',0)->>'status','unavailable','cross-user finish 1');
+select throws_ok($$select public.checkpoint_ranked_round_v2('40000000-0000-4000-8000-000000000001',1,1,gen_random_uuid())$$,'42501',null,'checkpoint revoked 1');
+select throws_ok($$select public.finish_ranked_run_v2('40000000-0000-4000-8000-000000000001',0)$$,'42501',null,'finish revoked 1');
 select throws_ok($attack$insert into public.wallet_ledger(user_id,idempotency_key,amount,reason) values('30000000-0000-4000-8000-000000000002','attack',999,'attack')$attack$, '42501', null, 'no direct wallet_ledger insert 1');
 select throws_ok($attack$insert into public.entitlements(user_id,entitlement_key,source) values('30000000-0000-4000-8000-000000000002','paid','attack')$attack$, '42501', null, 'no direct entitlements insert 1');
 select throws_ok($attack$insert into public.ranked_runs(user_id,client_build) values('30000000-0000-4000-8000-000000000002','attack')$attack$, '42501', null, 'no direct ranked_runs insert 1');
@@ -91,7 +91,7 @@ select throws_ok($attack$select public.checkpoint_ranked_round('40000000-0000-40
 select throws_ok($attack$select public.finish_ranked_run('40000000-0000-4000-8000-000000000002')$attack$, '42501', null, 'legacy RPC revoked 1');
 select set_config('request.jwt.claim.sub','',true);
 select throws_ok($$select public.put_player_save(0,'{}',0)$$,'28000',null,'missing claim save rejected');
-select throws_ok($$select public.start_ranked_run_v2('x',gen_random_uuid())$$,'28000',null,'missing claim ranked rejected');
+select throws_ok($$select public.start_ranked_run_v2('x',gen_random_uuid())$$,'42501',null,'ranked RPC revoked regardless of claim');
 select set_config('request.jwt.claim.sub','30000000-0000-4000-8000-000000000001',true);
 select throws_ok($$select public.put_player_save(-1,'{}',0)$$,'22023',null,'malformed save rejected');
 select throws_ok($$select public.put_player_save(null,'{}',0)$$,'22023',null,'malformed save rejected');
@@ -102,7 +102,7 @@ select throws_ok($$select public.put_player_save(1,'{}',-1)$$,'22023',null,'malf
 select throws_ok($$select public.put_player_save(1,'{}',1000001)$$,'22023',null,'malformed save rejected');
 select throws_ok($$select public.put_player_save(1,jsonb_build_object('name',repeat('x',5000)),0)$$,'22023',null,'malformed save rejected');
 select throws_ok($$select public.start_ranked_run_v2('x','bad-uuid')$$,'22P02',null,'malformed UUID rejected');
-select throws_ok($$select public.start_ranked_run_v2(repeat('x',81),gen_random_uuid())$$,'22023',null,'oversized build rejected');
+select throws_ok($$select public.start_ranked_run_v2(repeat('x',81),gen_random_uuid())$$,'42501',null,'oversized build cannot bypass revocation');
 select throws_ok($$select public.set_player_profile('player','<X>')$$,'22023',null,'invalid country rejected');
 select lives_ok($$select public.set_player_profile('''; DROP TABLE x;--','US')$$,'SQL metacharacters treated as text');
 select lives_ok($$select public.set_player_profile('rate fixture','US') from generate_series(1,20)$$,'local abuse probe: 20 profile writes have no server throttle');

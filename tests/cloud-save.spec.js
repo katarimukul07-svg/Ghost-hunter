@@ -6,9 +6,9 @@ completeTutorialForMostTests(test);
 const project = "https://demo.supabase.co";
 const enabled = { enabled:true, url:project, publishableKey:"sb_publishable_test" };
 
-async function mockCloud(page, { remote=null, conflict=false }={}) {
+async function mockCloud(page, { remote=null, conflict=false, rankedEnabled=false }={}) {
   const requests = [];
-  await page.route("**/cloud-config.json", route => route.fulfill({ json:enabled }));
+  await page.route("**/cloud-config.json", route => route.fulfill({ json:{...enabled,rankedEnabled} }));
   await page.route(`${project}/**`, async route => {
     const req = route.request();
     const url = new URL(req.url());
@@ -88,4 +88,24 @@ test("a stale revision requires another explicit choice before overwrite", async
   const writes = requests.filter(request => request.path.endsWith("put_player_save"));
   expect(writes.map(write => write.body.expected_revision)).toEqual([2,3]);
   expect(writes[1].body.new_settings).not.toHaveProperty("coins");
+});
+
+test("cloud saves work while stale config cannot reactivate ranked calls", async ({ page }) => {
+  const requests=await mockCloud(page,{rankedEnabled:true});
+  await page.goto('/');
+  await signIn(page);
+  await expect(page.locator('#accountStatus')).toContainText('Synced');
+  expect(requests.some(r=>r.path.endsWith('/put_player_save'))).toBe(true);
+  const result=await page.evaluate(async()=>({
+    ranked:window.EchoStepsCloud.isRanked(),
+    start:await window.EchoStepsCloud.startRankedRun(),
+    checkpoint:await window.EchoStepsCloud.checkpointRankedRound(999),
+    finish:await window.EchoStepsCloud.finishRankedRun(999),
+    leaderboard:await window.EchoStepsCloud.getLeaderboard(),
+  }));
+  expect(result).toEqual({ranked:false,start:false,checkpoint:false,finish:null,leaderboard:[]});
+  await page.locator('#accountBack').click();
+  await expect(page.locator('#leaderboardBtn')).toBeHidden();
+  await page.getByRole('button',{name:'PLAY',exact:true}).click();
+  expect(requests.filter(r=>/ranked|leaderboard/.test(r.path))).toEqual([]);
 });

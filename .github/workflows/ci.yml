@@ -5,6 +5,14 @@ on:
   push:
     branches:
       - main
+      # Bot-created PRs do not trigger pull_request workflows. Validate proposal
+      # pushes directly; the deployment job remains restricted to main.
+      - codex/**
+      - fix/**
+      - feature/**
+      - chore/**
+      - release/**
+      - setup/**
   workflow_dispatch:
 
 concurrency:

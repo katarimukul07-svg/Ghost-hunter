@@ -17,7 +17,6 @@ const scriptPaths = [
   "src/game/systems/bonuses.js",
   "src/rendering/backgrounds.js",
   "src/ui/tutorial.js",
-  "src/cloud/ranked-protocol.js",
   "src/cloud/account.js",
 ];
 const scriptEntries = await Promise.all(scriptPaths.map(async (relativePath) => [

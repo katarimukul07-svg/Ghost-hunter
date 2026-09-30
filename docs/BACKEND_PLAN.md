@@ -93,6 +93,12 @@ or production verified merely because local database and game tests pass.
 
 ## Cloud client activation checklist
 
+Ranked is independently blocked. Generated configuration always has
+`rankedEnabled:false`; `ECHO_RANKED_ACTIVATE=1` fails the build. Account activation
+never starts the retired checkpoint protocol. Apply and verify the containment
+migration before any hosted account rollout. See [RANKED_CONTAINMENT.md](RANKED_CONTAINMENT.md).
+
+
 The build writes `dist/cloud-config.json` with `enabled:false` unless
 `ECHO_CLOUD_ACTIVATE=1` is explicitly supplied alongside `ECHO_SUPABASE_URL`
 and `ECHO_SUPABASE_PUBLISHABLE_KEY`. A publishable key is public by design;
