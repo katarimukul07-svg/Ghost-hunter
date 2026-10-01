@@ -1,4 +1,4 @@
-const CACHE = "echo-steps-ranked-canvas-v1";
+const CACHE = "echo-steps-native-ui-v1";
 const OFFLINE_ASSETS = [
   "./",
   "./index.html",

@@ -6,6 +6,11 @@ A minimalist arcade survival game where every completed route becomes a lethal e
 
 The repository contains the web game plus Capacitor 8 projects for Android and iOS. Version 1.0 is in release-candidate preparation and still requires protected CI, real-device beta testing, signing, and store-owner approval before submission.
 
+Simulator UI follow-up (#38): pause uses CSS bars instead of a font-dependent glyph;
+results and sharing explicitly count completed rounds. Scoring and gameplay rules
+are unchanged. Browser regression tests cover the icon, pause/resume, and result/share
+counts; visual confirmation on a rebuilt iOS candidate and physical-device testing remain release gates.
+
 - Live game: <https://katarimukul07-svg.github.io/Ghost-hunter/>
 - Release plan: [ROADMAP.md](ROADMAP.md)
 - Release checklist: [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)

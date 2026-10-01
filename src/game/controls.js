@@ -191,7 +191,9 @@ el.mute.addEventListener("click", ()=>{
 });
 document.getElementById("shareBtn").addEventListener("click", async ()=>{
   const url=location.href;
-  const text=playerName+" reached round "+(round-1)+" in Echo Steps! Can you beat it?";
+  // The active HUD round is not completed yet; share the same score as results.
+  const completedRounds=round-1;
+  const text=playerName+" completed "+completedRounds+" "+(completedRounds===1?"round":"rounds")+" in Echo Steps! Can you beat it?";
   const b=document.getElementById("shareBtn");
   try {
     if (navigator.share){ await navigator.share({ title:"Echo Steps", text, url }); return; }
