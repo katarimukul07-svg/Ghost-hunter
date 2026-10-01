@@ -19,6 +19,7 @@ const scriptPaths = [
   "src/rendering/backgrounds.js",
   "src/ui/tutorial.js",
   "src/cloud/account.js",
+  "src/game/ranked-bridge.js",
 ];
 const scriptEntries = await Promise.all(scriptPaths.map(async (relativePath) => [
   relativePath,
