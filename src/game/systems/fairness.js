@@ -373,7 +373,8 @@
   };
 
   function applyTouchOffset(e) {
-    if (e.pointerType !== "touch" || mode !== STATE.PLAYING || paused) return;
+    if (e.pointerType !== "touch" || mode !== STATE.PLAYING || paused ||
+        !pointer.active || e.pointerId !== steeringPointerId) return;
     const p = toLocal(e);
     pointer.x = clamp(p.x, room.x + CFG.PLAYER_R, room.x + room.w - CFG.PLAYER_R);
     pointer.y = clamp(p.y - CFG.TOUCH_OFFSET_PX, room.y + CFG.PLAYER_R, room.y + room.h - CFG.PLAYER_R);

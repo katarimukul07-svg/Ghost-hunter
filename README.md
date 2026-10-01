@@ -28,6 +28,14 @@ future layouts. `npm run poc:replay` writes a machine-readable campaign report.
 This proves rule consistency, not human play or production anti-cheat. Existing
 ranked RPCs remain forgeable and production cloud/ranked activation stays off.
 
+Mobile release validation: steering belongs to one pointer and clears on capture
+loss, pause, focus/background interruption, and restart. Narrow-phone HUD cards
+stay above the arena. CI includes a focused WebKit phone suite as well as desktop
+and mobile Chromium. On 1 October 2026, the new regression suite reproduced five
+failures before the fixes; afterward 55 backend and 85 browser tests passed
+locally. Safe-area tests inject inset values and lifecycle tests simulate events;
+they do not replace physical-device acceptance.
+
 ## Controls
 
 - Desktop: click and drag to steer the node.
