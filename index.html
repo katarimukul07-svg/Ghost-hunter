@@ -30,7 +30,7 @@
       </div>
     </div>
     <div style="display:flex;gap:6px">
-      <button id="pauseBtn" aria-label="Pause game" title="Pause game">&#9208;</button>
+      <button id="pauseBtn" aria-label="Pause game" title="Pause game"><span class="pause-icon" aria-hidden="true"><span></span><span></span></span></button>
       <button id="muteBtn" aria-label="Toggle sound" aria-pressed="false">&#9834; ON</button>
     </div>
   </div>
@@ -134,7 +134,7 @@
 
   <div id="overScreen" class="overlay hidden">
     <h1 id="overTitle" style="color:var(--ghost);text-shadow:0 0 14px rgba(255,53,84,.55)">GHOST GOT YOU!</h1>
-    <div class="stat">You reached round <b id="finalRounds">0</b></div>
+    <div class="stat">Rounds completed: <b id="finalRounds">0</b></div>
     <div class="stat" style="font-size:15px">Best: <span id="bestScore">0</span> rounds &middot; +<span id="finalCoins">0</span> coins</div>
     <div class="stat" style="font-size:16px;color:var(--prize)">&#9670; <b id="totalCoinsOver">0</b> coins banked</div>
     <div class="sub" id="newBest" style="color:var(--prize);text-shadow:0 0 12px rgba(255,241,92,.6);display:none">&#9733; NEW BEST &#9733;</div>

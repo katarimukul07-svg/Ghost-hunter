@@ -3,6 +3,37 @@ import { collectPageErrors, completeTutorialForMostTests } from "./helpers.js";
 
 completeTutorialForMostTests(test);
 
+for (const completedRounds of [0, 1, 4]) {
+  test(`results and sharing count ${completedRounds} completed rounds`, async ({ page }) => {
+    const errors = collectPageErrors(page);
+    await page.goto("/?test=1");
+    await page.getByRole("button", { name:"PLAY" }).click();
+    await page.evaluate((count) => {
+      window.__sharedResult = null;
+      Object.defineProperty(navigator, "share", {
+        configurable:true,
+        value:async (payload) => { window.__sharedResult = payload; },
+      });
+      for (let i=0; i<count; i++) window.__echoStepsTest.completeRound();
+      // Move out of exit handoff protection before forcing the death fixture.
+      const { room } = window.__echoStepsTest.snapshot();
+      window.__echoStepsTest.movePlayerTo(room.x+room.w/2, room.y+room.h/2);
+      window.__echoStepsTest.step();
+      window.__echoStepsTest.putGhostOnPlayer();
+      window.__echoStepsTest.step(50);
+    }, completedRounds);
+    await expect(page.locator("#overScreen")).toBeVisible();
+    await expect(page.locator("#finalRounds")).toHaveText(String(completedRounds));
+    await expect(page.locator("#finalRounds").locator("..")).toHaveText(`Rounds completed: ${completedRounds}`);
+    expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).round).toBe(completedRounds+1);
+    await page.locator("#shareBtn").click();
+    const shared = await page.evaluate(() => window.__sharedResult);
+    expect(shared.text).toContain(` completed ${completedRounds} ${completedRounds===1?"round":"rounds"} in Echo Steps!`);
+    expect(shared.text).not.toContain("reached round");
+    expect(errors).toEqual([]);
+  });
+}
+
 test("a ghost death shows game over, refuses an unaffordable retry, and restarts", async ({ page }) => {
   const errors = collectPageErrors(page);
   await page.goto("/?test=1");
@@ -52,7 +83,16 @@ test("requires an active drag and preserves game position across resize", async 
   expect(afterDrag.player.x).toBeGreaterThan(beforeHover.player.x + 10);
   expect(afterDrag.pointer.active).toBe(false);
 
-  await page.getByRole("button", { name:"Pause game" }).click();
+  const pause = page.getByRole("button", { name:"Pause game" });
+  await expect(pause.locator(".pause-icon")).toHaveAttribute("aria-hidden", "true");
+  const bars = pause.locator(".pause-icon > span");
+  await expect(bars).toHaveCount(2);
+  for (const bar of await bars.all()) {
+    const size = await bar.boundingBox();
+    expect(size.width).toBe(3);
+    expect(size.height).toBe(12);
+  }
+  await pause.click();
   await expect.poll(async () => (await page.evaluate(() => window.__echoStepsTest.snapshot())).paused).toBe(true);
 
   const oldNormalized = {
@@ -67,6 +107,8 @@ test("requires an active drag and preserves game position across resize", async 
   };
   expect(newNormalized.x).toBeCloseTo(oldNormalized.x, 2);
   expect(newNormalized.y).toBeCloseTo(oldNormalized.y, 2);
+  await page.getByRole("button", { name:"RESUME", exact:true }).click();
+  expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).paused).toBe(false);
   expect(errors).toEqual([]);
 });
 

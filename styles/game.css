@@ -97,6 +97,9 @@
   #muteBtn, #pauseBtn { pointer-events:auto; background:transparent; color:var(--dim); box-shadow:none;
              border:1px solid var(--dim); border-radius:6px; padding:5px 10px; font-size:12px; }
   #muteBtn:active, #pauseBtn:active { transform:none; }
+  /* Draw the pause symbol without relying on native font/emoji coverage. */
+  .pause-icon { display:inline-flex; gap:4px; width:10px; height:12px; vertical-align:middle; }
+  .pause-icon > span { display:block; width:3px; height:12px; background:currentColor; }
 
   .leaderboard-rows { width:min(92vw,430px); max-height:52vh; overflow:auto; display:flex; flex-direction:column; gap:6px; }
   .leaderboard-row { display:grid; grid-template-columns:52px 1fr 44px 58px; gap:8px; align-items:center;
