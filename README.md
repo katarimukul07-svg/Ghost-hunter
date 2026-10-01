@@ -118,3 +118,5 @@ The replay service and native session-storage staging candidate are documented i
 listing drafts and remaining physical-device/signing gates are in the
 [store packet](docs/release/STORE_PACKET.md). Default guest play and ranked
 activation remain independently gated until hosted/native evidence is complete.
+
+The gated [ranked canvas adapter](docs/RANKED_CANVAS_INTEGRATION.md) records the actual fixed-tick inputs without changing the pinned gameplay ruleset. Public ranked activation remains blocked.

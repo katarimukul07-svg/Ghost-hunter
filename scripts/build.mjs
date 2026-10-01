@@ -36,8 +36,8 @@ await bundle({entryPoints:[path.join(root,"src/cloud/secure-storage-native.js")]
  outfile:path.join(dist,"src/cloud/secure-storage-native.js"),bundle:true,
  format:"esm",platform:"browser",target:"es2022",minify:true,legalComments:"none"});
 
-await bundle({entryPoints:[path.join(root,"src/cloud/ranked-session.js")],
- outfile:path.join(dist,"src/cloud/ranked-session.js"),bundle:true,
+await bundle({entryPoints:[path.join(root,"src/cloud/ranked-session.js"),path.join(root,"src/cloud/ranked-canvas.js")],
+ outdir:path.join(dist,"src/cloud"),bundle:true,
  format:"esm",platform:"browser",target:"es2022",minify:true,legalComments:"none"});
 
 await cp(path.join(root, "styles"), path.join(dist, "styles"), { recursive: true });
