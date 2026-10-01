@@ -18,6 +18,11 @@ export default defineConfig({
       name: "mobile-chromium",
       use: { ...devices["Pixel 7"] },
     },
+    {
+      name: "mobile-webkit",
+      testMatch: /mobile-release\.spec\.js/,
+      use: { ...devices["iPhone 13"] },
+    },
   ],
   webServer: {
     command: "npm run serve",

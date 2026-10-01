@@ -10,6 +10,15 @@
 - [ ] The release commit is tagged only after all required checks pass.
 - [ ] GitHub Pages deployment on the merged release commit passes its live verification.
 
+## Mobile browser evidence (1 October 2026)
+
+- Local static validation, 55 backend tests and 85 browser tests passed.
+- Chromium desktop/phone and focused WebKit phone tests cover single-pointer
+  ownership, interruption/capture loss, restart and fresh-drag recovery.
+- 320x568 and 390x844 viewport tests check injected safe areas and HUD clearance.
+- These checks simulate browser/lifecycle behavior; real notches, native OS input,
+  audio interruption and physical-device frame rate are still unverified.
+
 ## Real-device acceptance
 
 - [ ] Test at least one small and one large Android phone, including API 24 and API 36 where practical.

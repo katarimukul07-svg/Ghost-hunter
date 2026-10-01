@@ -16,10 +16,25 @@ function loop(now){
 /* ---------- Input ---------- */
 function toLocal(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
 function onMove(e){ const p=toLocal(e); pointer.x=p.x; pointer.y=p.y; }
-canvas.addEventListener("pointerdown",(e)=>{ pointer.active=true; onMove(e); canvas.setPointerCapture(e.pointerId); });
-canvas.addEventListener("pointermove", (e)=>{ if (pointer.active) onMove(e); });
-canvas.addEventListener("pointerup", ()=>{ pointer.active=false; });
-canvas.addEventListener("pointercancel", ()=>{ pointer.active=false; });
+let steeringPointerId = null;
+function clearSteering(){
+  const id = steeringPointerId;
+  steeringPointerId = null;
+  pointer.active = false;
+  if (id !== null && canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+}
+canvas.addEventListener("pointerdown", e => {
+  if (mode !== STATE.PLAYING || paused || steeringPointerId !== null || e.button !== 0) return;
+  steeringPointerId = e.pointerId;
+  pointer.active = true;
+  onMove(e);
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener("pointermove", e => {
+  if (pointer.active && e.pointerId === steeringPointerId) onMove(e);
+});
+for (const event of ["pointerup", "pointercancel", "lostpointercapture"])
+  canvas.addEventListener(event, e => { if (e.pointerId === steeringPointerId) clearSteering(); });
 
 /* ---------- Menu / buttons ---------- */
 function refreshCoinLine(){
@@ -113,6 +128,7 @@ function closeShop(){
   else { el.start.classList.remove("hidden"); refreshCoinLine(); }
 }
 function showStart(){
+  clearSteering();
   mode = STATE.START;
   el.over.classList.add("hidden"); el.pause.classList.add("hidden"); el.hud.classList.add("hidden");
   el.shop.classList.add("hidden");
@@ -156,6 +172,8 @@ function retryRun(){
   Sound.unlock(); Sound.startAmbient();
 }
 
+for (const id of ["startBtn", "restartBtn", "retryBtn", "pauseRestartBtn"])
+  document.getElementById(id).addEventListener("click", clearSteering, true);
 document.getElementById("retryBtn").addEventListener("click", retryRun);
 document.getElementById("startBtn").addEventListener("click", resetGame);
 document.getElementById("restartBtn").addEventListener("click", resetGame);
@@ -167,7 +185,7 @@ el.shopTabs.addEventListener("click", (e) => {
   setShopTab(b.dataset.cat);
 });
 document.getElementById("resumeBtn").addEventListener("click", ()=>{
-  paused=false; grace=CFG.GRACE_TICKS; el.pause.classList.add("hidden"); Sound.startAmbient();
+  clearSteering(); paused=false; grace=CFG.GRACE_TICKS; el.pause.classList.add("hidden"); Sound.startAmbient();
 });
 document.getElementById("pauseRestartBtn").addEventListener("click", ()=>{
   el.pause.classList.add("hidden");
@@ -184,7 +202,7 @@ document.getElementById("pauseSoundBtn").addEventListener("click", ()=>{
 });
 document.getElementById("pauseBtn").addEventListener("click", ()=>{
   if (mode!==STATE.PLAYING || paused) return;
-  paused = true; Sound.stopAmbient(); el.pause.classList.remove("hidden");
+  clearSteering(); paused = true; Sound.stopAmbient(); el.pause.classList.remove("hidden");
 });
 el.mute.addEventListener("click", ()=>{
   Sound.setMuted(!Sound.isMuted()); ss("echoSteps.mute", Sound.isMuted()?"1":"0"); updateMuteBtn();
@@ -205,9 +223,10 @@ document.getElementById("shareBtn").addEventListener("click", async ()=>{
 /* ---------- Web/native lifecycle ---------- */
 function pauseForInterruption(){
   if (mode===STATE.PLAYING && !paused){
-    pointer.active=false; paused=true; Sound.stopAmbient(); el.pause.classList.remove("hidden");
+    clearSteering(); paused=true; Sound.stopAmbient(); el.pause.classList.remove("hidden");
   }
 }
+window.addEventListener("blur", pauseForInterruption);
 document.addEventListener("visibilitychange", ()=>{ if (document.hidden) pauseForInterruption(); });
 window.addEventListener("echosteps:app-state", event => { if (!event.detail.isActive) pauseForInterruption(); });
 window.addEventListener("echosteps:back", ()=>{
