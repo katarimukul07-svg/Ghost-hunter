@@ -38,6 +38,8 @@ they do not replace physical-device acceptance.
 
 UI audit follow-up: clearer labels and ownership states, brighter secondary text, green Buy/red Cancel, consistent Ghost Hunter display names, and a smooth tap-to-drag transition. [Audit evidence](docs/release/UI_AUDIT.md) records browser measurements and the remaining physical-device and player acceptance gates.
 
+Release acceptance: [fresh-player and iPhone protocol](docs/release/BETA_TEST.md), with blank observation sheets and explicit release gates. Synthetic/browser tests are recorded separately from physical-device and human results.
+
 ## Controls
 
 - Desktop: click or drag to steer the dot.
