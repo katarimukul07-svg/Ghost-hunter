@@ -120,3 +120,9 @@ const SOUND_PACKS = [
   { id:"dark",     label:"Dark",     cost:0, pickup:{freq:440,  type:"triangle"}, complete:[{freq:330,type:"triangle"},{freq:494,type:"triangle"}], sweepFreq:110, sweepType:"sawtooth" },
   { id:"lofi",     label:"Lo-Fi",    cost:0, pickup:{freq:520,  type:"sine"},     complete:[{freq:392,type:"sine"},{freq:587,type:"sine"}],         sweepFreq:160, sweepType:"triangle" },
 ];
+
+const MUSIC_TRACKS = Object.freeze([
+  {id:"neon-rush",label:"Echo Run",genre:"Melodic EDM",src:"assets/music/echo-run.mp3"},
+  {id:"night-drive",label:"Ghost Circuit",genre:"Techno / breakbeat",src:"assets/music/ghost-circuit.mp3"},
+  {id:"acid-chase",label:"Last Exit",genre:"Acid techno",src:"assets/music/last-exit.mp3"},
+]);

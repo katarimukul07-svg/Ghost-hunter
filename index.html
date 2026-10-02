@@ -52,9 +52,26 @@
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="startBtn">PLAY</button>
       <button id="shopBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">SHOP</button>
+      <button id="settingsBtn" class="chip">SETTINGS</button>
       <button id="accountBtn" class="chip hidden">ACCOUNT</button>
       <button id="leaderboardBtn" class="chip hidden">LEADERBOARD</button>
     </div>
+  </div>
+
+  <div id="settingsScreen" class="overlay hidden" aria-label="Settings">
+    <h1>SETTINGS</h1>
+    <button id="settingsMuteBtn" class="chip" aria-label="Toggle all sound" aria-pressed="false">SOUND ON</button>
+    <label class="mlabel">MUSIC</label>
+    <div id="musicChoices" class="music-choices" role="group" aria-label="Music tracks"></div>
+    <p id="musicStatus" class="sub" role="status" aria-live="polite"></p>
+    <button id="stopMusicPreview" class="chip">STOP PREVIEW</button>
+    <div id="audioLevels" class="audio-settings">
+      <label for="musicLevel">Music volume</label><input id="musicLevel" aria-label="Music volume" type="range" min="0" max="100">
+      <label for="effectsLevel">Effects volume</label><input id="effectsLevel" aria-label="Effects volume" type="range" min="0" max="100">
+      <label for="effectsPack">Sound effects</label><select id="effectsPack" aria-label="Sound effects"></select>
+      <button id="previewEffects" class="chip">TEST EFFECTS</button>
+    </div>
+    <button id="settingsBackBtn">BACK</button>
   </div>
 
   <div id="accountScreen" class="overlay hidden" aria-label="Cloud save account">
@@ -106,17 +123,11 @@
       <button class="tab" data-cat="trail">TRAIL FX</button>
       <button class="tab" data-cat="ghost">GHOST SKIN</button>
       <button class="tab" data-cat="death">DEATH FX</button>
-      <button class="tab" data-cat="sound">SOUND</button>
     </div>
     <div class="swatches" id="shopColors"></div>
     <div class="swatches hidden" id="shopTrail"></div>
     <div class="swatches hidden" id="shopGhost"></div>
     <div class="swatches hidden" id="shopDeath"></div>
-    <div class="swatches hidden" id="shopSound"></div>
-    <div id="audioLevels" class="hidden" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
-      <label>MUSIC <input id="musicLevel" aria-label="Music volume" type="range" min="0" max="100"></label>
-      <label>EFFECTS <input id="effectsLevel" aria-label="Effects volume" type="range" min="0" max="100"></label>
-    </div>
     <div class="sub" id="shopHint">Tap an item to preview it. Owned items can be equipped instantly.</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="shopBuyBtn" type="button" class="hidden"></button>
@@ -137,7 +148,7 @@
     <h1>PAUSED</h1>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="resumeBtn">RESUME</button>
-      <button id="pauseSoundBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">SOUND</button>
+      <button id="pauseSettingsBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">SETTINGS</button>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="pauseRestartBtn" style="background:var(--prize);box-shadow:0 0 18px rgba(255,241,92,.5)">RESTART</button>
