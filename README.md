@@ -144,3 +144,12 @@ Background progression: Classic Grid is free; Circuit Foundry costs 40 coins,
 Abyssal Network 60, and Orbital Station 90. The ordering reflects increasing
 visual detail, with Orbital Station's planet glow and orbit rings priced highest.
 Background ownership stays on the device, like other coin cosmetics.
+
+Touch controls: tap a destination (including the target or inside the exit) to
+move to that exact spot. Drag to steer with the NODE above the finger. The
+visibility offset starts only after moving more than 8 pixels; obstacles still
+block direct routes. The tutorial explains both controls.
+
+Ghost path lines are 4 pixels wide (previously 2), including during collector sweeps.
+
+The main menu now uses a short goal summary and playful tagline instead of the longer NODE/echo explanation; detailed rules stay in How to Play.

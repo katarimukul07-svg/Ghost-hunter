@@ -126,3 +126,60 @@ for (const balance of [0, 50]) {
     await expect(page.locator("#shopBuyBtn")).toBeHidden();
   });
 }
+
+test("touch taps target the exact spot while drags retain the visibility offset", async ({ page }) => {
+  await page.goto("/?test=1");
+  await page.locator("#startBtn").click();
+  const result = await page.evaluate(() => {
+    const canvas = document.querySelector("#c");
+    canvas.setPointerCapture = () => {};
+    const send = (type,x,y) => canvas.dispatchEvent(new PointerEvent(type, {
+      pointerId:11, pointerType:"touch", clientX:x, clientY:y,
+    }));
+    send("pointerdown",180,300);
+    const tap = window.__echoStepsTest.snapshot().pointer;
+    send("pointerup",180,300);
+    const released = window.__echoStepsTest.snapshot().pointer;
+    send("pointerdown",180,300);
+    send("pointermove",210,340);
+    const drag = window.__echoStepsTest.snapshot().pointer;
+    return {tap,released,drag};
+  });
+  expect(result.tap).toMatchObject({x:180,y:300});
+  expect(result.released).toMatchObject({x:180,y:300,active:false});
+  expect(result.drag.x).toBe(210);
+  expect(result.drag.y).toBeLessThan(340);
+});
+
+test("tapping the prize collects it and tapping inside the exit clears the round", async ({ page }) => {
+  await page.goto("/?test=1");
+  await page.locator("#startBtn").click();
+  await page.evaluate(() => {
+    const api=window.__echoStepsTest, {prize}=api.snapshot();
+    // Start within the prize's guaranteed clear area; use real touch input for pickup.
+    api.movePlayerTo(prize.x,prize.y+30);
+  });
+  const prize = (await page.evaluate(() => window.__echoStepsTest.snapshot())).prize;
+  await page.evaluate(({x,y}) => {
+    const c=document.querySelector("#c"); c.setPointerCapture=()=>{};
+    for (const type of ["pointerdown","pointerup"]) c.dispatchEvent(new PointerEvent(type,{
+      pointerId:22,pointerType:"touch",clientX:x,clientY:y,
+    }));
+  },prize);
+  await expect.poll(async () => (await page.evaluate(() => window.__echoStepsTest.snapshot())).hasPrize).toBe(true);
+  const gate = await page.evaluate(() => {
+    const api=window.__echoStepsTest, {exit}=api.snapshot();
+    const x=exit.x+exit.w/2,y=exit.y+exit.h/2;
+    const dx=exit.wall==="left"?30:exit.wall==="right"?-30:0;
+    const dy=exit.wall==="top"?30:exit.wall==="bottom"?-30:0;
+    api.movePlayerTo(x+dx,y+dy);
+    return {x,y};
+  });
+  await page.evaluate(({x,y}) => {
+    const c=document.querySelector("#c");
+    for (const type of ["pointerdown","pointerup"]) c.dispatchEvent(new PointerEvent(type,{
+      pointerId:33,pointerType:"touch",clientX:x,clientY:y,
+    }));
+  },gate);
+  await expect.poll(async () => (await page.evaluate(() => window.__echoStepsTest.snapshot())).round).toBe(2);
+});

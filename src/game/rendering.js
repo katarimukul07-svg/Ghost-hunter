@@ -165,7 +165,7 @@ function drawPrize(){
 function drawGhosts(){
   for (let i=0;i<ghosts.length;i++){
     const g=ghosts[i], pos=ghostPos(g); if (!pos) continue;
-    ctx.strokeStyle=selectedGhostSkin; ctx.globalAlpha=0.10; ctx.lineWidth=2;
+    ctx.strokeStyle=selectedGhostSkin; ctx.globalAlpha=0.10; ctx.lineWidth=4;
     const p=g.path; ctx.beginPath(); ctx.moveTo(p[0].x,p[0].y);
     for (let k=1;k<p.length;k+=3) ctx.lineTo(p[k].x,p[k].y);
     ctx.stroke(); ctx.globalAlpha=1;
