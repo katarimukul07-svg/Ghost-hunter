@@ -353,7 +353,7 @@
     const collectCount = Math.min(sweep.remove, ghosts.length);
     for (let i = 0; i < ghosts.length; i++) {
       const g = ghosts[i], pos = ghostPos(g); if (!pos) continue;
-      ctx.strokeStyle = selectedGhostSkin; ctx.globalAlpha = 0.10; ctx.lineWidth = 2;
+      ctx.strokeStyle = selectedGhostSkin; ctx.globalAlpha = 0.10; ctx.lineWidth = 4;
       const p = g.path; ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y);
       for (let k = 1; k < p.length; k += 3) ctx.lineTo(p[k].x, p[k].y);
       ctx.stroke(); ctx.globalAlpha = 1;
@@ -372,12 +372,18 @@
     }
   };
 
+  let touchGesture = null;
   function applyTouchOffset(e) {
     if (e.pointerType !== "touch" || mode !== STATE.PLAYING || paused ||
         !pointer.active || e.pointerId !== steeringPointerId) return;
     const p = toLocal(e);
+    if (e.type === "pointerdown") touchGesture = { id:e.pointerId, x:p.x, y:p.y, dragging:false };
+    if (!touchGesture || touchGesture.id !== e.pointerId) return;
+    if (Math.hypot(p.x-touchGesture.x, p.y-touchGesture.y) > 8) touchGesture.dragging = true;
+    // Taps target the visible object exactly; offset only a deliberate drag.
+    const offset = touchGesture.dragging ? CFG.TOUCH_OFFSET_PX : 0;
     pointer.x = clamp(p.x, room.x + CFG.PLAYER_R, room.x + room.w - CFG.PLAYER_R);
-    pointer.y = clamp(p.y - CFG.TOUCH_OFFSET_PX, room.y + CFG.PLAYER_R, room.y + room.h - CFG.PLAYER_R);
+    pointer.y = clamp(p.y - offset, room.y + CFG.PLAYER_R, room.y + room.h - CFG.PLAYER_R);
   }
   canvas.addEventListener("pointerdown", applyTouchOffset);
   canvas.addEventListener("pointermove", applyTouchOffset);

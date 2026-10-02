@@ -7,7 +7,7 @@
     {
       kicker:"STEP 1 OF 7",
       title:"YOU ARE THE BLUE NODE",
-      body:"Touch and drag anywhere on the arena. Your NODE follows your finger with a small offset so you can still see it.",
+      body:"Tap a spot to move your NODE there, or drag to steer continuously. While dragging, the NODE stays above your finger so you can see it.",
       visual:"move",
       accent:"#29e0ff",
       note:"Keep moving. A stationary packet is an easy target.",
@@ -15,7 +15,7 @@
     {
       kicker:"STEP 2 OF 7",
       title:"COLLECT THE YELLOW TARGET",
-      body:"Guide the blue NODE into the yellow diamond. Collecting it unlocks the exit for that round.",
+      body:"Tap the yellow diamond or drag your NODE into it. Collecting the target unlocks the exit for that round.",
       visual:"target",
       accent:"#fff15c",
       note:"The yellow diamond is the objective—not an enemy.",
@@ -23,7 +23,7 @@
     {
       kicker:"STEP 3 OF 7",
       title:"ESCAPE THROUGH GREEN",
-      body:"After securing the target, reach the glowing green gate to clear the round. The exit can relocate every five rounds.",
+      body:"After collecting the target, tap inside the glowing green gate or drag into it to clear the round. The exit can relocate every five rounds.",
       visual:"exit",
       accent:"#39ff9e",
       note:"The active exit and its relocation handoff are protected zones.",

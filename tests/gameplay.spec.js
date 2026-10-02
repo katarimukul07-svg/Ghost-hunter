@@ -166,7 +166,7 @@ test("distinguishes the objective from red circular ghosts", async ({ page }) =>
   const errors = collectPageErrors(page);
 
   await page.goto("/?test=1");
-  await expect(page.locator("#startScreen")).toContainText("yellow diamond");
+  await expect(page.locator("#startScreen")).toContainText("yellow coin");
 
   const roles = await page.evaluate(() => window.__echoStepsTest.visualRoles());
   expect(roles.objective).toEqual({
