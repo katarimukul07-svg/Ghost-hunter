@@ -3,6 +3,8 @@ import { collectPageErrors, completeTutorialForMostTests } from "./helpers.js";
 completeTutorialForMostTests(test);
 
 test("backgrounds preview freely but require a confirmed coin purchase to equip", async ({ page }) => {
+  // This multi-screen journey includes offline caching, reloads and WebKit touch actions.
+  test.setTimeout(60_000);
   const errors = collectPageErrors(page);
   await page.addInitScript(() => {
     if (localStorage.getItem("echoSteps.coins") === null) localStorage.setItem("echoSteps.coins", "100");

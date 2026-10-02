@@ -61,6 +61,8 @@ test("overlapping effects render audible output with sample headroom",async({pag
 });
 
  test("three tracks preview, persist and stay separate from shop purchases",async({page})=>{
+  // This multi-screen journey includes offline caching, reloads and WebKit touch actions.
+  test.setTimeout(60_000);
   await page.goto('/?test=1');await page.locator('#settingsBtn').click();
   await expect(page.locator('#musicChoices button')).toHaveCount(3);
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
