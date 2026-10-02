@@ -136,7 +136,7 @@ The gated [ranked canvas adapter](docs/RANKED_CANVAS_INTEGRATION.md) records the
 
 ### Shop preview and confirmation
 Tap a locked cosmetic to preview without spending coins. Buy opens a confirmation
-showing the cost, current coin balance, and balance after purchase. Confirm spends
+showing the item and coin price in a compact, centered popup. Confirm spends
 earned coins once and equips the item; Cancel preserves the balance and selection.
 Owned cosmetics equip on tap. Insufficient funds disable buying.
 

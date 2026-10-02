@@ -20,7 +20,7 @@ test("backgrounds preview freely but require a confirmed coin purchase to equip"
   }
   expect((await state()).preview).toBe("orbit");
   await page.locator("#shopBuyBtn").click();
-  await expect(page.locator("#shopConfirmRemaining")).toHaveText("Balance after purchase: 10 coins");
+  await expect(page.locator("#shopConfirmCost")).toHaveText("90 coins");
   await page.locator("#shopConfirmCancel").click();
   expect((await state()).selected).toBe("classic");
   await page.locator("#shopBuyBtn").click();

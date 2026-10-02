@@ -117,6 +117,15 @@
 
 #shopBuyBtn:disabled { opacity:.55; cursor:default; box-shadow:none; }
 
-#shopConfirm { background:var(--bg); color:var(--ink); border:1px solid var(--sweep); border-radius:12px; padding:24px; max-width:min(360px, calc(100vw - 40px)); box-sizing:border-box; text-align:center; }
+#shopConfirm {
+  position:fixed; inset:auto; top:50%; left:50%; transform:translate(-50%,-50%); margin:0;
+  width:min(360px, calc(100vw - 40px));
+  max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px); overflow:auto;
+  background:var(--bg); color:var(--ink); border:1px solid var(--sweep);
+  border-radius:12px; padding:24px; text-align:center;
+}
+#shopConfirmItem { font-size:20px; line-height:1.3; overflow-wrap:anywhere; }
+#shopConfirmCost { font-size:18px; margin:12px 0 20px; color:var(--prize); }
 #shopConfirm::backdrop { background:rgba(0,0,0,.8); }
 .shop-confirm-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
+.shop-confirm-actions button { min-height:44px; font-size:14px; padding:12px 20px; }

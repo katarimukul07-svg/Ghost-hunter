@@ -104,9 +104,13 @@ for (const balance of [0, 50]) {
     } else {
       await page.locator("#shopBuyBtn").click();
       await expect(page.locator("#shopConfirm")).toBeVisible();
-      await expect(page.locator("#shopConfirmCost")).toHaveText("Coins used: 15");
-      await expect(page.locator("#shopConfirmBalance")).toHaveText("Current balance: 50 coins");
-      await expect(page.locator("#shopConfirmRemaining")).toHaveText("Balance after purchase: 35 coins");
+      await expect(page.locator("#shopConfirmItem")).toHaveText("Buy Pulse?");
+      await expect(page.locator("#shopConfirmCost")).toHaveText("15 coins");
+      const bounds = await page.locator("#shopConfirm").boundingBox();
+      const viewport = page.viewportSize();
+      expect(Math.abs(bounds.y + bounds.height/2 - viewport.height/2)).toBeLessThan(2);
+      expect(Math.abs(bounds.x + bounds.width/2 - viewport.width/2)).toBeLessThan(2);
+      expect(bounds.y).toBeGreaterThan(47);
       await expect(page.locator("#shopCoinLine")).toContainText("50 coins");
       await page.locator("#shopConfirmCancel").click();
       await expect(page.locator("#shopCoinLine")).toContainText("50 coins");
