@@ -51,7 +51,7 @@ const el = {
   hintDot:document.getElementById("hintDot"), hintGhost:document.getElementById("hintGhost"),
   coinLine:document.getElementById("coinLine"),
   shop:document.getElementById("shopScreen"), shopBtn:document.getElementById("shopBtn"),
-  shopBack:document.getElementById("shopBackBtn"), shopCoinLine:document.getElementById("shopCoinLine"),
+  shopBuy:document.getElementById("shopBuyBtn"), shopBack:document.getElementById("shopBackBtn"), shopCoinLine:document.getElementById("shopCoinLine"),
   shopTabs:document.getElementById("shopTabs"), shopPreview:document.getElementById("shopPreview"),
   shopColors:document.getElementById("shopColors"), shopTrail:document.getElementById("shopTrail"),
   shopGhost:document.getElementById("shopGhost"), shopDeath:document.getElementById("shopDeath"),

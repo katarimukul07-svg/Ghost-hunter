@@ -133,3 +133,14 @@ listing drafts and remaining physical-device/signing gates are in the
 activation remain independently gated until hosted/native evidence is complete.
 
 The gated [ranked canvas adapter](docs/RANKED_CANVAS_INTEGRATION.md) records the actual fixed-tick inputs without changing the pinned gameplay ruleset. Public ranked activation remains blocked.
+
+### Shop preview and confirmation
+Tap a locked cosmetic to preview without spending coins. Buy opens a confirmation
+showing the cost, current coin balance, and balance after purchase. Confirm spends
+earned coins once and equips the item; Cancel preserves the balance and selection.
+Owned cosmetics equip on tap. Insufficient funds disable buying.
+
+Background progression: Classic Grid is free; Circuit Foundry costs 40 coins,
+Abyssal Network 60, and Orbital Station 90. The ordering reflects increasing
+visual detail, with Orbital Station's planet glow and orbit rings priced highest.
+Background ownership stays on the device, like other coin cosmetics.

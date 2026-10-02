@@ -88,3 +88,41 @@ for (const size of [{ width:320, height:568 }, { width:390, height:844 }]) {
     expect(errors).toEqual([]);
   });
 }
+
+for (const balance of [0, 50]) {
+  test(`shop previews without spending and buys explicitly with ${balance} coins`, async ({ page }) => {
+    await page.addInitScript((value) => { if (localStorage.getItem("echoSteps.coins") === null) localStorage.setItem("echoSteps.coins", String(value)); }, balance);
+    await page.goto("/");
+    await page.locator("#shopBtn").click();
+    await page.locator("#shopColors").getByRole("button", { name:"Pulse", exact:true }).click();
+    await expect(page.locator("#shopHint")).toContainText("Previewing Pulse");
+    await expect(page.locator("#shopCoinLine")).toContainText(`${balance} coins`);
+    expect(await page.evaluate(() => localStorage.getItem("echoSteps.color"))).not.toBe("#3d7bff");
+    if (balance === 0) {
+      await expect(page.locator("#shopBuyBtn")).toBeDisabled();
+      await expect(page.locator("#shopBuyBtn")).toHaveText("NEED 15 MORE COINS");
+    } else {
+      await page.locator("#shopBuyBtn").click();
+      await expect(page.locator("#shopConfirm")).toBeVisible();
+      await expect(page.locator("#shopConfirmCost")).toHaveText("Coins used: 15");
+      await expect(page.locator("#shopConfirmBalance")).toHaveText("Current balance: 50 coins");
+      await expect(page.locator("#shopConfirmRemaining")).toHaveText("Balance after purchase: 35 coins");
+      await expect(page.locator("#shopCoinLine")).toContainText("50 coins");
+      await page.locator("#shopConfirmCancel").click();
+      await expect(page.locator("#shopCoinLine")).toContainText("50 coins");
+      await page.locator("#shopBuyBtn").click();
+      await page.locator("#shopConfirmBuy").click();
+      await expect(page.locator("#shopConfirm")).not.toBeVisible();
+      await expect(page.locator("#shopCoinLine")).toContainText("35 coins");
+      await expect(page.locator("#shopBuyBtn")).toBeHidden();
+      expect(await page.evaluate(() => localStorage.getItem("echoSteps.color"))).toBe("#3d7bff");
+      await page.locator("#shopColors").getByRole("button", { name:"Pulse", exact:true }).click();
+      await expect(page.locator("#shopCoinLine")).toContainText("35 coins");
+      await page.reload();
+      await page.locator("#shopBtn").click();
+      await expect(page.locator("#shopColors").getByRole("button", { name:"Pulse", exact:true })).toHaveAttribute("aria-pressed", "true");
+    }
+    await page.locator('#shopTabs [data-cat="trail"]').click();
+    await expect(page.locator("#shopBuyBtn")).toBeHidden();
+  });
+}

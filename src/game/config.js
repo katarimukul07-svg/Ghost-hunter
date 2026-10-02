@@ -35,9 +35,9 @@ const BONUS_TYPES = Object.freeze({
 
 const BACKGROUNDS = Object.freeze([
   { id:"classic", label:"CLASSIC GRID", cost:0 },
-  { id:"circuit", label:"CIRCUIT FOUNDRY", cost:0 },
-  { id:"orbit", label:"ORBITAL STATION", cost:0 },
-  { id:"abyss", label:"ABYSSAL NETWORK", cost:0 },
+  { id:"circuit", label:"CIRCUIT FOUNDRY", cost:40 },
+  { id:"abyss", label:"ABYSSAL NETWORK", cost:60 },
+  { id:"orbit", label:"ORBITAL STATION", cost:90 },
 ]);
 
 const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex"];

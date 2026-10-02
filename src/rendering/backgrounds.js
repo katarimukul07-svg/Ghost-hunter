@@ -3,8 +3,9 @@
   "use strict";
 
   const BACKGROUND_IDS = BACKGROUNDS.map(theme => theme.id);
+  const ownedBackgrounds = loadOwnedList("echoSteps.backgroundOwned", BACKGROUNDS.filter(theme => theme.cost === 0).map(theme => theme.id)).filter(id => BACKGROUND_IDS.includes(id));
   const savedBackground = ls("echoSteps.background");
-  let selectedBackground = BACKGROUND_IDS.includes(savedBackground) ? savedBackground : "classic";
+  let selectedBackground = ownedBackgrounds.includes(savedBackground) ? savedBackground : "classic";
   let previewBackground = selectedBackground;
 
   function fillRect(context, bounds, color) {
@@ -203,7 +204,7 @@
   el.shopHint.before(backgroundContainer);
 
   function selectBackground(id) {
-    if (!BACKGROUND_IDS.includes(id)) return;
+    if (!ownedBackgrounds.includes(id)) return;
     selectedBackground=id;
     previewBackground=id;
     ss("echoSteps.background",id);
@@ -212,7 +213,7 @@
   window.addEventListener("echosteps:save-changed", event => {
     if (event.detail.key !== "echoSteps.background") return;
     const saved = ls("echoSteps.background");
-    selectedBackground = BACKGROUND_IDS.includes(saved) ? saved : "classic";
+    selectedBackground = ownedBackgrounds.includes(saved) ? saved : "classic";
     previewBackground = selectedBackground;
   });
 
@@ -222,7 +223,7 @@
     renderShopCategory(
       backgroundContainer,
       BACKGROUNDS,
-      BACKGROUND_IDS,
+      ownedBackgrounds,
       "echoSteps.backgroundOwned",
       () => selectedBackground,
       selectBackground,
@@ -243,7 +244,7 @@
     backgroundContainer.classList.toggle("hidden",cat!=="background");
     if (cat==="background") {
       previewBackground=selectedBackground;
-      el.shopHint.textContent="Choose the environment behind the arena. All launch backgrounds are free.";
+      el.shopHint.textContent="Tap a background to preview it. Buy with coins to equip it.";
     }
   };
 
