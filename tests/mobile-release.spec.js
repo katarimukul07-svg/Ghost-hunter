@@ -187,3 +187,15 @@ test("tapping the prize collects it and tapping inside the exit clears the round
   },gate);
   await expect.poll(async () => (await page.evaluate(() => window.__echoStepsTest.snapshot())).round).toBe(2);
 });
+
+test("crossing the drag threshold does not jump the destination", async ({page}) => {
+ await page.goto('/?test=1'); await page.locator('#startBtn').click();
+ const shift=await page.evaluate(()=>{
+  const c=document.querySelector('#c');c.setPointerCapture=()=>{};
+  const send=(type,x)=>c.dispatchEvent(new PointerEvent(type,{pointerId:71,pointerType:'touch',clientX:x,clientY:300}));
+  send('pointerdown',180);send('pointermove',188);const a=window.__echoStepsTest.snapshot().pointer;
+  send('pointermove',189);const b=window.__echoStepsTest.snapshot().pointer;
+  return Math.hypot(a.x-b.x,a.y-b.y);
+ });
+ expect(shift).toBeLessThanOrEqual(2);
+});

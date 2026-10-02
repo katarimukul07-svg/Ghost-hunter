@@ -162,6 +162,16 @@ function drawPrize(){
   ctx.shadowBlur=0; ctx.strokeRect(-half,-half,half*2,half*2);
   ctx.restore();
 }
+// Eye marks identify a ghost even when its cosmetic color matches the exit.
+const reducedMotionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+function drawGhostBody(context,x,y,r,color,alpha){
+  glow(context,x,y,r,color,reducedMotionPreference.matches ? 1 : alpha);
+  context.save(); context.globalAlpha=1; context.fillStyle="#070b10";
+  for (const side of [-1,1]) {
+    context.beginPath(); context.arc(x+side*r*.30,y-r*.12,Math.max(1.4,r*.18),0,Math.PI*2); context.fill();
+  }
+  context.restore();
+}
 function drawGhosts(){
   for (let i=0;i<ghosts.length;i++){
     const g=ghosts[i], pos=ghostPos(g); if (!pos) continue;
@@ -170,7 +180,7 @@ function drawGhosts(){
     for (let k=1;k<p.length;k+=3) ctx.lineTo(p[k].x,p[k].y);
     ctx.stroke(); ctx.globalAlpha=1;
     const flick=(i===0 && sweep)?(0.45+0.4*Math.sin(performance.now()/40)):1;
-    glow(ctx,pos.x,pos.y,CFG.GHOST_R,selectedGhostSkin,flick);
+    drawGhostBody(ctx,pos.x,pos.y,CFG.GHOST_R,selectedGhostSkin,flick);
   }
 }
 function drawSweep(){
@@ -253,7 +263,7 @@ function drawToast(){
 function render(){
   ctx.clearRect(0,0,W,H);
   ctx.save();
-  if (shake>0.3) ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
+  if (shake>0.3 && !reducedMotionPreference.matches) ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
   drawGrid(); drawRoomBorder(); drawObstacles(); drawDepartureZone(); drawExit();
   drawGhosts(); drawPrize(); drawSweep();
   if (mode===STATE.PLAYING){ drawTrail(); drawPlayer(); drawHint(); }
@@ -305,7 +315,7 @@ function drawShopPreview(){
     glow(pctx, px, py, 8, playerColor, 1);
   } else if (previewTab==="ghost"){
     const flick = 0.55+0.4*Math.sin(performance.now()/180);
-    glow(pctx, cx, cy, 12, previewGhostColor, flick);
+    drawGhostBody(pctx, cx, cy, 12, previewGhostColor, flick);
   } else if (previewTab==="death"){
     previewDeathT += 1/60;
     if (previewDeathT > 1.3){ previewDeathT=0; runDeathFX(previewDeath, previewParticles, previewShockwaves, cx, cy, selectedGhostSkin); }
