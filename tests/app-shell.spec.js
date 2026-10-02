@@ -51,7 +51,7 @@ test("opens the shop without purchase or advertising controls", async ({ page })
   await page.goto("/");
   await page.getByRole("button", { name: "SHOP" }).click();
   await expect(page.getByRole("heading", { name: "SHOP" })).toBeVisible();
-  await expect(page.locator("#shopHint")).toHaveText("Choose the shape and color of your NODE.");
+  await expect(page.locator("#shopHint")).toHaveText("Tap a color to preview it. Buy with coins to equip it.");
 
   await expect(page.getByRole("button", { name: /BUY COINS|GET COINS|WATCH REWARDED AD/ })).toHaveCount(0);
   await expect(page.locator("body")).not.toContainText("Demo build");

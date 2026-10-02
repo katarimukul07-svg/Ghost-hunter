@@ -116,9 +116,22 @@
     <div class="swatches hidden" id="shopSound"></div>
     <div class="sub" id="shopHint">Tap an item to preview it. Owned items can be equipped instantly.</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button id="shopBuyBtn" type="button" class="hidden"></button>
       <button id="shopBackBtn">BACK</button>
     </div>
   </div>
+
+  <dialog id="shopConfirm" aria-labelledby="shopConfirmTitle">
+    <h2 id="shopConfirmTitle">CONFIRM PURCHASE</h2>
+    <p id="shopConfirmItem"></p>
+    <p id="shopConfirmCost"></p>
+    <p id="shopConfirmBalance"></p>
+    <p id="shopConfirmRemaining"></p>
+    <div class="shop-confirm-actions">
+      <button id="shopConfirmCancel" type="button" autofocus>CANCEL</button>
+      <button id="shopConfirmBuy" type="button">CONFIRM BUY</button>
+    </div>
+  </dialog>
 
   <div id="pauseScreen" class="overlay hidden">
     <h1>PAUSED</h1>

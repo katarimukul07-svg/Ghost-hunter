@@ -114,3 +114,9 @@
     .hud-stat { flex-direction:column; align-items:flex-start; gap:2px; padding:4px 6px; }
     .hud-stat .label { font-size:8px; }
   }
+
+#shopBuyBtn:disabled { opacity:.55; cursor:default; box-shadow:none; }
+
+#shopConfirm { background:var(--bg); color:var(--ink); border:1px solid var(--sweep); border-radius:12px; padding:24px; max-width:min(360px, calc(100vw - 40px)); box-sizing:border-box; text-align:center; }
+#shopConfirm::backdrop { background:rgba(0,0,0,.8); }
+.shop-confirm-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }

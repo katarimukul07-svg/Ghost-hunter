@@ -42,6 +42,41 @@ function refreshCoinLine(){
 }
 function applyColorUI(){ el.hintDot.style.color = playerColor; }
 function applyGhostUI(){ if (el.hintGhost) el.hintGhost.style.color = selectedGhostSkin; }
+let shopPurchase = null;
+function refreshShopBuy(){
+  const choice = shopPurchase;
+  const owned = !choice || choice.ownedArr.includes(choice.item.id);
+  el.shopBuy.classList.toggle("hidden", owned);
+  el.shopBuy.disabled = owned || coins < choice.item.cost;
+  if (!owned) el.shopBuy.textContent = coins >= choice.item.cost
+    ? "BUY " + choice.item.label + " · " + choice.item.cost + " COINS"
+    : "NEED " + (choice.item.cost - coins) + " MORE COINS";
+}
+const shopConfirm = document.getElementById("shopConfirm");
+let pendingShopPurchase = null;
+shopConfirm.addEventListener("cancel", () => { pendingShopPurchase = null; });
+document.getElementById("shopConfirmCancel").addEventListener("click", () => { pendingShopPurchase = null; shopConfirm.close(); });
+el.shopBuy.addEventListener("click", () => {
+  const choice = shopPurchase;
+  if (!choice || choice.ownedArr.includes(choice.item.id) || coins < choice.item.cost) return;
+  pendingShopPurchase = choice;
+  document.getElementById("shopConfirmItem").textContent = choice.item.label;
+  document.getElementById("shopConfirmCost").textContent = "Coins used: " + choice.item.cost;
+  document.getElementById("shopConfirmBalance").textContent = "Current balance: " + coins + " coins";
+  document.getElementById("shopConfirmRemaining").textContent = "Balance after purchase: " + (coins - choice.item.cost) + " coins";
+  shopConfirm.showModal();
+});
+document.getElementById("shopConfirmBuy").addEventListener("click", () => {
+  const choice = pendingShopPurchase;
+  pendingShopPurchase = null;
+  shopConfirm.close();
+  if (!choice || choice !== shopPurchase || choice.ownedArr.includes(choice.item.id) || coins < choice.item.cost) return;
+  coins -= choice.item.cost; saveCoins();
+  choice.ownedArr.push(choice.item.id); saveOwnedList(choice.ownedKey, choice.ownedArr);
+  choice.setSel(choice.item.id);
+  haptic("medium"); refreshShopCoinLine(); buildShopAll(); refreshShopBuy();
+  el.shopHint.textContent = choice.item.label + " purchased and equipped.";
+});
 function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch, previewCat){
   container.innerHTML = "";
   items.forEach(item => {
@@ -49,6 +84,8 @@ function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel
     const wrap = document.createElement("div"); wrap.className = "skin";
     const b = document.createElement("button");
     b.className = (swatch?"swatch":"chip") + (item.id===getSel()?" sel":"") + (owned?"":" locked");
+    b.setAttribute("aria-label", item.label);
+    b.setAttribute("aria-pressed", String(item.id===getSel()));
     if (swatch) b.style.background = item.id; else b.textContent = item.label;
     const price = document.createElement("div"); price.className = "price";
     price.textContent = owned ? (item.id===getSel() ? "\u2713" : "") : ("\u25C6" + item.cost);
@@ -57,16 +94,12 @@ function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel
       if (ownedArr.includes(item.id)) {                          // already owned -> select
         setSel(item.id);
         renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch, previewCat);
-      } else if (coins >= item.cost) {                           // buy it
-        coins -= item.cost; saveCoins();
-        ownedArr.push(item.id); saveOwnedList(ownedKey, ownedArr);
-        setSel(item.id);
-        haptic("medium");
-        refreshShopCoinLine();
-        renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel, swatch, previewCat);
-      } else {                                                   // can't afford -> flash price red
-        price.style.color = C.ghost; setTimeout(()=>{ price.style.color = ""; }, 450);
       }
+      shopPurchase = { item, ownedArr, ownedKey, setSel };
+      refreshShopBuy();
+      el.shopHint.textContent = ownedArr.includes(item.id)
+        ? item.label + " equipped."
+        : "Previewing " + item.label + ". Buy it for " + item.cost + " coins to equip it.";
     });
     wrap.appendChild(b);
     if (swatch && item.label){
@@ -99,6 +132,8 @@ function refreshShopCoinLine(){
   el.shopCoinLine.textContent = "\u25C6 " + coins + " coins";
 }
 function setShopTab(cat){
+  shopConfirm.close(); pendingShopPurchase = null;
+  shopPurchase = null; refreshShopBuy();
   const map = { colors:el.shopColors, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath, sound:el.shopSound };
   Object.keys(map).forEach(k => map[k].classList.toggle("hidden", k!==cat));
   el.shopTabs.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.cat===cat));
@@ -108,7 +143,7 @@ function setShopTab(cat){
   else if (cat==="ghost") previewGhostColor = selectedGhostSkin;
   else if (cat==="death") setPreviewItem("death", selectedDeathFX);
   const hints = {
-    colors:"Choose the shape and color of your NODE.",
+    colors:"Tap a color to preview it. Buy with coins to equip it.",
     trail:"Preview the trail that follows your movement.",
     ghost:"Change how your dangerous echoes appear.",
     death:"Preview the effect shown when an echo catches you.",
@@ -123,6 +158,8 @@ function openShop(tab){
   el.shop.classList.remove("hidden");
 }
 function closeShop(){
+  shopConfirm.close(); pendingShopPurchase = null;
+  shopPurchase = null; refreshShopBuy();
   el.shop.classList.add("hidden");
   if (shopReturnTo === "pause") el.pause.classList.remove("hidden");
   else { el.start.classList.remove("hidden"); refreshCoinLine(); }
@@ -231,6 +268,7 @@ document.addEventListener("visibilitychange", ()=>{ if (document.hidden) pauseFo
 window.addEventListener("echosteps:app-state", event => { if (!event.detail.isActive) pauseForInterruption(); });
 window.addEventListener("echosteps:back", ()=>{
   if (window.EchoStepsCloud && window.EchoStepsCloud.close()) return;
+  if (shopConfirm.open) { pendingShopPurchase = null; shopConfirm.close(); return; }
   if (!el.shop.classList.contains("hidden")) { closeShop(); return; }
   if (!el.pause.classList.contains("hidden") || mode===STATE.OVER) { showStart(); return; }
   if (mode===STATE.PLAYING) { pauseForInterruption(); return; }
