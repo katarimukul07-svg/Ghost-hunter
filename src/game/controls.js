@@ -60,10 +60,8 @@ el.shopBuy.addEventListener("click", () => {
   const choice = shopPurchase;
   if (!choice || choice.ownedArr.includes(choice.item.id) || coins < choice.item.cost) return;
   pendingShopPurchase = choice;
-  document.getElementById("shopConfirmItem").textContent = choice.item.label;
-  document.getElementById("shopConfirmCost").textContent = "Coins used: " + choice.item.cost;
-  document.getElementById("shopConfirmBalance").textContent = "Current balance: " + coins + " coins";
-  document.getElementById("shopConfirmRemaining").textContent = "Balance after purchase: " + (coins - choice.item.cost) + " coins";
+  document.getElementById("shopConfirmItem").textContent = "Buy " + choice.item.label + "?";
+  document.getElementById("shopConfirmCost").textContent = choice.item.cost + " coins";
   shopConfirm.showModal();
 });
 document.getElementById("shopConfirmBuy").addEventListener("click", () => {
