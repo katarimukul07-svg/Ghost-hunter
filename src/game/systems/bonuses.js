@@ -70,7 +70,7 @@
     }
     burst(particles, bonus.x, bonus.y, BONUS_TYPES[bonus.type].color, 22);
     shockwaves.push({ x:bonus.x, y:bonus.y, t:0 });
-    Sound.pickup();
+    Sound.bonus();
     haptic("medium");
   }
 

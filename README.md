@@ -2,6 +2,12 @@
 
 A minimalist arcade survival game where every completed route becomes a lethal echo. Collect the prize, escape, and survive your own history until the Garbage Collector clears old paths.
 
+## Audio
+The game includes an original procedural A-minor arcade score at 112 BPM.
+Additional layers enter at rounds 5 and 10. The sound tab has independent,
+locally saved music/effects sliders; the HUD mute still silences both.
+See [audio POC evidence](docs/AUDIO_POC.md) for checks and device listening gates.
+
 ## Current status
 
 The repository contains the web game plus Capacitor 8 projects for Android and iOS. Version 1.0 is in release-candidate preparation and still requires protected CI, real-device beta testing, signing, and store-owner approval before submission.
