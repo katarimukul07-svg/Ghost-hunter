@@ -50,12 +50,16 @@ const Sound = (() => {
     duck();
     notes.forEach(([f,d,delay=0,glide])=>voice(f,d,type,vol,effects,ctx.currentTime+delay,glide));
   }
+  // iOS Capacitor returns URLResponse (not HTTPURLResponse) for bundled media.
+  // WebKit exposes a successful local response with status 0 and ok=false.
+  const acceptsMusicResponse=(response,source)=>response.ok ||
+    (response.status===0 && new URL(source,location.href).protocol==="capacitor:");
   async function loadTrack(id){
     if(buffers.has(id))return buffers.get(id);
     const track=MUSIC_TRACKS.find(t=>t.id===id);
     const pending=(async()=>{
       let response;
-      try{response=await fetch(track.src);if(!response.ok)throw new Error("Music unavailable");}
+      try{response=await fetch(track.src);if(!acceptsMusicResponse(response,track.src))throw new Error("Music unavailable");}
       catch(error){response=typeof caches!=="undefined"?await caches.match(track.src):null;if(!response)throw error;}
       return ctx.decodeAudioData(await response.arrayBuffer());
     })();
@@ -125,6 +129,7 @@ const Sound = (() => {
   };
   if(new URLSearchParams(location.search).has("test"))
     Object.defineProperty(window,"__ghostAudioTest",{value:{
+      acceptsMusicResponse,
       snapshot:()=>({musicActive:musicSource!==null,trackId,running:timer!==null,voices:voices.size,intensity,step,muted,levels:api.levels()}),
     }});
   return api;

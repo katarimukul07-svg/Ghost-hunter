@@ -95,3 +95,18 @@ for(const width of [320,390])test(`settings remain usable at ${width}px`,async({
   expect(b.x).toBeGreaterThanOrEqual(0);expect(b.x+b.width).toBeLessThanOrEqual(width);expect(b.y+b.height).toBeLessThanOrEqual(568);
   await page.locator('#settingsBackBtn').click();await expect(page.locator('#startScreen')).toBeVisible();
 });
+
+test("bundled iOS media status zero is accepted without accepting HTTP failures",async({page})=>{
+  await page.goto("/?test=1");
+  const results=await page.evaluate(()=>{
+    const accepts=window.__ghostAudioTest.acceptsMusicResponse;
+    return [
+      accepts({ok:false,status:0},"capacitor://localhost/assets/music/echo-run.mp3"),
+      accepts({ok:false,status:0},"https://localhost/assets/music/echo-run.mp3"),
+      accepts({ok:false,status:404},"capacitor://localhost/assets/music/echo-run.mp3"),
+      accepts({ok:false,status:500},"https://localhost/assets/music/echo-run.mp3"),
+      accepts({ok:true,status:200},"https://localhost/assets/music/echo-run.mp3"),
+    ];
+  });
+  expect(results).toEqual([true,false,false,false,true]);
+});
