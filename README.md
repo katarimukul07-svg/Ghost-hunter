@@ -167,3 +167,5 @@ block direct routes. The tutorial explains both controls.
 Ghost path lines are 4 pixels wide (previously 2), including during collector sweeps.
 
 The main menu now uses a short goal summary and playful tagline instead of the longer NODE/echo explanation; detailed rules stay in How to Play.
+
+Current iOS distribution evidence and remaining owner gates: [2 October release handoff](docs/release/RELEASE_HANDOFF_2026-10-02.md).
