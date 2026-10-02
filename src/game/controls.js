@@ -135,6 +135,7 @@ function setShopTab(cat){
   const map = { colors:el.shopColors, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath, sound:el.shopSound };
   Object.keys(map).forEach(k => map[k].classList.toggle("hidden", k!==cat));
   el.shopTabs.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.cat===cat));
+  document.getElementById("audioLevels").classList.toggle("hidden",cat!=="sound");
   previewTab = cat;
   if (cat==="colors") previewColor = playerColor;
   else if (cat==="trail") previewTrail = selectedTrail;
@@ -204,7 +205,7 @@ function retryRun(){
   el.over.classList.add("hidden");
   el.hud.classList.remove("hidden");
   haptic("medium");
-  Sound.unlock(); Sound.startAmbient();
+  Sound.setRound(round); Sound.unlock(); Sound.startAmbient();
 }
 
 for (const id of ["startBtn", "restartBtn", "retryBtn", "pauseRestartBtn"])
@@ -273,3 +274,17 @@ window.addEventListener("echosteps:back", ()=>{
   if (window.EchoStepsNative) window.EchoStepsNative.exitApp();
 });
 "use strict";
+
+/* Independent levels live in the sound tab to keep the main menu compact. */
+const audioLevels=document.getElementById("audioLevels");
+const musicSlider=document.getElementById("musicLevel");
+const effectsSlider=document.getElementById("effectsLevel");
+musicSlider.value=Math.round(Sound.levels().music*100);
+effectsSlider.value=Math.round(Sound.levels().effects*100);
+for(const slider of [musicSlider,effectsSlider]) slider.addEventListener("input",()=>{
+  Sound.setLevels(Number(musicSlider.value)/100,Number(effectsSlider.value)/100);
+});
+
+window.addEventListener("blur",()=>Sound.stopAmbient());
+document.addEventListener("visibilitychange",()=>{if(document.hidden) Sound.stopAmbient();});
+window.addEventListener("echosteps:app-state",e=>{if(!e.detail.isActive) Sound.stopAmbient();});

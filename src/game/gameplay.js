@@ -22,7 +22,7 @@ function resetGame() {
   el.over.classList.add("hidden");
   el.pause.classList.add("hidden");
   el.hud.classList.remove("hidden");
-  Sound.unlock(); Sound.startAmbient();
+  Sound.setRound(round); Sound.unlock(); Sound.startAmbient();
 }
 function trimPathAtExit(path){
   const pad = CFG.GHOST_R + 6;
@@ -68,13 +68,13 @@ function completeRound() {
       : { text:"\u26A0 NEW OBSTACLE!", t:0 };
   }
   reserveSafeCorridors();
-  spawnPrize(); Sound.complete();
+  spawnPrize(); Sound.setRound(round); Sound.complete();
 }
 function startDeath() {
   mode = STATE.DYING; deathTimer = 0; shake = 16;
   playDeathFX(player.x, player.y);
   haptic("heavy");
-  Sound.death(); Sound.stopAmbient();
+  Sound.death();
 }
 function finalizeDeath() {
   mode = STATE.OVER;
