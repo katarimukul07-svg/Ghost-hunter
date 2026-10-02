@@ -1,0 +1,38 @@
+{
+  "candidateCommit": "acf6df624cbd860f491e60b208c5fb8869efc17f",
+  "date": "2026-10-01",
+  "browserValidation": {
+    "staticAndBackend": "passed",
+    "browserPassed": 104,
+    "browserSkipped": 1,
+    "focusedAcceptancePassed": 42,
+    "offlineScope": "disconnect after assets load; close and reopen browser using the same temporary persistent profile; not iPhone airplane-mode cold launch"
+  },
+  "nativeProbe": {
+    "device": "iPhone 14 Pro",
+    "os": "26.6 (23G71)",
+    "durationSeconds": 30.862155,
+    "template": "Activity Monitor",
+    "target": "native App wrapper only",
+    "activityState": "unobserved; no controlled gameplay input",
+    "samples": 20,
+    "physicalFootprintBytes": {
+      "first": 12452736,
+      "last": 12092288,
+      "min": 12092288,
+      "max": 12534656
+    },
+    "cpuPercentMaxSample": 0.786598424,
+    "thermalState": "Nominal",
+    "acceptance": "profiling attachment works; sustained gameplay performance remains pending",
+    "limitations": [
+      "excludes WebKit content/rendering processes",
+      "no FPS, frame pacing or JS heap measurement",
+      "no 20-minute gameplay or temperature claim"
+    ]
+  },
+  "sourceExportSha256": {
+    "native-wrapper-activity.xml": "33989ba21f38719781b4168e0b124423f7a56d7dd59d65fcdb6c49c11fb3696a",
+    "native-thermal.xml": "f717cd2550351966007628e89e523474c3370dcfc258d82e4db43fa01527775d"
+  }
+}

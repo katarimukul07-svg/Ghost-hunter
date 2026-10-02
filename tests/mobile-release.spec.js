@@ -199,3 +199,52 @@ test("crossing the drag threshold does not jump the destination", async ({page})
  });
  expect(shift).toBeLessThanOrEqual(2);
 });
+
+test('offline play and purchases persist after a browser process restart', async ({ playwright, browserName }, testInfo) => {
+  const use = testInfo.project.use;
+  const options = { viewport:use.viewport, deviceScaleFactor:use.deviceScaleFactor,
+    isMobile:use.isMobile, hasTouch:use.hasTouch, userAgent:use.userAgent, headless:true };
+  const profile = testInfo.outputPath('offline-profile');
+  let context = await playwright[browserName].launchPersistentContext(profile, options);
+  try {
+    const page = await context.newPage();
+    const errors = collectPageErrors(page);
+    await page.addInitScript(() => {
+      localStorage.setItem('echoSteps.tutorial.v1','complete');
+      localStorage.setItem('echoSteps.coins','50');
+    });
+    await page.goto('http://127.0.0.1:4173/?test=1');
+    // Native assets are bundled. Disconnect only after loading the web harness.
+    await context.setOffline(true);
+    await page.locator('#shopBtn').click();
+    await page.locator('#shopColors').getByRole('button',{name:'Pulse',exact:true}).click();
+    await page.locator('#shopBuyBtn').click();
+    await page.locator('#shopConfirmCancel').click();
+    expect(await page.evaluate(()=>localStorage.getItem('echoSteps.coins'))).toBe('50');
+    await page.locator('#shopBuyBtn').click();
+    await page.locator('#shopConfirmBuy').click();
+    expect(await page.evaluate(()=>localStorage.getItem('echoSteps.coins'))).toBe('35');
+    const saved = await page.evaluate(()=>Object.fromEntries(Object.entries(localStorage).filter(([k])=>k.startsWith('echoSteps.'))));
+    await page.locator('#shopBackBtn').click();
+    await page.locator('#startBtn').click();
+    const before = await page.evaluate(()=>window.__echoStepsTest.snapshot().round);
+    await page.evaluate(()=>window.__echoStepsTest.step(30));
+    expect((await page.evaluate(()=>window.__echoStepsTest.snapshot())).round).toBe(before);
+    await expect(page.locator('#hud')).toBeVisible();
+    expect(errors).toEqual([]);
+    await context.close();
+    context = await playwright[browserName].launchPersistentContext(profile, options);
+    const reopened = await context.newPage();
+    await reopened.goto('http://127.0.0.1:4173/');
+    await reopened.locator('#shopBtn').click();
+    await expect(reopened.locator('#shopCoinLine')).toContainText('35 coins');
+    await expect(reopened.locator('#shopColors').getByRole('button',{name:'Pulse',exact:true})).toHaveAttribute('aria-pressed','true');
+    const restored = await reopened.evaluate(()=>Object.fromEntries(Object.entries(localStorage).filter(([k])=>k.startsWith('echoSteps.'))));
+    // A restart preserves currency, ownership and equipment; run state is transient.
+    for (const key of ['echoSteps.coins','echoSteps.color','echoSteps.unlocked'])
+      expect(restored[key],key).toBe(saved[key]);
+    expect(restored['echoSteps.coins']).toBe('35');
+    expect(restored['echoSteps.color']).toBe('#3d7bff');
+    expect(restored['echoSteps.unlocked'].split(',')).toContain('#3d7bff');
+  } finally { await context.close(); }
+});
