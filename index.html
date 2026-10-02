@@ -1,4 +1,4 @@
-<!-- Echo Steps: Garbage Collector — by katarimukul07-svg -->
+<!-- Ghost Hunter — by katarimukul07-svg -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,12 +10,12 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="assets/icon-192.png" />
 <link rel="apple-touch-icon" href="assets/icon-192.png" />
-<title>Echo Steps: Garbage Collector</title>
+<title>Ghost Hunter</title>
 <link rel="stylesheet" href="styles/game.css">
 </head>
 <body>
 <div id="stage">
-  <canvas id="c" role="application" aria-label="Echo Steps game arena"></canvas>
+  <canvas id="c" role="application" aria-label="Ghost Hunter game arena"></canvas>
 
   <div id="hud" class="hidden">
     <div class="hud-stats">
@@ -26,7 +26,7 @@
         <span class="value" id="hudCoins">0</span><span class="label">COINS</span>
       </div>
       <div class="hud-stat" style="border-left-color:var(--sweep)">
-        <span class="value" id="hudGc">10</span><span class="label">GC IN</span>
+        <span class="value" id="hudGc">10</span><span class="label">SWEEP IN</span>
       </div>
     </div>
     <div style="display:flex;gap:6px">
@@ -36,7 +36,7 @@
   </div>
 
   <div id="startScreen" class="overlay">
-    <h1>ECHO STEPS</h1>
+    <h1>GHOST HUNTER</h1>
     <div class="sub">Your past wants a rematch.</div>
     <div class="sub" id="coinLine" style="color:var(--prize)">&#9670; 0 coins &middot; best 0 rounds</div>
     <div class="menu">

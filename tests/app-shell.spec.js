@@ -8,22 +8,22 @@ test("first launch tutorial is automatic, skippable, remembered, and replayable"
 
   await page.goto("/");
   await expect(page.locator("#tutorialScreen")).toBeVisible();
-  await expect(page.getByRole("heading", { name:"YOU ARE THE BLUE NODE" })).toBeVisible();
+  await expect(page.getByRole("heading", { name:"YOU ARE THE BLUE DOT" })).toBeVisible();
   await expect(page.locator("#tutorialKicker")).toHaveText("STEP 1 OF 7");
   await expect(page.getByRole("button", { name:"SKIP" })).toBeVisible();
 
   await page.getByRole("button", { name:"NEXT" }).click();
-  await expect(page.getByRole("heading", { name:"COLLECT THE YELLOW TARGET" })).toBeVisible();
+  await expect(page.getByRole("heading", { name:"COLLECT THE YELLOW COIN" })).toBeVisible();
 
   await page.getByRole("button", { name:"SKIP" }).click();
-  await expect(page.getByRole("heading", { name:"ECHO STEPS" })).toBeVisible();
+  await expect(page.getByRole("heading", { name:"GHOST HUNTER" })).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("echoSteps.tutorial.v1"))).toBe("complete");
 
   await page.reload();
   await expect(page.locator("#tutorialScreen")).toBeHidden();
   await page.getByRole("button", { name:"Open tutorial" }).click();
   await expect(page.locator("#tutorialScreen")).toBeVisible();
-  await expect(page.getByRole("heading", { name:"YOU ARE THE BLUE NODE" })).toBeVisible();
+  await expect(page.getByRole("heading", { name:"YOU ARE THE BLUE DOT" })).toBeVisible();
   await expect(page.getByRole("button", { name:"CLOSE" })).toBeVisible();
 
   expect(errors).toEqual([]);
@@ -33,7 +33,7 @@ test("loads the menu and starts a run without runtime errors", async ({ page }) 
   const errors = collectPageErrors(page);
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "ECHO STEPS" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "GHOST HUNTER" })).toBeVisible();
   await expect(page.locator("#coinLine")).toContainText("coins");
 
   await page.getByRole("button", { name: "PLAY" }).click();
@@ -70,7 +70,7 @@ test("pauses for native lifecycle interruption and handles native Back", async (
   await expect(page.getByRole("heading", { name: "PAUSED" })).toBeVisible();
 
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("echosteps:back")));
-  await expect(page.getByRole("heading", { name: "ECHO STEPS" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "GHOST HUNTER" })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -82,7 +82,7 @@ test("reloads offline after the install cache is ready", async ({ page, context 
   await context.setOffline(true);
   try {
     await page.reload();
-    await expect(page.getByRole("heading", { name: "ECHO STEPS" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "GHOST HUNTER" })).toBeVisible();
   } finally {
     await context.setOffline(false);
   }

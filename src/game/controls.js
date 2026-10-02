@@ -86,7 +86,7 @@ function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel
     b.setAttribute("aria-pressed", String(item.id===getSel()));
     if (swatch) b.style.background = item.id; else b.textContent = item.label;
     const price = document.createElement("div"); price.className = "price";
-    price.textContent = owned ? (item.id===getSel() ? "\u2713" : "") : ("\u25C6" + item.cost);
+    price.textContent = owned ? (item.id===getSel() ? "EQUIPPED" : "OWNED") : ("\u25C6" + item.cost);
     b.addEventListener("click", () => {
       setPreviewItem(previewCat, item.id);                       // always preview what's tapped
       if (ownedArr.includes(item.id)) {                          // already owned -> select
@@ -143,7 +143,7 @@ function setShopTab(cat){
   const hints = {
     colors:"Tap a color to preview it. Buy with coins to equip it.",
     trail:"Preview the trail that follows your movement.",
-    ghost:"Change how your dangerous echoes appear.",
+    ghost:"Change how your ghosts appear.",
     death:"Preview the effect shown when an echo catches you.",
     sound:"Tap a sound pack to hear and equip it for free.",
   };
@@ -246,10 +246,10 @@ document.getElementById("shareBtn").addEventListener("click", async ()=>{
   const url=location.href;
   // The active HUD round is not completed yet; share the same score as results.
   const completedRounds=round-1;
-  const text=playerName+" completed "+completedRounds+" "+(completedRounds===1?"round":"rounds")+" in Echo Steps! Can you beat it?";
+  const text=playerName+" completed "+completedRounds+" "+(completedRounds===1?"round":"rounds")+" in Ghost Hunter! Can you beat it?";
   const b=document.getElementById("shareBtn");
   try {
-    if (navigator.share){ await navigator.share({ title:"Echo Steps", text, url }); return; }
+    if (navigator.share){ await navigator.share({ title:"Ghost Hunter", text, url }); return; }
     await navigator.clipboard.writeText(text+" "+url);
     const old=b.textContent; b.textContent="COPIED!"; setTimeout(()=>{ b.textContent=old; },1500);
   } catch(e){}

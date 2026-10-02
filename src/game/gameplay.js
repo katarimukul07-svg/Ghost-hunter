@@ -200,7 +200,7 @@ function update(dt) {
       collectCoin(prize.x, prize.y);            // +1 coin (currency)
       haptic("medium");
       hasPrize=true; prize=null; Sound.pickup();
-      toast = { text:"TARGET SECURED — REACH THE EXIT", t:0 };
+      toast = { text:"COIN COLLECTED — FIND THE EXIT", t:0 };
     }
   }
   if (hasPrize && player.x>exit.x && player.x<exit.x+exit.w && player.y>exit.y && player.y<exit.y+exit.h)

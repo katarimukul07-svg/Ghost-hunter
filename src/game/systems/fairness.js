@@ -343,7 +343,7 @@
       const removedByBase = ghostCountBefore - ghosts.length;
       const remaining = Math.max(0, Math.min(sweepRemove, ghostCountBefore) - removedByBase);
       if (remaining) ghosts.splice(0, remaining);
-      toast = { text:"♻ MEMORY CLEANED — " + sweepRemove + " ECHO" + (sweepRemove === 1 ? "" : "ES") + " CLEARED", t:0 };
+      toast = { text:"♻ MEMORY CLEANED — " + sweepRemove + " GHOST" + (sweepRemove === 1 ? "" : "S") + " CLEARED", t:0 };
     }
   };
 
@@ -359,7 +359,7 @@
       ctx.stroke(); ctx.globalAlpha = 1;
       const targeted = i < collectCount;
       const flick = targeted ? (0.35 + 0.55 * Math.sin(performance.now() / 38 + i)) : 1;
-      glow(ctx, pos.x, pos.y, CFG.GHOST_R, selectedGhostSkin, flick);
+      drawGhostBody(ctx, pos.x, pos.y, CFG.GHOST_R, selectedGhostSkin, flick);
     }
   };
 
@@ -377,11 +377,12 @@
     if (e.pointerType !== "touch" || mode !== STATE.PLAYING || paused ||
         !pointer.active || e.pointerId !== steeringPointerId) return;
     const p = toLocal(e);
-    if (e.type === "pointerdown") touchGesture = { id:e.pointerId, x:p.x, y:p.y, dragging:false };
+    if (e.type === "pointerdown") touchGesture = { id:e.pointerId, x:p.x, y:p.y, offset:0 };
     if (!touchGesture || touchGesture.id !== e.pointerId) return;
-    if (Math.hypot(p.x-touchGesture.x, p.y-touchGesture.y) > 8) touchGesture.dragging = true;
+    const travel = Math.hypot(p.x-touchGesture.x, p.y-touchGesture.y);
+    touchGesture.offset = Math.max(touchGesture.offset, Math.min(CFG.TOUCH_OFFSET_PX, Math.max(0, travel - 8)));
     // Taps target the visible object exactly; offset only a deliberate drag.
-    const offset = touchGesture.dragging ? CFG.TOUCH_OFFSET_PX : 0;
+    const offset = touchGesture.offset;
     pointer.x = clamp(p.x, room.x + CFG.PLAYER_R, room.x + room.w - CFG.PLAYER_R);
     pointer.y = clamp(p.y - offset, room.y + CFG.PLAYER_R, room.y + room.h - CFG.PLAYER_R);
   }

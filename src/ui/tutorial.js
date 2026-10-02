@@ -6,16 +6,16 @@
   const steps = [
     {
       kicker:"STEP 1 OF 7",
-      title:"YOU ARE THE BLUE NODE",
-      body:"Tap a spot to move your NODE there, or drag to steer continuously. While dragging, the NODE stays above your finger so you can see it.",
+      title:"YOU ARE THE BLUE DOT",
+      body:"Tap a spot to move your dot there, or drag to steer continuously. While dragging, the dot stays above your finger so you can see it.",
       visual:"move",
       accent:"#29e0ff",
       note:"Keep moving. A stationary packet is an easy target.",
     },
     {
       kicker:"STEP 2 OF 7",
-      title:"COLLECT THE YELLOW TARGET",
-      body:"Tap the yellow diamond or drag your NODE into it. Collecting the target unlocks the exit for that round.",
+      title:"COLLECT THE YELLOW COIN",
+      body:"Tap the yellow diamond or drag your dot into it. Collecting the coin unlocks the exit for that round.",
       visual:"target",
       accent:"#fff15c",
       note:"The yellow diamond is the objective—not an enemy.",
@@ -23,7 +23,7 @@
     {
       kicker:"STEP 3 OF 7",
       title:"ESCAPE THROUGH GREEN",
-      body:"After collecting the target, tap inside the glowing green gate or drag into it to clear the round. The exit can relocate every five rounds.",
+      body:"After collecting the coin, tap inside the glowing green gate or drag into it to clear the round. The exit can relocate every five rounds.",
       visual:"exit",
       accent:"#39ff9e",
       note:"The active exit and its relocation handoff are protected zones.",
@@ -38,8 +38,8 @@
     },
     {
       kicker:"STEP 5 OF 7",
-      title:"WATCH THE GC COUNTDOWN",
-      body:"GC IN shows when the Garbage Collector will sweep. At every tenth completed round, it clears some of the oldest ghosts.",
+      title:"WATCH THE SWEEP COUNTDOWN",
+      body:"SWEEP IN counts down to a ghost-clearing sweep. At every tenth completed round, it clears some of the oldest ghosts.",
       visual:"gc",
       accent:"#c66bff",
       note:"Use the sweep timing to reclaim dangerous parts of the arena.",
@@ -55,7 +55,7 @@
     {
       kicker:"STEP 7 OF 7",
       title:"SURVIVE YOUR OWN HISTORY",
-      body:"Collect the target, reach the exit, avoid echoes, and use bonuses or GC sweeps when the grid becomes crowded.",
+      body:"Collect the coin, reach the exit, avoid ghosts, and use bonuses or sweeps when the grid becomes crowded.",
       visual:"ready",
       accent:"#29e0ff",
       note:"You are ready. Each run teaches you a safer route.",

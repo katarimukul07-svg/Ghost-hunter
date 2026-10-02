@@ -175,7 +175,7 @@
     previewContext.fillText("EXIT",w*.52,h*.14);
 
     drawSkin(previewContext,w*.22,h*.72,9,playerColor,playerStyle,1,performance.now()/1000);
-    glow(previewContext,w*.74,h*.34,7,selectedGhostSkin,1);
+    drawGhostBody(previewContext,w*.74,h*.34,7,selectedGhostSkin,1);
 
     previewContext.translate(w*.78,h*.76);
     previewContext.rotate(Math.PI/4);

@@ -1,4 +1,4 @@
-# Echo Steps: Garbage Collector
+# Ghost Hunter
 
 A minimalist arcade survival game where every completed route becomes a lethal echo. Collect the prize, escape, and survive your own history until the Garbage Collector clears old paths.
 
@@ -36,11 +36,13 @@ failures before the fixes; afterward 55 backend and 85 browser tests passed
 locally. Safe-area tests inject inset values and lifecycle tests simulate events;
 they do not replace physical-device acceptance.
 
+UI audit follow-up: clearer labels and ownership states, brighter secondary text, green Buy/red Cancel, consistent Ghost Hunter display names, and a smooth tap-to-drag transition. [Audit evidence](docs/release/UI_AUDIT.md) records browser measurements and the remaining physical-device and player acceptance gates.
+
 ## Controls
 
-- Desktop: click and drag to steer the node.
-- Mobile: drag with one finger; the control target is offset above the finger for visibility.
-- Collect the pulsing yellow diamond, then enter the green exit. Red flickering circles are ghosts.
+- Desktop: click or drag to steer the dot.
+- Mobile: tap a destination or drag with one finger. The target gradually moves above the finger during a drag for visibility.
+- Collect the pulsing yellow diamond, then enter the green exit. Circles with eye marks are ghosts; their purchased skin may change their color.
 - Avoid obstacles and the echoes replaying earlier routes.
 
 ## Core systems

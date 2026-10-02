@@ -1,6 +1,6 @@
 {
-  "name": "Echo Steps: Garbage Collector",
-  "short_name": "Echo Steps",
+  "name": "Ghost Hunter",
+  "short_name": "Ghost Hunter",
   "description": "Outrun the echoes created by your own past routes.",
   "start_url": "./",
   "scope": "./",

@@ -1,0 +1,78 @@
+{
+  "scope": "Mac browser emulation, synthetic simulation and rendering; NOT physical iPhone FPS, battery, survival or retention evidence",
+  "createdAt": "2026-10-02T03:09:33.908Z",
+  "engines": [
+    {
+      "name": "chromium",
+      "onePixelDragTransitionPx": 1.4142135623730951,
+      "idleTenSimulatedMinutesAddedSamples": 36000,
+      "rows": [
+        {
+          "round": 1,
+          "ghosts": 0,
+          "currentSamples": 1200,
+          "retainedGhostSamples": 0,
+          "renderMedianMs": 0,
+          "renderP95Ms": 0.10000000055879354
+        },
+        {
+          "round": 30,
+          "ghosts": 22,
+          "currentSamples": 1200,
+          "retainedGhostSamples": 26400,
+          "renderMedianMs": 0.20000000018626451,
+          "renderP95Ms": 0.39999999944120646
+        },
+        {
+          "round": 100,
+          "ghosts": 84,
+          "currentSamples": 1200,
+          "retainedGhostSamples": 100800,
+          "renderMedianMs": 0.7000000001862645,
+          "renderP95Ms": 0.8000000007450581
+        }
+      ]
+    },
+    {
+      "name": "webkit",
+      "onePixelDragTransitionPx": 1.4142135623730951,
+      "idleTenSimulatedMinutesAddedSamples": 36000,
+      "rows": [
+        {
+          "round": 1,
+          "ghosts": 0,
+          "currentSamples": 1200,
+          "retainedGhostSamples": 0,
+          "renderMedianMs": 0,
+          "renderP95Ms": 0
+        },
+        {
+          "round": 30,
+          "ghosts": 22,
+          "currentSamples": 1200,
+          "retainedGhostSamples": 26400,
+          "renderMedianMs": 2,
+          "renderP95Ms": 3
+        },
+        {
+          "round": 100,
+          "ghosts": 84,
+          "currentSamples": 1200,
+          "retainedGhostSamples": 100800,
+          "renderMedianMs": 7,
+          "renderP95Ms": 8
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "baseCommit": "286bffd29f9f14b8b585c1387b9b5b3b3f88be61",
+    "phase": "audit working tree",
+    "sha256": {
+      "index.html": "a503d26a44f902f3158beed59005b424e03e5616a283f4e39e61e4ac4db14075",
+      "styles/game.css": "916dc075379a77e40f29b5272a39abf1a69fffb708bab2d902623481275b8e03",
+      "src/game/rendering.js": "4026d6e1585c62804f1b7b63b6deb48546ebdda8038989adbf441ce08169c226",
+      "src/game/systems/fairness.js": "1e8f3adeb0e38ba512f5679abf347691298eed47e300b4e3fdf8f17639ca8d07"
+    }
+  }
+}
