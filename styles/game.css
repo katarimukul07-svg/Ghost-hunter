@@ -129,3 +129,7 @@
 #shopConfirm::backdrop { background:rgba(0,0,0,.8); }
 .shop-confirm-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
 .shop-confirm-actions button { min-height:44px; font-size:14px; padding:12px 20px; }
+
+#shopBuyBtn, #shopConfirmBuy { background:var(--exit); box-shadow:0 0 18px rgba(57,255,158,.35); }
+#shopConfirmCancel { background:var(--ghost); box-shadow:0 0 18px rgba(255,53,84,.35); }
+#shopBuyBtn:disabled { box-shadow:none; }
