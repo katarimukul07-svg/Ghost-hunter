@@ -55,7 +55,7 @@ const el = {
   shopTabs:document.getElementById("shopTabs"), shopPreview:document.getElementById("shopPreview"),
   shopColors:document.getElementById("shopColors"), shopTrail:document.getElementById("shopTrail"),
   shopGhost:document.getElementById("shopGhost"), shopDeath:document.getElementById("shopDeath"),
-  shopSound:document.getElementById("shopSound"), shopHint:document.getElementById("shopHint"),
+  shopHint:document.getElementById("shopHint"),
 };
 
 /* ---------- Helpers ---------- */

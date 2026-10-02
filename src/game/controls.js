@@ -117,8 +117,6 @@ function buildShopAll(){
     ()=>selectedGhostSkin, (v)=>{ selectedGhostSkin=v; ss("echoSteps.ghostSkin",v); applyGhostUI(); }, true, "ghost");
   renderShopCategory(el.shopDeath, DEATH_FX, unlockedDeathFX, "echoSteps.deathOwned",
     ()=>selectedDeathFX, (v)=>{ selectedDeathFX=v; ss("echoSteps.deathfx",v); }, false, "death");
-  renderShopCategory(el.shopSound, SOUND_PACKS, unlockedSound, "echoSteps.soundOwned",
-    ()=>selectedSound, selectSoundPack, false, "sound");
 }
 function selectSoundPack(id){
   selectedSound = id; ss("echoSteps.sound", id);
@@ -132,10 +130,9 @@ function refreshShopCoinLine(){
 function setShopTab(cat){
   shopConfirm.close(); pendingShopPurchase = null;
   shopPurchase = null; refreshShopBuy();
-  const map = { colors:el.shopColors, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath, sound:el.shopSound };
+  const map = { colors:el.shopColors, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath };
   Object.keys(map).forEach(k => map[k].classList.toggle("hidden", k!==cat));
   el.shopTabs.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.cat===cat));
-  document.getElementById("audioLevels").classList.toggle("hidden",cat!=="sound");
   previewTab = cat;
   if (cat==="colors") previewColor = playerColor;
   else if (cat==="trail") previewTrail = selectedTrail;
@@ -146,7 +143,6 @@ function setShopTab(cat){
     trail:"Preview the trail that follows your movement.",
     ghost:"Change how your ghosts appear.",
     death:"Preview the effect shown when an echo catches you.",
-    sound:"Tap a sound pack to hear and equip it for free.",
   };
   el.shopHint.textContent = hints[cat] || "Tap an item to preview it.";
 }
@@ -168,6 +164,7 @@ function showStart(){
   mode = STATE.START;
   el.over.classList.add("hidden"); el.pause.classList.add("hidden"); el.hud.classList.add("hidden");
   el.shop.classList.add("hidden");
+  document.getElementById("settingsScreen").classList.add("hidden");
   Sound.stopAmbient();
   refreshCoinLine(); applyColorUI(); applyGhostUI();
   el.start.classList.remove("hidden");
@@ -177,6 +174,8 @@ function updateMuteBtn(){
   el.mute.innerHTML = m ? "&#9834; OFF" : "&#9834; ON";
   el.mute.style.color = m ? C.dim : C.ink;
   el.mute.setAttribute("aria-pressed", m ? "true" : "false");
+  const settingsMute=document.getElementById("settingsMuteBtn");
+  settingsMute.textContent=m?"SOUND OFF":"SOUND ON";settingsMute.setAttribute("aria-pressed",String(m));
 }
 /* ---------- Retry (revive at same round for coins) ---------- */
 function refreshRetryBtn(){
@@ -232,10 +231,7 @@ document.getElementById("pauseMenuBtn").addEventListener("click", ()=>{
   el.pause.classList.add("hidden");
   showStart();
 });
-document.getElementById("pauseSoundBtn").addEventListener("click", ()=>{
-  shopReturnTo = "pause";
-  openShop("sound");
-});
+document.getElementById("pauseSettingsBtn").addEventListener("click", ()=>openSettings("pause"));
 document.getElementById("pauseBtn").addEventListener("click", ()=>{
   if (mode!==STATE.PLAYING || paused) return;
   clearSteering(); paused = true; Sound.stopAmbient(); el.pause.classList.remove("hidden");
@@ -268,6 +264,7 @@ window.addEventListener("echosteps:app-state", event => { if (!event.detail.isAc
 window.addEventListener("echosteps:back", ()=>{
   if (window.EchoStepsCloud && window.EchoStepsCloud.close()) return;
   if (shopConfirm.open) { pendingShopPurchase = null; shopConfirm.close(); return; }
+  if (!document.getElementById("settingsScreen").classList.contains("hidden")) { closeSettings(); return; }
   if (!el.shop.classList.contains("hidden")) { closeShop(); return; }
   if (!el.pause.classList.contains("hidden") || mode===STATE.OVER) { showStart(); return; }
   if (mode===STATE.PLAYING) { pauseForInterruption(); return; }
@@ -275,7 +272,7 @@ window.addEventListener("echosteps:back", ()=>{
 });
 "use strict";
 
-/* Independent levels live in the sound tab to keep the main menu compact. */
+/* Audio preferences are free settings, independent of cosmetic purchases. */
 const audioLevels=document.getElementById("audioLevels");
 const musicSlider=document.getElementById("musicLevel");
 const effectsSlider=document.getElementById("effectsLevel");
@@ -288,3 +285,36 @@ for(const slider of [musicSlider,effectsSlider]) slider.addEventListener("input"
 window.addEventListener("blur",()=>Sound.stopAmbient());
 document.addEventListener("visibilitychange",()=>{if(document.hidden) Sound.stopAmbient();});
 window.addEventListener("echosteps:app-state",e=>{if(!e.detail.isActive) Sound.stopAmbient();});
+
+let settingsReturnTo="start";
+const settingsScreen=document.getElementById("settingsScreen");
+function refreshSettings(){
+  const choices=document.getElementById("musicChoices"); choices.replaceChildren();
+  for(const track of MUSIC_TRACKS){
+    const button=document.createElement("button");button.className="chip music-choice";
+    button.textContent=track.label+" · "+track.genre;button.setAttribute("aria-pressed",String(Sound.musicTrack()===track.id));
+    button.addEventListener("click",()=>{Sound.setMusic(track.id);Sound.startAmbient();refreshSettings();});choices.append(button);
+  }
+  const packs=document.getElementById("effectsPack");packs.replaceChildren();
+  for(const pack of SOUND_PACKS){const option=document.createElement("option");option.value=pack.id;option.textContent=pack.label;packs.append(option);}
+  packs.value=selectedSound;
+  musicSlider.value=Math.round(Sound.levels().music*100);effectsSlider.value=Math.round(Sound.levels().effects*100);
+}
+function openSettings(from="start"){
+  settingsReturnTo=from;Sound.stopAmbient();clearSteering();
+  el.start.classList.add("hidden");el.pause.classList.add("hidden");settingsScreen.classList.remove("hidden");refreshSettings();
+}
+function closeSettings(){
+  Sound.stopAmbient();settingsScreen.classList.add("hidden");
+  if(settingsReturnTo==="pause")el.pause.classList.remove("hidden");else el.start.classList.remove("hidden");
+}
+document.getElementById("settingsBtn").addEventListener("click",()=>openSettings());
+document.getElementById("settingsBackBtn").addEventListener("click",closeSettings);
+document.getElementById("stopMusicPreview").addEventListener("click",()=>Sound.stopAmbient());
+document.getElementById("effectsPack").addEventListener("change",e=>selectSoundPack(e.target.value));
+document.getElementById("previewEffects").addEventListener("click",()=>{Sound.unlock();Sound.previewPack();});
+window.addEventListener("ghost:music-status",e=>{document.getElementById("musicStatus").textContent=e.detail;});
+
+document.getElementById("settingsMuteBtn").addEventListener("click",()=>{
+  Sound.unlock();Sound.setMuted(!Sound.isMuted());ss("echoSteps.mute",Sound.isMuted()?"1":"0");updateMuteBtn();
+});

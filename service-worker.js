@@ -1,4 +1,4 @@
-const CACHE = "echo-steps-native-ui-v1";
+const CACHE = "ghost-techno-settings-v2";
 const OFFLINE_ASSETS = [
   "./",
   "./index.html",
@@ -25,6 +25,9 @@ const OFFLINE_ASSETS = [
   "./manifest.webmanifest",
   "./privacy.html",
   "./support.html",
+  "./assets/music/neon-rush.mp3",
+  "./assets/music/night-drive.mp3",
+  "./assets/music/acid-chase.mp3",
   "./assets/icon-192.png",
   "./assets/icon-512.png",
 ];

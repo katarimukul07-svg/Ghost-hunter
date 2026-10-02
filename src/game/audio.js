@@ -1,11 +1,15 @@
-/* Original procedural score: no downloaded tracks or runtime network requests. */
+/* Bundled instrumental tracks; procedural gameplay cues use a separate bus. */
 const Sound = (() => {
-  let ctx, master, music, effects, limiter, timer=null, muted=false;
+  let ctx, master, music, effects, limiter, timer=null, muted=false, musicSource=null, musicEpoch=0;
   let packId=SOUND_PACKS[0].id, intensity=0, step=0, nextBeat=0;
   const read=key=>{try{return localStorage.getItem(key);}catch(e){return null;}};
   let musicLevel=Number(read("echoSteps.musicLevel") ?? 0.55);
   let effectsLevel=Number(read("echoSteps.effectsLevel") ?? 0.8);
+  let trackId=read("echoSteps.musicTrack");
+  if(!MUSIC_TRACKS.some(t=>t.id===trackId))trackId=MUSIC_TRACKS[0].id;
+  const buffers=new Map();
   const voices=new Set();
+  const status=text=>window.dispatchEvent(new CustomEvent("ghost:music-status",{detail:text}));
   const clamp=v=>Math.max(0,Math.min(1,Number.isFinite(Number(v))?Number(v):0.5));
   musicLevel=clamp(musicLevel); effectsLevel=clamp(effectsLevel);
   function ensure(){
@@ -18,7 +22,7 @@ const Sound = (() => {
       limiter.threshold.value=-10; limiter.knee.value=6; limiter.ratio.value=12;
       limiter.attack.value=0.003; limiter.release.value=0.15;
       music.connect(master); effects.connect(master); master.connect(limiter); limiter.connect(ctx.destination);
-      master.gain.value=muted?0:0.7; music.gain.value=musicLevel*0.28; effects.gain.value=effectsLevel;
+      master.gain.value=muted?0:0.7; music.gain.value=musicLevel*0.7; effects.gain.value=effectsLevel;
     } catch(e){ ctx=null; }
   }
   function unlock(){ ensure(); if(ctx?.state==="suspended") ctx.resume().catch(()=>{}); }
@@ -37,7 +41,7 @@ const Sound = (() => {
   const pack=()=>SOUND_PACKS.find(p=>p.id===packId) || SOUND_PACKS[0];
   function duck(){
     if(!ctx) return;
-    const t=ctx.currentTime, target=musicLevel*0.28;
+    const t=ctx.currentTime, target=musicLevel*0.7;
     music.gain.cancelScheduledValues(t); music.gain.setTargetAtTime(target*0.35,t,0.015);
     music.gain.setTargetAtTime(target,t+0.25,0.12);
   }
@@ -46,42 +50,47 @@ const Sound = (() => {
     duck();
     notes.forEach(([f,d,delay=0,glide])=>voice(f,d,type,vol,effects,ctx.currentTime+delay,glide));
   }
-  // 112 BPM, A minor: sparse bass + a recognizable four-note ghost motif.
-  // Added pulse and octave response enter on beat boundaries as rounds advance.
-  function schedule(){
-    if(!ctx || timer===null) return;
-    if(ctx.state!=="running"){ nextBeat=ctx.currentTime+0.03; return; }
-    if(nextBeat<ctx.currentTime) nextBeat=ctx.currentTime+0.03;
-    while(nextBeat<ctx.currentTime+0.12){
-      const n=step%32, roots=[110,87.31,130.81,98], root=roots[Math.floor(n/8)];
-      if(n%4===0) voice(root,0.36,"triangle",0.22,music,nextBeat);
-      if(n%8===0) voice(root*2,0.7,"sine",0.08,music,nextBeat);
-      if(n%8===2 || n%8===6){
-        const motif=[440,523.25,659.25,493.88];
-        voice(motif[Math.floor(n/8)],0.18,"sine",0.12,music,nextBeat);
-      }
-      if(intensity>=1 && n%2===0) voice(220,0.06,"triangle",0.045,music,nextBeat,110);
-      if(intensity>=2 && n%8===7) voice(root*4,0.1,"triangle",0.07,music,nextBeat);
-      step++; nextBeat+=60/112/2;
-    }
+  async function loadTrack(id){
+    if(buffers.has(id))return buffers.get(id);
+    const track=MUSIC_TRACKS.find(t=>t.id===id);
+    const pending=(async()=>{
+      let response;
+      try{response=await fetch(track.src);if(!response.ok)throw new Error("Music unavailable");}
+      catch(error){response=typeof caches!=="undefined"?await caches.match(track.src):null;if(!response)throw error;}
+      return ctx.decodeAudioData(await response.arrayBuffer());
+    })();
+    buffers.set(id,pending);
+    try{return await pending;}catch(error){buffers.delete(id);throw error;}
   }
   function stopAmbient(){
-    if(timer!==null) clearInterval(timer);
-    timer=null;
-    // Cancel future notes and effect tails on pause/menu/background transitions.
-    for(const source of voices){ try{source.stop();}catch(e){} }
+    musicEpoch++;timer=null;
+    if(musicSource){try{musicSource.stop();}catch(e){}musicSource.disconnect();musicSource=null;}
+    for(const source of voices){try{source.stop();}catch(e){}}
+    status("");
   }
-  function startAmbient(){
-    unlock(); if(!ctx || timer!==null) return;
-    step=0; nextBeat=ctx.currentTime+0.03;
-    timer=setInterval(schedule,25); schedule();
+  async function startAmbient(){
+    unlock();if(!ctx || timer!==null)return;
+    timer=true;const epoch=++musicEpoch;step++;
+    if(muted){status("Sound is off. Turn it on to preview.");return;}
+    status("Loading music…");
+    try{
+      const buffer=await loadTrack(trackId);
+      if(epoch!==musicEpoch || timer===null || muted)return;
+      const source=ctx.createBufferSource();source.buffer=buffer;source.loop=true;source.connect(music);musicSource=source;
+      music.gain.cancelScheduledValues(ctx.currentTime);music.gain.setValueAtTime(0,ctx.currentTime);music.gain.linearRampToValueAtTime(musicLevel*0.7,ctx.currentTime+0.15);
+      source.start();status(MUSIC_TRACKS.find(t=>t.id===trackId).label);
+    }catch(e){if(epoch===musicEpoch){timer=null;status("Music unavailable. Tap a track to retry.");}}
+  }
+  function setMusic(id){
+    if(!MUSIC_TRACKS.some(t=>t.id===id))return;
+    stopAmbient();buffers.clear();trackId=id;ss("echoSteps.musicTrack",id);
   }
   function setLevels(m,e){
     musicLevel=clamp(m); effectsLevel=clamp(e);
     ss("echoSteps.musicLevel",String(musicLevel)); ss("echoSteps.effectsLevel",String(effectsLevel));
     if(ctx){
       music.gain.cancelScheduledValues(ctx.currentTime);
-      music.gain.setTargetAtTime(musicLevel*0.28,ctx.currentTime,0.03);
+      music.gain.setTargetAtTime(musicLevel*0.7,ctx.currentTime,0.03);
       effects.gain.setTargetAtTime(effectsLevel,ctx.currentTime,0.03);
     }
   }
@@ -97,7 +106,7 @@ const Sound = (() => {
     cue([[220,0.18,0,90]],"sawtooth",0.06);
   }
   const api={
-    unlock,startAmbient,stopAmbient,pickup,complete,death,
+    unlock,startAmbient,stopAmbient,pickup,complete,death,setMusic,musicTrack:()=>trackId,
     bonus(){cue([[659.25,0.09],[880,0.14,0.07]],"sine",0.12);},
     sweep(){const p=pack(); cue([[p.sweepFreq,CFG.SWEEP_TIME,0,p.sweepFreq*4]],"triangle",0.1);},
     previewPack(){pickup(); complete();},
@@ -106,14 +115,17 @@ const Sound = (() => {
     setMuted(m){
       muted=!!m;
       if(ctx) master.gain.setTargetAtTime(muted?0:0.7,ctx.currentTime,0.02);
-      if(muted) for(const source of voices){try{source.stop();}catch(e){}}
+      if(muted){
+        musicEpoch++;if(musicSource){try{musicSource.stop();}catch(e){}musicSource.disconnect();musicSource=null;}
+        for(const source of voices){try{source.stop();}catch(e){}}
+      }else if(timer!==null){timer=null;startAmbient();}
     },
     isMuted:()=>muted,setLevels,
     levels:()=>({music:musicLevel,effects:effectsLevel}),
   };
   if(new URLSearchParams(location.search).has("test"))
     Object.defineProperty(window,"__ghostAudioTest",{value:{
-      snapshot:()=>({running:timer!==null,voices:voices.size,intensity,step,muted,levels:api.levels()}),
+      snapshot:()=>({musicActive:musicSource!==null,trackId,running:timer!==null,voices:voices.size,intensity,step,muted,levels:api.levels()}),
     }});
   return api;
 })();

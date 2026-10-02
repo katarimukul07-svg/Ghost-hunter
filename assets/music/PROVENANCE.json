@@ -1,0 +1,24 @@
+{
+  "provider": "ElevenLabs",
+  "model": "eleven_music_v2",
+  "created": "2026-10-02",
+  "flow": "Higuuh1bYrqtieb6bbqm",
+  "processing": "60 seconds, 128kbps MP3 stereo, target -18 LUFS/-2dBTP, short boundary fades",
+  "tracks": [
+    {
+      "id": "neon-rush",
+      "generation": "H17xZRwRTzrfuuNsbR7S",
+      "prompt": "Instrumental melodic EDM, 128 BPM, driving four-on-the-floor punchy kick, warm sidechained bass, crisp offbeat hats and claps, catchy minor-key pluck melody with lush restrained supersaw layers. Energetic futuristic arcade chase, polished club production, strong steady groove from the first second, musical eight-bar development, no vocals, no spoken words, no sound effects, no long intro or outro, no silence, consistent groove suitable for looping under fast mobile gameplay. Clean balanced mix without harsh treble."
+    },
+    {
+      "id": "night-drive",
+      "generation": "E4fQ6d8MdHrb17MPArej",
+      "prompt": "Instrumental hypnotic driving techno, 132 BPM. Tight four-on-the-floor kick, rolling deep bass, syncopated metallic percussion, filtered rhythmic chord stabs, atmospheric dark synth textures, crisp controlled hi-hats. Confident underground club groove for a neon arcade survival game. Start with full rhythm immediately, maintain eight-bar phrase development, no vocals, no spoken words, no dramatic stop or long breakdown, no fadeout, ending compatible with repeating the opening. Professional balanced mix, no harsh squeaks."
+    },
+    {
+      "id": "acid-chase",
+      "generation": "3QHigHHCCnusvsbQ49yy",
+      "prompt": "Instrumental acid techno, 138 BPM. Punchy tight kick, rubbery resonant acid bass arpeggio, snappy clap, shuffled hats, subtle layered industrial percussion, catchy repeating minor-key motif with tasteful filter movement. Fast playful chase energy, full club rhythm immediately, no vocals or spoken words, no alarm-like effects, no long breakdown or intro, no silence or fadeout, consistent dance groove suitable for looping. Controlled resonance and smooth high frequencies."
+    }
+  ]
+}
