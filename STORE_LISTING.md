@@ -1,9 +1,9 @@
-# Echo Steps store listing
+# Ghost Hunter store listing
 
 ## Identity
 
-- App name: Echo Steps: Garbage Collector
-- Short name: Echo Steps
+- App name: Ghost Hunter
+- Short name: Ghost Hunter
 - Bundle/application ID: `com.mukulkatari.echosteps` (owner must approve before first store record)
 - Version: 1.0.0
 - Category: Games — Arcade
@@ -11,7 +11,7 @@
 
 ## Google Play copy
 
-Short description (79 characters):
+Short description:
 
 > Outrun the deadly echoes created by every route you complete.
 
@@ -39,9 +39,9 @@ Full description:
 
 ## Review notes
 
-Echo Steps is an offline single-player arcade game. Drag anywhere on the arena to steer the Node. Collect the gold coin and move through the green gate to complete a round. Each completed path becomes a red echo. No account, network connection, advertising, analytics, tracking, or purchase is required. All progress is stored locally.
+Ghost Hunter is an offline single-player arcade game. Drag anywhere on the arena to steer the Node. Collect the gold coin and move through the green gate to complete a round. Each completed path becomes a red echo. No account, network connection, advertising, analytics, tracking, or purchase is required. All progress is stored locally.
 
-## Privacy declarations for this build
+## Proposed privacy declarations for the offline build
 
 - Apple App Privacy: Data Not Collected
 - Google Play Data Safety: No data collected and no data shared
@@ -49,4 +49,8 @@ Echo Steps is an offline single-player arcade game. Drag anywhere on the arena t
 - Purchases: No
 - Account/login: No
 
-Re-evaluate every declaration if an SDK or network feature is added.
+Owner must review these declarations against the final signed binary. Re-evaluate every declaration if an SDK or network feature is enabled. Accounts and ranked code exist but remain disabled in the current release configuration.
+
+## Submission status
+
+Draft only. See [current release blockers](docs/release/RELEASE_HANDOFF_2026-10-02.md). No TestFlight upload or App Review submission has been completed by this handoff.
