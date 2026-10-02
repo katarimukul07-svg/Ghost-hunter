@@ -1,13 +1,13 @@
 # Three-track music and Settings update
 
 Replaces the procedural score with three generated instrumental tracks:
-Neon Rush (melodic EDM), Night Drive (driving techno), Acid Chase (acid techno).
+Echo Run (melodic EDM), Ghost Circuit (techno / breakbeat), Last Exit (acid techno).
 Audio controls move from Shop into main-menu Settings, also accessible from Pause.
 Track previews stop on exit, mute, app backgrounding, and death. Selection and
 independent music/effects levels persist without changing coins or cosmetic ownership.
 
-Each track is bundled as a 60-second, stereo 128 kbps MP3. Combined assets are
-approximately 2.9 MB. They are precached for browser offline play and bundled in
+Each track is bundled as a 90-second, stereo 128 kbps MP3. Combined assets are
+approximately 4.3 MB. They are precached for browser offline play and bundled in
 native builds. Fetch failures can use a cached response even before the first
 service worker takes control. Decoded buffers are released when switching tracks.
 Short edge fades reduce clicks; musical loop transitions need listening review.
@@ -19,7 +19,7 @@ were requested. Generated once per track and normalized to -18 LUFS / -2 dBTP.
 Validation covers playback in Chromium, Firefox, and mobile WebKit, all three
 previews offline, persisted preferences, mute, interruption, unchanged coins,
 return from Pause, and Settings usability at 320/390 px. Existing effects headroom
-render checks remain. Physical iPhone listening and preference review are pending;
+render checks remain. User approved the 90-second previews after listening. Physical iPhone balance and loop checks are pending;
 browser playback checks do not establish subjective music quality.
 
 Local validation (2026-10-02): npm test passed static validation, backend checks,

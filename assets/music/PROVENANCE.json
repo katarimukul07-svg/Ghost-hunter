@@ -2,23 +2,30 @@
   "provider": "ElevenLabs",
   "model": "eleven_music_v2",
   "created": "2026-10-02",
-  "flow": "Higuuh1bYrqtieb6bbqm",
-  "processing": "60 seconds, 128kbps MP3 stereo, target -18 LUFS/-2dBTP, short boundary fades",
+  "flow": "Cyf1n0xVwxgIkWY2ZqUV",
+  "listening_approved": "2026-10-02",
+  "processing": "90 seconds, 128kbps MP3 stereo, target -18 LUFS/-2dBTP, short boundary fades",
   "tracks": [
     {
       "id": "neon-rush",
-      "generation": "H17xZRwRTzrfuuNsbR7S",
-      "prompt": "Instrumental melodic EDM, 128 BPM, driving four-on-the-floor punchy kick, warm sidechained bass, crisp offbeat hats and claps, catchy minor-key pluck melody with lush restrained supersaw layers. Energetic futuristic arcade chase, polished club production, strong steady groove from the first second, musical eight-bar development, no vocals, no spoken words, no sound effects, no long intro or outro, no silence, consistent groove suitable for looping under fast mobile gameplay. Clean balanced mix without harsh treble."
+      "label": "Echo Run",
+      "file": "echo-run",
+      "generation": "MAjod8KmNCxjadUiQy3q",
+      "prompt": "Instrumental melodic EDM arcade soundtrack, 128 BPM in E minor, playful suspense with a memorable four-note plucked synth hook, answering arpeggios, warm pulsing bass, crisp kicks and syncopated percussion; clean balanced mix with space for gameplay sound effects, no vocals. Compose a developing 90-second piece: 0\u201315s introduce hook over a light groove, 15\u201330s add a melodic answer and changing bass line, 30\u201345s switch to a broken-beat rhythm and new chord inversion, 45\u201360s quieter half-time breakdown with a hook variation, 60\u201375s energetic full-beat return with counter-melody, 75\u201390s resolve back to the opening groove for repeat play. Use coherent eight-bar phrases, audible drum fills and real melodic/harmonic changes between sections rather than a static beat or endless riser; keep the strongest lead pleasant and restrained."
     },
     {
       "id": "night-drive",
-      "generation": "E4fQ6d8MdHrb17MPArej",
-      "prompt": "Instrumental hypnotic driving techno, 132 BPM. Tight four-on-the-floor kick, rolling deep bass, syncopated metallic percussion, filtered rhythmic chord stabs, atmospheric dark synth textures, crisp controlled hi-hats. Confident underground club groove for a neon arcade survival game. Start with full rhythm immediately, maintain eight-bar phrase development, no vocals, no spoken words, no dramatic stop or long breakdown, no fadeout, ending compatible with repeating the opening. Professional balanced mix, no harsh squeaks."
+      "label": "Ghost Circuit",
+      "file": "ghost-circuit",
+      "generation": "B0RrxmF19nEth4cP1FEE",
+      "prompt": "Instrumental driving techno with electro breakbeat and an eerie catchy bell-synth motif, 132 BPM in D minor, tight round bass, soft metallic arpeggios, swung hi-hats and crisp restrained drums; tense but fun arcade chase energy, clean mix leaving room for sound effects, no vocals or harsh screeches. Develop a complete 90-second arrangement: 0\u201315s establish a nimble syncopated groove and short hook, 15\u201330s answer the hook with a contrasting melody and bass variation, 30\u201345s shift to four-on-the-floor techno with layered percussion, 45\u201360s pull drums back to sparse half-time echoes with a different harmony, 60\u201375s return to a fuller breakbeat chase with a counter-melody, 75\u201390s bring back the opening motif and simplify toward a repeatable groove. Make each section audibly distinct with brief fills and rhythmic variation while keeping a coherent theme; avoid one unchanging percussion loop."
     },
     {
       "id": "acid-chase",
-      "generation": "3QHigHHCCnusvsbQ49yy",
-      "prompt": "Instrumental acid techno, 138 BPM. Punchy tight kick, rubbery resonant acid bass arpeggio, snappy clap, shuffled hats, subtle layered industrial percussion, catchy repeating minor-key motif with tasteful filter movement. Fast playful chase energy, full club rhythm immediately, no vocals or spoken words, no alarm-like effects, no long breakdown or intro, no silence or fadeout, consistent dance groove suitable for looping. Controlled resonance and smooth high frequencies."
+      "label": "Last Exit",
+      "file": "last-exit",
+      "generation": "MXQKKmS0WXDDwUeIMI6Y",
+      "prompt": "Instrumental dark melodic acid techno game soundtrack, 138 BPM in A minor, controlled resonant 303 bass, a memorable minor-key lead hook, airy pads, tight kick and rolling tom accents; suspenseful urgent energy with crisp modern production and room for game sound effects, no vocals, no distorted noise wall. Write a developing 90-second composition: 0\u201315s introduce the lead hook with a restrained beat, 15\u201330s change bass pattern and add an answering lead, 30\u201345s intensify into a driving section with a new chord progression, 45\u201360s dramatic quieter half-time break with filtered acid and sparse notes, 60\u201375s release into a full rhythmic chase with a melodic variation and counter-rhythm, 75\u201390s resolve tension and return to the opening texture for repetition. Use musical phrase transitions, short drum fills and clear rhythmic/melodic/harmonic changes, not a single beat repeated throughout."
     }
   ]
 }

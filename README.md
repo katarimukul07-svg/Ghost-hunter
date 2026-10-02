@@ -3,8 +3,8 @@
 A minimalist arcade survival game where every completed route becomes a lethal echo. Collect the prize, escape, and survive your own history until the Garbage Collector clears old paths.
 
 ## Audio
-Choose one of three bundled instrumental tracks: Neon Rush (melodic EDM),
-Night Drive (driving techno), or Acid Chase (acid techno). Main-menu Settings
+Choose one of three bundled instrumental tracks: Echo Run (melodic EDM),
+Ghost Circuit (techno / breakbeat), or Last Exit (acid techno). Main-menu Settings
 contains track previews, separate music/effects volume sliders, sound-effect
 styles, and mute. Settings is also available while paused.
 Preferences stay on the device; tracks are free and included in the offline cache.

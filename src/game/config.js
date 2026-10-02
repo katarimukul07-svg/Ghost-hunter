@@ -122,7 +122,7 @@ const SOUND_PACKS = [
 ];
 
 const MUSIC_TRACKS = Object.freeze([
-  {id:"neon-rush",label:"Neon Rush",genre:"Melodic EDM",src:"assets/music/neon-rush.mp3"},
-  {id:"night-drive",label:"Night Drive",genre:"Driving techno",src:"assets/music/night-drive.mp3"},
-  {id:"acid-chase",label:"Acid Chase",genre:"Acid techno",src:"assets/music/acid-chase.mp3"},
+  {id:"neon-rush",label:"Echo Run",genre:"Melodic EDM",src:"assets/music/echo-run.mp3"},
+  {id:"night-drive",label:"Ghost Circuit",genre:"Techno / breakbeat",src:"assets/music/ghost-circuit.mp3"},
+  {id:"acid-chase",label:"Last Exit",genre:"Acid techno",src:"assets/music/last-exit.mp3"},
 ]);

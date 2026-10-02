@@ -66,7 +66,7 @@ test("overlapping effects render audible output with sample headroom",async({pag
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
   await expect.poll(()=>page.evaluate(async()=>{const found=await Promise.all(MUSIC_TRACKS.map(t=>caches.match(t.src)));return found.every(Boolean);})).toBe(true);
   await page.context().setOffline(true);
-  for(const title of ['Neon Rush','Night Drive','Acid Chase']){
+  for(const title of ['Echo Run','Ghost Circuit','Last Exit']){
     await page.locator('#musicChoices button').filter({hasText:title}).click();
     await expect.poll(()=>page.evaluate(()=>window.__ghostAudioTest.snapshot().musicActive)).toBe(true);
   }
