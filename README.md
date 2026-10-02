@@ -46,6 +46,8 @@ UI audit follow-up: clearer labels and ownership states, brighter secondary text
 
 Release acceptance: [fresh-player and iPhone protocol](docs/release/BETA_TEST.md), with blank observation sheets and explicit release gates. Synthetic/browser tests are recorded separately from physical-device and human results.
 
+Shop prices are now provisional at 5–25 coins for paid dot/effect cosmetics and 15/25/40 for backgrounds. [Price rationale](docs/release/COSMETIC_PRICING.md) records the reductions and the beta evidence still needed.
+
 ## Controls
 
 - Desktop: click or drag to steer the dot.

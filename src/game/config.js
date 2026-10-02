@@ -35,9 +35,9 @@ const BONUS_TYPES = Object.freeze({
 
 const BACKGROUNDS = Object.freeze([
   { id:"classic", label:"CLASSIC GRID", cost:0 },
-  { id:"circuit", label:"CIRCUIT FOUNDRY", cost:40 },
-  { id:"abyss", label:"ABYSSAL NETWORK", cost:60 },
-  { id:"orbit", label:"ORBITAL STATION", cost:90 },
+  { id:"circuit", label:"CIRCUIT FOUNDRY", cost:15 },
+  { id:"abyss", label:"ABYSSAL NETWORK", cost:25 },
+  { id:"orbit", label:"ORBITAL STATION", cost:40 },
 ]);
 
 const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex"];
@@ -59,10 +59,10 @@ function gcPolicyForCompletedRounds(completed) {
 const SKINS = [
   { id:"#29e0ff", label:"Node",  style:"solid",  cost:0  },   // plain glowing dot
   { id:"#eaf2ff", label:"Ghost", style:"ring",   cost:0  },   // hollow outlined ring
-  { id:"#3d7bff", label:"Pulse", style:"pulse",  cost:15 },   // core + breathing ring
-  { id:"#ff5ca8", label:"Comet", style:"comet",  cost:25 },   // spinning star spikes
-  { id:"#ff8a2b", label:"Blaze", style:"square", cost:40 },   // rotated glowing square
-  { id:"#b06bff", label:"Void",  style:"void",   cost:60 },   // bright ring, hollow core
+  { id:"#3d7bff", label:"Pulse", style:"pulse",  cost:5 },   // core + breathing ring
+  { id:"#ff5ca8", label:"Comet", style:"comet",  cost:10 },   // spinning star spikes
+  { id:"#ff8a2b", label:"Blaze", style:"square", cost:15 },   // rotated glowing square
+  { id:"#b06bff", label:"Void",  style:"void",   cost:25 },   // bright ring, hollow core
 ];
 function getSkinStyle(colorId){
   const s = SKINS.find(k=>k.id===colorId);
@@ -71,21 +71,21 @@ function getSkinStyle(colorId){
 
 const TRAILS = [
   { id:"classic", label:"Classic", cost:0 },
-  { id:"sparkle", label:"Sparkle", cost:20 },
-  { id:"long", label:"Long Trail", cost:30 },
-  { id:"rainbow", label:"Rainbow", cost:50 },
+  { id:"sparkle", label:"Sparkle", cost:8 },
+  { id:"long", label:"Long Trail", cost:12 },
+  { id:"rainbow", label:"Rainbow", cost:20 },
 ];
 const GHOST_SKINS = [
   { id:"#ff3554", label:"Crimson", cost:0 },
-  { id:"#c66bff", label:"Violet", cost:20 },
-  { id:"#39ff9e", label:"Toxic", cost:35 },
-  { id:"#eaf2ff", label:"Phantom", cost:50 },
+  { id:"#c66bff", label:"Violet", cost:8 },
+  { id:"#39ff9e", label:"Toxic", cost:12 },
+  { id:"#eaf2ff", label:"Phantom", cost:20 },
 ];
 const DEATH_FX = [
   { id:"classic", label:"Classic", cost:0 },
-  { id:"shockwave", label:"Shockwave", cost:25 },
-  { id:"confetti", label:"Confetti", cost:40 },
-  { id:"implode", label:"Implode", cost:55 },
+  { id:"shockwave", label:"Shockwave", cost:10 },
+  { id:"confetti", label:"Confetti", cost:15 },
+  { id:"implode", label:"Implode", cost:25 },
 ];
 
 /* Game-over flavor — punchy titles + funny sublines, all about your own ghosts. */
