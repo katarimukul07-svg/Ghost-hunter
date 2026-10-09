@@ -1,13 +1,31 @@
 /* ---------- Loop ---------- */
 let last = performance.now(), acc = 0;
+// State before the latest fixed step, so frames that land between steps can be
+// drawn part-way instead of jumping 0, 1 or 2 whole steps (visible judder).
+const renderPrev = { x:0, y:0, phase:0, valid:false };
+function renderInterpolated(){
+  const alpha = acc / CFG.SIMULATION_STEP;
+  const dx = player.x - renderPrev.x, dy = player.y - renderPrev.y;
+  const dPhase = ghostPhase - renderPrev.phase;
+  const smooth = renderPrev.valid && !paused && mode===STATE.PLAYING && alpha > 0 && alpha < 1 &&
+    Math.hypot(dx,dy) <= playerSpeed*1.5 && dPhase >= 0 && dPhase <= 8;   // skip teleports/resets
+  if (!smooth){ render(); return; }
+  const sx = player.x, sy = player.y, sPhase = ghostPhase;
+  player.x = renderPrev.x + dx*alpha; player.y = renderPrev.y + dy*alpha;
+  ghostPhase = renderPrev.phase + dPhase*alpha;
+  try { render(); } finally { player.x = sx; player.y = sy; ghostPhase = sPhase; }
+}
 function loop(now){
   let dt=(now-last)/1000; last=now; if (dt>0.1) dt=0.1; acc+=dt;
   while (acc>=CFG.SIMULATION_STEP){
-    if (!paused) update(CFG.SIMULATION_STEP);
+    if (!paused){
+      renderPrev.x = player.x; renderPrev.y = player.y; renderPrev.phase = ghostPhase; renderPrev.valid = true;
+      update(CFG.SIMULATION_STEP);
+    }
     updateEffects(CFG.SIMULATION_STEP);
     acc-=CFG.SIMULATION_STEP;
   }
-  render();
+  renderInterpolated();
   if (mode===STATE.PLAYING && !paused) updateHUD();
   if (!el.shop.classList.contains("hidden")) drawShopPreview();
   requestAnimationFrame(loop);

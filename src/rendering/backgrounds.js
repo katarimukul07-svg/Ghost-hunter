@@ -132,16 +132,16 @@
   }
 
   const drawGridBase = drawGrid;
-  drawGrid = function drawThemedGrid() {
+  drawGrid = function drawThemedGrid(target=ctx) {
     if (selectedBackground === "classic") {
-      drawGridBase();
+      drawGridBase(target);
       return;
     }
-    drawBackground(ctx,room,selectedBackground);
-    ctx.save();
-    ctx.globalAlpha=.48;
-    drawGridBase();
-    ctx.restore();
+    drawBackground(target,room,selectedBackground);
+    target.save();
+    target.globalAlpha=.48;
+    drawGridBase(target);
+    target.restore();
   };
 
   const drawPreviewGridBase = drawPreviewGrid;
@@ -206,6 +206,7 @@
   function selectBackground(id) {
     if (!ownedBackgrounds.includes(id)) return;
     selectedBackground=id;
+    staticLayer.key="";   // redraw the cached background layer
     previewBackground=id;
     ss("echoSteps.background",id);
     haptic("light");
@@ -214,6 +215,7 @@
     if (event.detail.key !== "echoSteps.background") return;
     const saved = ls("echoSteps.background");
     selectedBackground = ownedBackgrounds.includes(saved) ? saved : "classic";
+    staticLayer.key="";
     previewBackground = selectedBackground;
   });
 
