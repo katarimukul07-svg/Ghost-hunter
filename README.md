@@ -7,7 +7,7 @@ Gameplay music is Neon House (CC0 synthwave house loop); the main menu plays
 Synth Wave (CC0). Sound effects are synthwave voices generated in code, tuned
 to the same key. Licences and sources are in
 [assets/music/LICENSES.md](assets/music/LICENSES.md). Settings has a music
-preview, separate music/effects volume sliders, an effects test, and mute.
+preview, separate music/effects volume sliders, a sound-effects preview, and mute.
 Settings is also available while paused. Preferences stay on the device.
 See [music update evidence](docs/release/TECHNO_MUSIC_SETTINGS.md).
 
