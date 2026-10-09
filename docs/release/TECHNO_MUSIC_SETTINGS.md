@@ -1,5 +1,13 @@
 # Three-track music and Settings update
 
+> **Update (2026-10-09): the ElevenLabs tracks were removed.** Eleven Music's
+> terms exclude "Studio Games" (games released on more than one platform) on
+> every plan except Enterprise Music, and the free plan also requires
+> attribution. Echo Steps ships on iOS and Android, so the three MP3s and
+> `assets/music/PROVENANCE.json` were replaced by two CC0 tracks from
+> OpenGameArt plus code-generated styles with the old names. See
+> `assets/music/LICENSES.md`. The rest of this page is history.
+
 Replaces the procedural score with three generated instrumental tracks:
 Echo Run (melodic EDM), Ghost Circuit (techno / breakbeat), Last Exit (acid techno).
 Audio controls move from Shop into main-menu Settings, also accessible from Pause.

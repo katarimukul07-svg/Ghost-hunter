@@ -1,6 +1,7 @@
-/* Bundled instrumental tracks; procedural gameplay cues use a separate bus. */
+/* Music: licensed CC0 tracks plus original code-generated styles. Effects use a separate bus. */
 const Sound = (() => {
-  let ctx, master, music, effects, limiter, timer=null, muted=false, musicSource=null, musicEpoch=0;
+  let ctx, master, music, synth, effects, limiter, timer=null, muted=false, musicSource=null, musicEpoch=0;
+  let schedulerId=null, procedural=null, playingId=null;
   let packId=SOUND_PACKS[0].id, intensity=0, step=0, nextBeat=0;
   const read=key=>{try{return localStorage.getItem(key);}catch(e){return null;}};
   let musicLevel=Number(read("echoSteps.musicLevel") ?? 0.55);
@@ -21,6 +22,7 @@ const Sound = (() => {
       limiter=ctx.createDynamicsCompressor();
       limiter.threshold.value=-10; limiter.knee.value=6; limiter.ratio.value=12;
       limiter.attack.value=0.003; limiter.release.value=0.15;
+      synth=ctx.createGain(); synth.gain.value=0.4; synth.connect(music);
       music.connect(master); effects.connect(master); master.connect(limiter); limiter.connect(ctx.destination);
       master.gain.value=muted?0:0.7; music.gain.value=musicLevel*0.7; effects.gain.value=effectsLevel;
     } catch(e){ ctx=null; }
@@ -54,9 +56,19 @@ const Sound = (() => {
   // WebKit exposes a successful local response with status 0 and ok=false.
   const acceptsMusicResponse=(response,source)=>response.ok ||
     (response.status===0 && new URL(source,location.href).protocol==="capacitor:");
+  const trackById=id=>MUSIC_TRACKS.find(t=>t.id===id) || MENU_TRACK;
+  // Encoders pad compressed audio with silence; start and end the loop on sound
+  // so looping tracks don't stutter at the seam.
+  function soundBounds(buffer){
+    const data=buffer.getChannelData(0), limit=0.0015;
+    let a=0,b=data.length-1;
+    while(a<b && Math.abs(data[a])<limit) a++;
+    while(b>a && Math.abs(data[b])<limit) b--;
+    return {start:a/buffer.sampleRate, end:(b+1)/buffer.sampleRate};
+  }
   async function loadTrack(id){
     if(buffers.has(id))return buffers.get(id);
-    const track=MUSIC_TRACKS.find(t=>t.id===id);
+    const track=trackById(id);
     const pending=(async()=>{
       let response;
       try{response=await fetch(track.src);if(!acceptsMusicResponse(response,track.src))throw new Error("Music unavailable");}
@@ -66,28 +78,90 @@ const Sound = (() => {
     buffers.set(id,pending);
     try{return await pending;}catch(error){buffers.delete(id);throw error;}
   }
+  function kick(t,vol){ voice(150,0.14,"sine",vol,synth,t,42); }
+  function hat(t,vol){ voice(7040,0.025,"square",vol,synth,t,5200); }
+  const STYLES={
+    // Melodic EDM, 124 BPM, E minor: plucked four-note hook over a warm bass.
+    "neon-rush":{bpm:124, roots:[82.41,65.41,98,73.42], motif:[659.25,783.99,987.77,739.99],
+      play(n,t,root,s){
+        if(n%4===0) kick(t,0.2);
+        if(n%2===1) hat(t,0.018);
+        if(n%4===2) voice(root,0.28,"triangle",0.2,synth,t);
+        if(n%8===0) voice(root*2,0.9,"sine",0.06,synth,t);
+        if(n%8===3 || n%8===6) voice(s.motif[Math.floor(n/8)],0.16,"triangle",0.1,synth,t);
+        if(intensity>=1 && n%8===7) voice(s.motif[(Math.floor(n/8)+1)%4]*2,0.1,"sine",0.06,synth,t);
+        if(intensity>=2 && n%2===0) voice(root*4,0.05,"triangle",0.035,synth,t);
+      }},
+    // Driving techno, 132 BPM, D minor: four-on-the-floor kick and a bell motif.
+    "night-drive":{bpm:132, roots:[73.42,58.27,87.31,65.41], motif:[587.33,698.46,880,523.25],
+      play(n,t,root,s){
+        if(n%2===0) kick(t,0.22);
+        if(n%2===1) hat(t,0.022);
+        if(n%4===1 || n%4===3) voice(root,0.12,"triangle",0.17,synth,t);
+        if(n%16===4 || n%16===10) voice(s.motif[Math.floor(n/8)],0.35,"sine",0.09,synth,t);
+        if(intensity>=1 && n%8===6) voice(s.motif[Math.floor(n/8)]*1.5,0.12,"sine",0.05,synth,t);
+        if(intensity>=2 && n%4===2) voice(root*8,0.04,"square",0.012,synth,t);
+      }},
+    // Acid techno, 138 BPM, A minor: gliding saw bass under the original ghost motif.
+    "acid-chase":{bpm:138, roots:[55,43.65,65.41,49], motif:[440,523.25,659.25,493.88],
+      play(n,t,root,s){
+        if(n%2===0) kick(t,0.2);
+        if(n%2===1) hat(t,0.02);
+        const acid=[1,1,2,1,1.5,1,2,1.33][n%8];
+        voice(root*2*acid,0.11,"sawtooth",0.045,synth,t,root*2*acid*(n%3===0?1.5:1));
+        if(n%8===2 || n%8===6) voice(s.motif[Math.floor(n/8)],0.18,"sine",0.11,synth,t);
+        if(intensity>=1 && n%8===7) voice(root*4,0.1,"triangle",0.07,synth,t);
+        if(intensity>=2 && n%4===3) voice(s.motif[(Math.floor(n/8)+2)%4]*2,0.06,"sine",0.04,synth,t);
+      }},
+  };
+  function schedule(){
+    if(!ctx || timer===null || muted || !procedural) return;
+    if(ctx.state!=="running"){ nextBeat=ctx.currentTime+0.03; return; }
+    if(nextBeat<ctx.currentTime) nextBeat=ctx.currentTime+0.03;
+    const s=STYLES[procedural];
+    while(nextBeat<ctx.currentTime+0.12){
+      const n=step%32, root=s.roots[Math.floor(n/8)];
+      s.play(n,nextBeat,root,s);
+      step++; nextBeat+=60/s.bpm/2;
+    }
+  }
   function stopAmbient(){
-    musicEpoch++;timer=null;
+    musicEpoch++;
+    if(schedulerId!==null) clearInterval(schedulerId);
+    schedulerId=null; timer=null; procedural=null; playingId=null;
     if(musicSource){try{musicSource.stop();}catch(e){}musicSource.disconnect();musicSource=null;}
     for(const source of voices){try{source.stop();}catch(e){}}
     status("");
   }
-  async function startAmbient(){
-    unlock();if(!ctx || timer!==null)return;
-    timer=true;const epoch=++musicEpoch;step++;
+  // Plays one track: a bundled file (track.src) or a code-generated style.
+  async function play(id){
+    unlock(); if(!ctx) return;
+    if(timer!==null && playingId===id) return;
+    if(timer!==null) stopAmbient();
+    timer=true; playingId=id; const epoch=++musicEpoch; const track=trackById(id);
     if(muted){status("Sound is off. Turn it on to preview.");return;}
+    music.gain.cancelScheduledValues(ctx.currentTime);music.gain.setValueAtTime(0,ctx.currentTime);
+    music.gain.linearRampToValueAtTime(musicLevel*0.7,ctx.currentTime+0.4);
+    if(!track.src){
+      procedural=track.id; step=0; nextBeat=ctx.currentTime+0.03;
+      schedulerId=setInterval(schedule,25); schedule(); status(track.label); return;
+    }
     status("Loading music…");
     try{
-      const buffer=await loadTrack(trackId);
+      const buffer=await loadTrack(id);
       if(epoch!==musicEpoch || timer===null || muted)return;
-      const source=ctx.createBufferSource();source.buffer=buffer;source.loop=true;source.connect(music);musicSource=source;
-      music.gain.cancelScheduledValues(ctx.currentTime);music.gain.setValueAtTime(0,ctx.currentTime);music.gain.linearRampToValueAtTime(musicLevel*0.7,ctx.currentTime+0.15);
-      source.start();status(MUSIC_TRACKS.find(t=>t.id===trackId).label);
-    }catch(e){if(epoch===musicEpoch){timer=null;status("Music unavailable. Tap a track to retry.");}}
+      const bounds=soundBounds(buffer);
+      const source=ctx.createBufferSource();source.buffer=buffer;source.loop=true;
+      source.loopStart=bounds.start;source.loopEnd=bounds.end;
+      source.connect(music);musicSource=source;
+      source.start(0,bounds.start);status(track.label);
+    }catch(e){if(epoch===musicEpoch){timer=null;playingId=null;status("Music unavailable. Tap a track to retry.");}}
   }
+  function startAmbient(){ return play(trackId); }
+  function startMenuMusic(){ return play(MENU_TRACK.id); }
   function setMusic(id){
     if(!MUSIC_TRACKS.some(t=>t.id===id))return;
-    stopAmbient();buffers.clear();trackId=id;ss("echoSteps.musicTrack",id);
+    stopAmbient();trackId=id;ss("echoSteps.musicTrack",id);
   }
   function setLevels(m,e){
     musicLevel=clamp(m); effectsLevel=clamp(e);
@@ -110,7 +184,7 @@ const Sound = (() => {
     cue([[220,0.18,0,90]],"sawtooth",0.06);
   }
   const api={
-    unlock,startAmbient,stopAmbient,pickup,complete,death,setMusic,musicTrack:()=>trackId,
+    unlock,startAmbient,startMenuMusic,stopAmbient,pickup,complete,death,setMusic,musicTrack:()=>trackId,
     bonus(){cue([[659.25,0.09],[880,0.14,0.07]],"sine",0.12);},
     sweep(){const p=pack(); cue([[p.sweepFreq,CFG.SWEEP_TIME,0,p.sweepFreq*4]],"triangle",0.1);},
     previewPack(){pickup(); complete();},
@@ -122,7 +196,7 @@ const Sound = (() => {
       if(muted){
         musicEpoch++;if(musicSource){try{musicSource.stop();}catch(e){}musicSource.disconnect();musicSource=null;}
         for(const source of voices){try{source.stop();}catch(e){}}
-      }else if(timer!==null){timer=null;startAmbient();}
+      }else if(playingId!==null){const id=playingId;stopAmbient();play(id);}
     },
     isMuted:()=>muted,setLevels,
     levels:()=>({music:musicLevel,effects:effectsLevel}),
@@ -130,7 +204,7 @@ const Sound = (() => {
   if(new URLSearchParams(location.search).has("test"))
     Object.defineProperty(window,"__ghostAudioTest",{value:{
       acceptsMusicResponse,
-      snapshot:()=>({musicActive:musicSource!==null,trackId,running:timer!==null,voices:voices.size,intensity,step,muted,levels:api.levels()}),
+      snapshot:()=>({musicActive:!muted && (musicSource!==null || procedural!==null),playingId,trackId,running:timer!==null,voices:voices.size,intensity,step,muted,levels:api.levels()}),
     }});
   return api;
 })();
