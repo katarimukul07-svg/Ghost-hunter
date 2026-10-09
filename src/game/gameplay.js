@@ -185,22 +185,25 @@ function update(dt) {
 
   const dx=pointer.x-player.x, dy=pointer.y-player.y, d=Math.hypot(dx,dy);
   // Move in sub-steps no longer than half the player radius, resolving walls after
-  // each one, so a fast step can never carry NODE through a thin obstacle.
+  // each one, so a fast step can never carry NODE through a thin obstacle. The
+  // sub-step positions are kept so coin, exit and ghost contacts are swept too.
   const step = d>0.5 ? Math.min(d,playerSpeed) : 0;
   const subSteps = Math.max(1, Math.ceil(step/(CFG.PLAYER_R*0.5)));
+  const swept = [];
   for (let s=0;s<subSteps;s++){
     if (step){ player.x+=(dx/d)*step/subSteps; player.y+=(dy/d)*step/subSteps; }
     player.x = clamp(player.x, room.x+CFG.PLAYER_R, room.x+room.w-CFG.PLAYER_R);
     player.y = clamp(player.y, room.y+CFG.PLAYER_R, room.y+room.h-CFG.PLAYER_R);
     for (let pass=0;pass<2;pass++)
       for (const o of obstacles){ const r=resolveCircleRect(player.x,player.y,CFG.PLAYER_R,o); player.x=r.x; player.y=r.y; }
+    swept.push({ x:player.x, y:player.y });
   }
 
   currentPath.push({ x:player.x, y:player.y });
 
   if (prize && !hasPrize){
     const rr=CFG.PLAYER_R+CFG.PRIZE_R;
-    if (dist2(player.x,player.y,prize.x,prize.y) < rr*rr){
+    if (swept.some(q => dist2(q.x,q.y,prize.x,prize.y) < rr*rr)){
       burst(particles, prize.x, prize.y, C.prize, 26);
       shockwaves.push({ x:prize.x, y:prize.y, t:0 });
       collectCoin(prize.x, prize.y);            // +1 coin (currency)
@@ -209,8 +212,16 @@ function update(dt) {
       toast = { text:"COIN COLLECTED — FIND THE EXIT", t:0 };
     }
   }
-  if (hasPrize && player.x>exit.x && player.x<exit.x+exit.w && player.y>exit.y && player.y<exit.y+exit.h)
-    completeRound();
+  if (hasPrize){
+    // First sub-step inside the exit; stop NODE there so the new round (and its
+    // departure safe zone) starts from inside the exit rather than past it.
+    const entry = swept.find(q => q.x>exit.x && q.x<exit.x+exit.w && q.y>exit.y && q.y<exit.y+exit.h);
+    if (entry){
+      player.x = entry.x; player.y = entry.y;
+      currentPath[currentPath.length-1] = { x:entry.x, y:entry.y };
+      completeRound();
+    }
+  }
 
   if (departureZone){
     departureZone.ticks--;
@@ -220,12 +231,12 @@ function update(dt) {
   if (sweep){ sweep.t += dt/CFG.SWEEP_TIME; if (sweep.t>=1){ if (ghosts.length) ghosts.shift(); sweep=null; } }
 
   if (grace>0) grace--;
-  else if (!inExitZone(player.x, player.y, CFG.GHOST_R) &&
-           !inDepartureZone(player.x, player.y, CFG.GHOST_R)) {
+  else {
     const rr=CFG.PLAYER_R+CFG.GHOST_R;
+    const exposed = swept.filter(q => !inExitZone(q.x, q.y, CFG.GHOST_R) && !inDepartureZone(q.x, q.y, CFG.GHOST_R));
     for (const g of ghosts){
       const pos=ghostPos(g);
-      if (pos && dist2(player.x,player.y,pos.x,pos.y) < rr*rr){ startDeath(); break; }
+      if (pos && exposed.some(q => dist2(q.x,q.y,pos.x,pos.y) < rr*rr)){ startDeath(); break; }
     }
   }
 
