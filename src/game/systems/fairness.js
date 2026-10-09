@@ -365,11 +365,7 @@
 
   const updateHUDBase = updateHUD;
   updateHUD = function clearerGcHud() {
-    updateHUDBase();
-    if (sweep) {
-      el.gc.textContent = "SWEEP";
-      el.gc.style.color = C.sweep;
-    }
+    updateHUDBase();   // base HUD already shows "SWEEP" while a sweep runs
   };
 
   let touchGesture = null;

@@ -63,16 +63,33 @@ function drawSkin(targetCtx, x, y, r, color, style, alpha, tSec){
       glow(targetCtx, x, y, r, color, alpha);
   }
 }
-function drawGrid(){
-  ctx.strokeStyle=C.grid; ctx.lineWidth=1; const gap=40; ctx.beginPath();
-  for (let x=room.x;x<=room.x+room.w;x+=gap){ ctx.moveTo(x,room.y); ctx.lineTo(x,room.y+room.h); }
-  for (let y=room.y;y<=room.y+room.h;y+=gap){ ctx.moveTo(room.x,y); ctx.lineTo(room.x+room.w,y); }
-  ctx.stroke();
+function drawGrid(target=ctx){
+  target.strokeStyle=C.grid; target.lineWidth=1; const gap=40; target.beginPath();
+  for (let x=room.x;x<=room.x+room.w;x+=gap){ target.moveTo(x,room.y); target.lineTo(x,room.y+room.h); }
+  for (let y=room.y;y<=room.y+room.h;y+=gap){ target.moveTo(room.x,y); target.lineTo(room.x+room.w,y); }
+  target.stroke();
 }
-function drawRoomBorder(){
-  ctx.save(); ctx.strokeStyle=C.border; ctx.globalAlpha=0.5;
-  ctx.shadowColor=C.border; ctx.shadowBlur=10; ctx.lineWidth=2;
-  ctx.strokeRect(room.x,room.y,room.w,room.h); ctx.restore();
+function drawRoomBorder(target=ctx){
+  target.save(); target.strokeStyle=C.border; target.globalAlpha=0.5;
+  target.shadowColor=C.border; target.shadowBlur=10; target.lineWidth=2;
+  target.strokeRect(room.x,room.y,room.w,room.h); target.restore();
+}
+// Background, grid and glowing border only change when the room or theme does,
+// so draw them once into an offscreen layer and copy it each frame.
+const staticLayer = { canvas:null, key:"" };
+function drawStaticLayer(){
+  const key = [canvas.width, canvas.height, DPR, room.x, room.y, room.w, room.h,
+    C.grid, C.border].join("|");   // backgrounds.js also clears key on theme change
+  if (!staticLayer.canvas) staticLayer.canvas = document.createElement("canvas");
+  const layer = staticLayer.canvas;
+  if (staticLayer.key !== key){
+    layer.width = canvas.width; layer.height = canvas.height;
+    const lctx = layer.getContext("2d");
+    lctx.setTransform(DPR,0,0,DPR,0,0);
+    drawGrid(lctx); drawRoomBorder(lctx);
+    staticLayer.key = key;
+  }
+  ctx.drawImage(layer, 0, 0, W, H);
 }
 function traceObstaclePath(o){
   const x=o.x, y=o.y, w=o.w, h=o.h, cx=x+w/2, cy=y+h/2;
@@ -264,7 +281,7 @@ function render(){
   ctx.clearRect(0,0,W,H);
   ctx.save();
   if (shake>0.3 && !reducedMotionPreference.matches) ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
-  drawGrid(); drawRoomBorder(); drawObstacles(); drawDepartureZone(); drawExit();
+  drawStaticLayer(); drawObstacles(); drawDepartureZone(); drawExit();
   drawGhosts(); drawPrize(); drawSweep();
   if (mode===STATE.PLAYING){ drawTrail(); drawPlayer(); drawHint(); }
   drawParticles(); drawShockwaves(); drawPops(); drawToast();
@@ -336,12 +353,17 @@ function drawShopPreview(){
     }
   }
 }
+// The HUD refreshes every frame; only touch the DOM when a value changes so the
+// web view doesn't redo text layout 60 times a second.
+function setHudText(node, value){ value = String(value); if (node.textContent !== value) node.textContent = value; }
+const hudColors = new WeakMap();   // style.color reads back normalized, so remember what we set
+function setHudColor(node, value){ if (hudColors.get(node) !== value){ hudColors.set(node, value); node.style.color = value; } }
 function updateHUD(){
-  el.round.textContent = round; el.coins.textContent = coins;
+  setHudText(el.round, round); setHudText(el.coins, coins);
   const completedRounds = round - 1;
   const movesLeft = CFG.GC_MOVES - (completedRounds % CFG.GC_MOVES);
   const armed = ghosts.length > 0;
-  el.gc.textContent = String(movesLeft);
-  el.gc.style.color = armed ? (movesLeft<=2 ? C.sweep : "") : C.dim;
+  setHudText(el.gc, sweep ? "SWEEP" : movesLeft);
+  setHudColor(el.gc, sweep ? C.sweep : (armed ? (movesLeft<=2 ? C.sweep : "") : C.dim));
 }
 "use strict";
