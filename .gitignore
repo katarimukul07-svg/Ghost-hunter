@@ -3,3 +3,14 @@ node_modules/
 dist/
 test-results/
 playwright-report/
+
+# Local-only files that must never be committed
+supabase/.temp/
+backups/
+data/
+*.sqlite3
+*.sqlite3-*
+*.sqlite3.tmp-*
+.env
+.env.*
+ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
