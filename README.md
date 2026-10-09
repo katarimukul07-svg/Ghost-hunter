@@ -1,6 +1,6 @@
 # Ghost Hunter
 
-A minimalist arcade survival game where every completed route becomes a lethal echo. Collect the prize, escape, and survive your own history until the Garbage Collector clears old paths.
+A minimalist mobile arcade game for iPhone and Android where every completed route becomes a lethal echo. Collect the prize, escape, and survive your own history until the Garbage Collector clears old paths.
 
 ## Audio
 Choose one of three bundled instrumental tracks: Echo Run (melodic EDM),
@@ -12,14 +12,20 @@ See [music update evidence](docs/release/TECHNO_MUSIC_SETTINGS.md).
 
 ## Current status
 
-The repository contains the web game plus Capacitor 8 projects for Android and iOS. Version 1.0 is in release-candidate preparation and still requires protected CI, real-device beta testing, signing, and store-owner approval before submission.
+The repository contains the web game plus Capacitor 8 projects for Android and iOS. Version 1.0 is in beta on Apple TestFlight (App Store Connect record: "Echo Steps: Ghost Run", bundle ID `com.mukulkatari.echosteps`) and is being tested on a physical iPhone.
+
+### Release plan
+
+1. **Release the game first.** Ship version 1.0 as a guest-play arcade game, with no accounts or online scores.
+2. **Google Play release.** Set up Android release signing and closed testing, then publish.
+3. **Leaderboard return, 1–2 weeks after the Google Play release.** The leaderboard is paused for launch, not removed. Before it comes back, the server replay validator must be deployed: `scripts/build.mjs` refuses `ECHO_RANKED_ACTIVATE=1` until then.
 
 Simulator UI follow-up (#38): pause uses CSS bars instead of a font-dependent glyph;
 results and sharing explicitly count completed rounds. Scoring and gameplay rules
 are unchanged. Browser regression tests cover the icon, pause/resume, and result/share
 counts; visual confirmation on a rebuilt iOS candidate and physical-device testing remain release gates.
 
-- Live game: <https://katarimukul07-svg.github.io/Ghost-hunter/>
+- Web preview (for quick testing only; the product is the iOS and Android app): <https://katarimukul07-svg.github.io/Ghost-hunter/>
 - Release plan: [ROADMAP.md](ROADMAP.md)
 - Release checklist: [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
 - Store listing draft: [STORE_LISTING.md](STORE_LISTING.md)
@@ -137,8 +143,9 @@ with their owning system or in `src/game/state.js`. `CFG` includes:
 
 GitHub Pages deployment is defined in `.github/workflows/ci.yml`. A pull request must pass web, Android, and iOS build checks; after a tested change reaches `main`, the workflow builds `dist/` and deploys it. Capacitor packages those same tested local assets into native projects instead of loading the hosted website inside the app.
 
-Ranked checkpoint submissions and the legacy leaderboard are retired. Account
-activation cannot enable them. See [ranked containment and next gates](docs/RANKED_CONTAINMENT.md).
+The leaderboard and ranked submissions are paused for the 1.0 launch and planned to
+return 1–2 weeks after the Google Play release (see Release plan). The old
+checkpoint protocol stays retired; account activation cannot enable it. See [ranked containment and next gates](docs/RANKED_CONTAINMENT.md).
 
 The replay service and native session-storage staging candidate are documented in
 [Ranked service implementation](docs/RANKED_SERVICE_IMPLEMENTATION.md). Store

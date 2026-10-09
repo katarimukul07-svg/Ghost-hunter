@@ -18,7 +18,8 @@ Included:
 Not included in the initial launch:
 
 - Paid coin packs or other in-app purchases.
-- Player accounts, cloud saves, or a global leaderboard.
+- Player accounts or cloud saves.
+- The global leaderboard, which is paused for launch and planned to return 1–2 weeks after the Google Play release, once the server replay validator is live.
 - Daily challenges, multiplayer, or live events.
 - Advertising that interrupts active gameplay.
 
@@ -81,7 +82,8 @@ Exit criteria: a modified client cannot directly mint currency, grant paid inven
 
 - Fix launch issues before adding features.
 - Review retention, round completion, death causes, retry usage, ad completion, and cosmetic engagement.
-- Consider daily challenges and leaderboards only after the launch loop demonstrates retention.
+- Bring back the global leaderboard 1–2 weeks after the Google Play release.
+- Consider daily challenges only after the launch loop demonstrates retention.
 
 ## Quality gates
 
