@@ -109,25 +109,13 @@ const DEATH_LINES = [
   "skill issue? no. YOU issue.",
 ];
 
-/* Selectable sound packs — free preference switcher (no coin cost). Each pack
-   only re-flavors pickup/complete/sweep; the death stinger is always the
-   dedicated scary effect below, regardless of pack. */
-const SOUND_PACKS = [
-  { id:"arcade",   label:"Arcade",   cost:0, pickup:{freq:880,  type:"square"},   complete:[{freq:660,type:"triangle"},{freq:988,type:"triangle"}], sweepFreq:220, sweepType:"sawtooth" },
-  { id:"chiptune", label:"Chiptune", cost:0, pickup:{freq:1046, type:"square"},   complete:[{freq:784,type:"square"},{freq:1318,type:"square"}],   sweepFreq:330, sweepType:"square"   },
-  { id:"synth",    label:"Synth",    cost:0, pickup:{freq:660,  type:"sine"},     complete:[{freq:494,type:"sine"},{freq:740,type:"sine"}],         sweepFreq:180, sweepType:"sawtooth" },
-  { id:"retro",    label:"Retro",    cost:0, pickup:{freq:1200, type:"square", dur:0.05}, complete:[{freq:900,type:"square"},{freq:1500,type:"square"}], sweepFreq:400, sweepType:"square" },
-  { id:"dark",     label:"Dark",     cost:0, pickup:{freq:440,  type:"triangle"}, complete:[{freq:330,type:"triangle"},{freq:494,type:"triangle"}], sweepFreq:110, sweepType:"sawtooth" },
-  { id:"lofi",     label:"Lo-Fi",    cost:0, pickup:{freq:520,  type:"sine"},     complete:[{freq:392,type:"sine"},{freq:587,type:"sine"}],         sweepFreq:160, sweepType:"triangle" },
-];
+/* One effects style: synthwave voices generated in src/game/audio.js.
+   Kept as a list so saved preferences and cloud saves stay compatible. */
+const SOUND_PACKS = [{ id:"neon", label:"Neon", cost:0 }];
 
-// Gameplay music, chosen in Settings. Files are CC0 from OpenGameArt (see
-// assets/music/LICENSES.md); tracks without src are generated in code.
+// Gameplay music. CC0 from OpenGameArt (see assets/music/LICENSES.md).
 const MUSIC_TRACKS = Object.freeze([
   {id:"synthwave-house",label:"Neon House",genre:"Synthwave house",src:"assets/music/synthwave-house.mp3"},
-  {id:"neon-rush",label:"Echo Run",genre:"Melodic EDM (generated)"},
-  {id:"night-drive",label:"Ghost Circuit",genre:"Techno (generated)"},
-  {id:"acid-chase",label:"Last Exit",genre:"Acid techno (generated)"},
 ]);
 // Main-menu music.
 const MENU_TRACK = Object.freeze({id:"menu-synth-wave",label:"Synth Wave",genre:"Calm synthwave",src:"assets/music/menu-synth-wave.mp3"});

@@ -310,12 +310,15 @@ function refreshSettings(){
   const choices=document.getElementById("musicChoices"); choices.replaceChildren();
   for(const track of MUSIC_TRACKS){
     const button=document.createElement("button");button.className="chip music-choice";
-    button.textContent=track.label+" · "+track.genre;button.setAttribute("aria-pressed",String(Sound.musicTrack()===track.id));
+    button.textContent=track.label;button.setAttribute("aria-pressed",String(Sound.musicTrack()===track.id));
     button.addEventListener("click",()=>{Sound.setMusic(track.id);Sound.startAmbient();refreshSettings();});choices.append(button);
   }
   const packs=document.getElementById("effectsPack");packs.replaceChildren();
   for(const pack of SOUND_PACKS){const option=document.createElement("option");option.value=pack.id;option.textContent=pack.label;packs.append(option);}
   packs.value=selectedSound;
+  // With a single effects style there is nothing to choose; keep only PREVIEW SOUNDS.
+  const single=SOUND_PACKS.length<2;
+  packs.hidden=single; document.querySelector('label[for="effectsPack"]').hidden=single;
   musicSlider.value=Math.round(Sound.levels().music*100);effectsSlider.value=Math.round(Sound.levels().effects*100);
 }
 function openSettings(from="start"){

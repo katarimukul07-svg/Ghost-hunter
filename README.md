@@ -3,12 +3,12 @@
 A minimalist mobile arcade game for iPhone and Android where every completed route becomes a lethal echo. Collect the prize, escape, and survive your own history until the Garbage Collector clears old paths.
 
 ## Audio
-Gameplay music: Neon House (CC0 synthwave house loop) or one of three styles the
-game generates in code: Echo Run (melodic EDM), Ghost Circuit (techno), Last Exit
-(acid techno). The main menu plays Synth Wave (CC0). Licences and sources are in
-[assets/music/LICENSES.md](assets/music/LICENSES.md). Main-menu Settings contains
-track previews, separate music/effects volume sliders, sound-effect styles, and
-mute. Settings is also available while paused. Preferences stay on the device.
+Gameplay music is Neon House (CC0 synthwave house loop); the main menu plays
+Synth Wave (CC0). Sound effects are synthwave voices generated in code, tuned
+to the same key. Licences and sources are in
+[assets/music/LICENSES.md](assets/music/LICENSES.md). Settings has a music
+preview, separate music/effects volume sliders, a sound-effects preview, and mute.
+Settings is also available while paused. Preferences stay on the device.
 See [music update evidence](docs/release/TECHNO_MUSIC_SETTINGS.md).
 
 ## Current status

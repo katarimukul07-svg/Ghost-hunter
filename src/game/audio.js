@@ -1,8 +1,7 @@
-/* Music: licensed CC0 tracks plus original code-generated styles. Effects use a separate bus. */
+/* Music: CC0 tracks (assets/music/LICENSES.md). Effects are synthwave voices generated in code on a separate bus. */
 const Sound = (() => {
-  let ctx, master, music, synth, effects, limiter, timer=null, muted=false, musicSource=null, musicEpoch=0;
-  let schedulerId=null, procedural=null, playingId=null;
-  let packId=SOUND_PACKS[0].id, intensity=0, step=0, nextBeat=0;
+  let ctx, master, music, effects, limiter, noise=null, timer=null, muted=false, musicSource=null, musicEpoch=0;
+  let playingId=null, intensity=0;
   const read=key=>{try{return localStorage.getItem(key);}catch(e){return null;}};
   let musicLevel=Number(read("echoSteps.musicLevel") ?? 0.55);
   let effectsLevel=Number(read("echoSteps.effectsLevel") ?? 0.8);
@@ -22,7 +21,6 @@ const Sound = (() => {
       limiter=ctx.createDynamicsCompressor();
       limiter.threshold.value=-10; limiter.knee.value=6; limiter.ratio.value=12;
       limiter.attack.value=0.003; limiter.release.value=0.15;
-      synth=ctx.createGain(); synth.gain.value=0.4; synth.connect(music);
       music.connect(master); effects.connect(master); master.connect(limiter); limiter.connect(ctx.destination);
       master.gain.value=muted?0:0.7; music.gain.value=musicLevel*0.7; effects.gain.value=effectsLevel;
     } catch(e){ ctx=null; }
@@ -40,17 +38,11 @@ const Sound = (() => {
     o.onended=()=>{ voices.delete(o); o.disconnect(); g.disconnect(); };
     o.start(t); o.stop(t+dur+0.02);
   }
-  const pack=()=>SOUND_PACKS.find(p=>p.id===packId) || SOUND_PACKS[0];
   function duck(){
     if(!ctx) return;
     const t=ctx.currentTime, target=musicLevel*0.7;
     music.gain.cancelScheduledValues(t); music.gain.setTargetAtTime(target*0.35,t,0.015);
     music.gain.setTargetAtTime(target,t+0.25,0.12);
-  }
-  function cue(notes,type="sine",vol=0.13){
-    if(!ctx || muted) return;
-    duck();
-    notes.forEach(([f,d,delay=0,glide])=>voice(f,d,type,vol,effects,ctx.currentTime+delay,glide));
   }
   // iOS Capacitor returns URLResponse (not HTTPURLResponse) for bundled media.
   // WebKit exposes a successful local response with status 0 and ok=false.
@@ -78,62 +70,14 @@ const Sound = (() => {
     buffers.set(id,pending);
     try{return await pending;}catch(error){buffers.delete(id);throw error;}
   }
-  function kick(t,vol){ voice(150,0.14,"sine",vol,synth,t,42); }
-  function hat(t,vol){ voice(7040,0.025,"square",vol,synth,t,5200); }
-  const STYLES={
-    // Melodic EDM, 124 BPM, E minor: plucked four-note hook over a warm bass.
-    "neon-rush":{bpm:124, roots:[82.41,65.41,98,73.42], motif:[659.25,783.99,987.77,739.99],
-      play(n,t,root,s){
-        if(n%4===0) kick(t,0.2);
-        if(n%2===1) hat(t,0.018);
-        if(n%4===2) voice(root,0.28,"triangle",0.2,synth,t);
-        if(n%8===0) voice(root*2,0.9,"sine",0.06,synth,t);
-        if(n%8===3 || n%8===6) voice(s.motif[Math.floor(n/8)],0.16,"triangle",0.1,synth,t);
-        if(intensity>=1 && n%8===7) voice(s.motif[(Math.floor(n/8)+1)%4]*2,0.1,"sine",0.06,synth,t);
-        if(intensity>=2 && n%2===0) voice(root*4,0.05,"triangle",0.035,synth,t);
-      }},
-    // Driving techno, 132 BPM, D minor: four-on-the-floor kick and a bell motif.
-    "night-drive":{bpm:132, roots:[73.42,58.27,87.31,65.41], motif:[587.33,698.46,880,523.25],
-      play(n,t,root,s){
-        if(n%2===0) kick(t,0.22);
-        if(n%2===1) hat(t,0.022);
-        if(n%4===1 || n%4===3) voice(root,0.12,"triangle",0.17,synth,t);
-        if(n%16===4 || n%16===10) voice(s.motif[Math.floor(n/8)],0.35,"sine",0.09,synth,t);
-        if(intensity>=1 && n%8===6) voice(s.motif[Math.floor(n/8)]*1.5,0.12,"sine",0.05,synth,t);
-        if(intensity>=2 && n%4===2) voice(root*8,0.04,"square",0.012,synth,t);
-      }},
-    // Acid techno, 138 BPM, A minor: gliding saw bass under the original ghost motif.
-    "acid-chase":{bpm:138, roots:[55,43.65,65.41,49], motif:[440,523.25,659.25,493.88],
-      play(n,t,root,s){
-        if(n%2===0) kick(t,0.2);
-        if(n%2===1) hat(t,0.02);
-        const acid=[1,1,2,1,1.5,1,2,1.33][n%8];
-        voice(root*2*acid,0.11,"sawtooth",0.045,synth,t,root*2*acid*(n%3===0?1.5:1));
-        if(n%8===2 || n%8===6) voice(s.motif[Math.floor(n/8)],0.18,"sine",0.11,synth,t);
-        if(intensity>=1 && n%8===7) voice(root*4,0.1,"triangle",0.07,synth,t);
-        if(intensity>=2 && n%4===3) voice(s.motif[(Math.floor(n/8)+2)%4]*2,0.06,"sine",0.04,synth,t);
-      }},
-  };
-  function schedule(){
-    if(!ctx || timer===null || muted || !procedural) return;
-    if(ctx.state!=="running"){ nextBeat=ctx.currentTime+0.03; return; }
-    if(nextBeat<ctx.currentTime) nextBeat=ctx.currentTime+0.03;
-    const s=STYLES[procedural];
-    while(nextBeat<ctx.currentTime+0.12){
-      const n=step%32, root=s.roots[Math.floor(n/8)];
-      s.play(n,nextBeat,root,s);
-      step++; nextBeat+=60/s.bpm/2;
-    }
-  }
   function stopAmbient(){
     musicEpoch++;
-    if(schedulerId!==null) clearInterval(schedulerId);
-    schedulerId=null; timer=null; procedural=null; playingId=null;
+    timer=null; playingId=null;
     if(musicSource){try{musicSource.stop();}catch(e){}musicSource.disconnect();musicSource=null;}
     for(const source of voices){try{source.stop();}catch(e){}}
     status("");
   }
-  // Plays one track: a bundled file (track.src) or a code-generated style.
+  // Plays one bundled track on a seamless loop.
   async function play(id){
     unlock(); if(!ctx) return;
     if(timer!==null && playingId===id) return;
@@ -142,10 +86,6 @@ const Sound = (() => {
     if(muted){status("Sound is off. Turn it on to preview.");return;}
     music.gain.cancelScheduledValues(ctx.currentTime);music.gain.setValueAtTime(0,ctx.currentTime);
     music.gain.linearRampToValueAtTime(musicLevel*0.7,ctx.currentTime+0.4);
-    if(!track.src){
-      procedural=track.id; step=0; nextBeat=ctx.currentTime+0.03;
-      schedulerId=setInterval(schedule,25); schedule(); status(track.label); return;
-    }
     status("Loading music…");
     try{
       const buffer=await loadTrack(id);
@@ -172,23 +112,76 @@ const Sound = (() => {
       effects.gain.setTargetAtTime(effectsLevel,ctx.currentTime,0.03);
     }
   }
-  function pickup(){const p=pack(); cue([[p.pickup.freq,p.pickup.dur||0.09]],p.pickup.type);}
+  // Synthwave effects in A minor (Neon House is in C major / A minor): detuned saw plucks
+  // through a closing low-pass filter, a filtered-noise riser and a falling bass.
+  const N={a1:55,a2:110,e3:164.81,a3:220,a4:440,c5:523.25,e5:659.25,a5:880,c6:1046.5,e6:1318.51};
+  function track(node){
+    voices.add(node);
+    node.onended=()=>{voices.delete(node);node.disconnect();};
+  }
+  function synthVoice(freq,dur,{when=0,vol=0.1,type="sawtooth",detune=9,cutoff=3200,cutoffEnd=500,glide,q=4}={}){
+    if(!ctx || muted || voices.size>=46) return;
+    const t=ctx.currentTime+when, f=ctx.createBiquadFilter(), g=ctx.createGain();
+    f.type="lowpass"; f.Q.value=q;
+    f.frequency.setValueAtTime(cutoff,t); f.frequency.exponentialRampToValueAtTime(Math.max(60,cutoffEnd),t+dur);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    f.connect(g); g.connect(effects);
+    let left=2;
+    for(const cents of [-detune,detune]){
+      const o=ctx.createOscillator(); o.type=type; o.detune.value=cents;
+      o.frequency.setValueAtTime(freq,t); if(glide) o.frequency.exponentialRampToValueAtTime(glide,t+dur);
+      o.connect(f); voices.add(o);
+      o.onended=()=>{voices.delete(o);o.disconnect();if(--left===0){f.disconnect();g.disconnect();}};
+      o.start(t); o.stop(t+dur+0.02);
+    }
+  }
+  function riser(dur){
+    if(!ctx || muted) return;
+    if(!noise){
+      noise=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);
+      const d=noise.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    }
+    const t=ctx.currentTime, src=ctx.createBufferSource(), f=ctx.createBiquadFilter(), g=ctx.createGain();
+    src.buffer=noise; src.loop=true; f.type="bandpass"; f.Q.value=6;
+    f.frequency.setValueAtTime(400,t); f.frequency.exponentialRampToValueAtTime(5000,t+dur);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.09,t+dur*0.8);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    src.connect(f); f.connect(g); g.connect(effects); voices.add(src);
+    src.onended=()=>{voices.delete(src);src.disconnect();f.disconnect();g.disconnect();};
+    src.start(t); src.stop(t+dur+0.02);
+  }
+  function pickup(){
+    if(!ctx || muted) return; duck();
+    synthVoice(N.e5,0.14,{vol:0.07,cutoff:4200,cutoffEnd:700});
+    synthVoice(N.a5,0.1,{when:0.035,vol:0.04,type:"triangle",detune:4,cutoff:6000,cutoffEnd:1500});
+  }
+  function bonus(){
+    if(!ctx || muted) return; duck();
+    synthVoice(N.c6,0.12,{vol:0.06,cutoff:5000,cutoffEnd:900});
+    synthVoice(N.e6,0.22,{when:0.07,vol:0.06,cutoff:5500,cutoffEnd:900});
+  }
   function complete(){
-    const p=pack(), [a,b]=p.complete;
-    cue([[a.freq,0.1]],a.type);
-    voice(b.freq,0.16,b.type,0.14,effects,ctx?.currentTime+0.1);
+    if(!ctx || muted) return; duck();
+    [N.a4,N.c5,N.e5,N.a5].forEach((f,i)=>synthVoice(f,i===3?0.4:0.14,{when:i*0.055,vol:0.06,cutoff:4500,cutoffEnd:i===3?400:800}));
+    synthVoice(N.a3,0.5,{when:0.17,vol:0.05,type:"triangle",detune:6,cutoff:1800,cutoffEnd:300});
+  }
+  function sweep(){
+    if(!ctx || muted) return; duck();
+    riser(CFG.SWEEP_TIME);
+    synthVoice(N.a2,CFG.SWEEP_TIME,{vol:0.05,cutoff:400,cutoffEnd:3500,glide:N.a3,q:8});
   }
   function death(){
     stopAmbient();
-    cue([[180,0.65,0,70],[191,0.55,0,76],[269,0.5,0,107]],"triangle",0.12);
-    cue([[220,0.18,0,90]],"sawtooth",0.06);
+    if(!ctx || muted) return;
+    synthVoice(N.e3,0.75,{vol:0.1,cutoff:2400,cutoffEnd:120,glide:N.e3/2,q:6});
+    synthVoice(N.a2,0.8,{vol:0.08,cutoff:1800,cutoffEnd:100,glide:N.a1,detune:14});
+    voice(110,0.45,"sine",0.18,effects,ctx.currentTime,40);
   }
   const api={
-    unlock,startAmbient,startMenuMusic,stopAmbient,pickup,complete,death,setMusic,musicTrack:()=>trackId,
-    bonus(){cue([[659.25,0.09],[880,0.14,0.07]],"sine",0.12);},
-    sweep(){const p=pack(); cue([[p.sweepFreq,CFG.SWEEP_TIME,0,p.sweepFreq*4]],"triangle",0.1);},
-    previewPack(){pickup(); complete();},
-    setPack(id){packId=id;},
+    unlock,startAmbient,startMenuMusic,stopAmbient,pickup,complete,death,bonus,sweep,setMusic,musicTrack:()=>trackId,
+    previewPack(){pickup(); setTimeout(complete,250); setTimeout(bonus,700);},
+    setPack(){}, // one effects style; kept so saved settings stay compatible
     setRound(value){intensity=value>=10?2:value>=5?1:0;},
     setMuted(m){
       muted=!!m;
@@ -204,7 +197,7 @@ const Sound = (() => {
   if(new URLSearchParams(location.search).has("test"))
     Object.defineProperty(window,"__ghostAudioTest",{value:{
       acceptsMusicResponse,
-      snapshot:()=>({musicActive:!muted && (musicSource!==null || procedural!==null),playingId,trackId,running:timer!==null,voices:voices.size,intensity,step,muted,levels:api.levels()}),
+      snapshot:()=>({musicActive:!muted && musicSource!==null,playingId,trackId,running:timer!==null,voices:voices.size,intensity,muted,levels:api.levels()}),
     }});
   return api;
 })();
