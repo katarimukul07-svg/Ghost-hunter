@@ -1,10 +1,10 @@
-# Ghost Hunter store preparation packet
+# Echo Steps store preparation packet
 
 Status: reviewable draft. Not submitted; no real-device or signing claim.
 
 ## Listing copy
 
-**Proposed store name:** Ghost Hunter
+**Store name:** Echo Steps: Ghost Run (App Store Connect record); home-screen name: Echo Steps
 
 **Short description:** Collect the prize. Reach the exit. Survive your own echoes.
 
@@ -29,7 +29,7 @@ submitted binary. The current release default remains offline guest play.
 | Native token vault | Keychain/Keystore tests on physical iOS/Android; failures stay closed |
 | Account providers | Apple/Google configuration and approved callback/capability settings |
 | Support/privacy | Owner must confirm durable contact, retention and final declarations |
-| Identity | Confirm Ghost Hunter branding and permanent `com.mukulkatari.echosteps` ID |
+| Identity | Confirm Echo Steps branding and permanent `com.mukulkatari.echosteps` ID |
 | Screenshots | Capture the accepted build on actual store target sizes |
 | Google testing | Confirm account-specific testing requirements in Play Console |
 | Submission | Owner approval required by WORKFLOW.md; no automatic submission |

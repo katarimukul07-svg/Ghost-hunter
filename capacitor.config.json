@@ -1,6 +1,6 @@
 {
   "appId": "com.mukulkatari.echosteps",
-  "appName": "Ghost Hunter",
+  "appName": "Echo Steps",
   "webDir": "dist",
   "backgroundColor": "#070b10",
   "ios": {

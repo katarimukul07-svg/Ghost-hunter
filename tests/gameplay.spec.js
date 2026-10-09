@@ -28,7 +28,7 @@ for (const completedRounds of [0, 1, 4]) {
     expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).round).toBe(completedRounds+1);
     await page.locator("#shareBtn").click();
     const shared = await page.evaluate(() => window.__sharedResult);
-    expect(shared.text).toContain(` completed ${completedRounds} ${completedRounds===1?"round":"rounds"} in Ghost Hunter!`);
+    expect(shared.text).toContain(` completed ${completedRounds} ${completedRounds===1?"round":"rounds"} in Echo Steps!`);
     expect(shared.text).not.toContain("reached round");
     expect(errors).toEqual([]);
   });

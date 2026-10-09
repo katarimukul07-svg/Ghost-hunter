@@ -1,6 +1,6 @@
 {
-  "name": "Ghost Hunter",
-  "short_name": "Ghost Hunter",
+  "name": "Echo Steps: Ghost Run",
+  "short_name": "Echo Steps",
   "description": "Outrun the echoes created by your own past routes.",
   "start_url": "./",
   "scope": "./",
