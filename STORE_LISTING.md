@@ -2,7 +2,7 @@
 
 ## Identity
 
-- App name: Echo Steps: Garbage Collector
+- App name: Echo Steps: Ghost Run
 - Short name: Echo Steps
 - Bundle/application ID: `com.mukulkatari.echosteps` (owner must approve before first store record)
 - Version: 1.0.0

@@ -1,4 +1,4 @@
-# Ghost Hunter
+# Echo Steps: Ghost Run
 
 A minimalist mobile arcade game for iPhone and Android where every completed route becomes a lethal echo. Collect the prize, escape, and survive your own history until the Garbage Collector clears old paths.
 
@@ -50,7 +50,7 @@ failures before the fixes; afterward 55 backend and 85 browser tests passed
 locally. Safe-area tests inject inset values and lifecycle tests simulate events;
 they do not replace physical-device acceptance.
 
-UI audit follow-up: clearer labels and ownership states, brighter secondary text, green Buy/red Cancel, consistent Ghost Hunter display names, and a smooth tap-to-drag transition. [Audit evidence](docs/release/UI_AUDIT.md) records browser measurements and the remaining physical-device and player acceptance gates.
+UI audit follow-up: clearer labels and ownership states, brighter secondary text, green Buy/red Cancel, consistent display names (now Echo Steps), and a smooth tap-to-drag transition. [Audit evidence](docs/release/UI_AUDIT.md) records browser measurements and the remaining physical-device and player acceptance gates.
 
 Release acceptance: [fresh-player and iPhone protocol](docs/release/BETA_TEST.md), with blank observation sheets and explicit release gates. Synthetic/browser tests are recorded separately from physical-device and human results.
 
