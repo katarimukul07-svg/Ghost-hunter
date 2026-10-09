@@ -13,4 +13,3 @@ data/
 *.sqlite3.tmp-*
 .env
 .env.*
-ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
