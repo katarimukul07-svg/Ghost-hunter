@@ -316,6 +316,9 @@ function refreshSettings(){
   const packs=document.getElementById("effectsPack");packs.replaceChildren();
   for(const pack of SOUND_PACKS){const option=document.createElement("option");option.value=pack.id;option.textContent=pack.label;packs.append(option);}
   packs.value=selectedSound;
+  // With a single effects style there is nothing to choose; keep only TEST EFFECTS.
+  const single=SOUND_PACKS.length<2;
+  packs.hidden=single; document.querySelector('label[for="effectsPack"]').hidden=single;
   musicSlider.value=Math.round(Sound.levels().music*100);effectsSlider.value=Math.round(Sound.levels().effects*100);
 }
 function openSettings(from="start"){
