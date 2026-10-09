@@ -245,3 +245,22 @@ test("uses the scheduled garbage collection count after each tenth completed rou
   }
   expect(errors).toEqual([]);
 });
+
+test("a full-speed step cannot pass through a ghost between tick endpoints", async ({ page }) => {
+  await page.goto("/?test=1");
+  await page.getByRole("button", { name:"PLAY" }).click();
+  const result = await page.evaluate(() => {
+    const T = window.__echoStepsTest;
+    obstacles.length = 0; prize = null; grace = 0;
+    T.movePlayerTo(room.x + room.w/2 - 120, room.y + room.h/2);
+    // One step's worth ahead, with the ghost parked in the middle of that step.
+    const step = playerSpeed;
+    ghosts = [{ path:[{ x:player.x + step/2, y:player.y }] }];
+    pointer.x = player.x + 400; pointer.y = player.y; pointer.active = true;
+    const startX = player.x;
+    T.step(1);
+    return { moved:player.x - startX, step, mode };
+  });
+  expect(result.moved).toBeGreaterThan(0);
+  expect(result.mode).not.toBe(1);   // STATE.PLAYING is 1; contact must start the death
+});

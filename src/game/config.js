@@ -7,7 +7,7 @@
 
 const CFG = {
   WALL_MARGIN:16, HUD_CLEARANCE:46, PLAYER_R:12,
-  SPEED_FRAC:0.026,          // responsive without snapping instantly to the pointer
+  SPEED_FRAC:0.031,          // ~20% faster than 0.026; still eases toward the pointer
   GHOST_R:9, PRIZE_R:11, EXIT_W:150, EXIT_H:44,
   GC_MOVES:10, GC_REMOVE_START:4, GC_REMOVE_MIN:1, SWEEP_TIME:0.7, GRACE_TICKS:36,
   RAMP_START:7, GHOST_RAMP:0.01, WALL_DRIFT:0.9,
