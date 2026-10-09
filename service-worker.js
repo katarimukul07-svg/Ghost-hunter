@@ -1,4 +1,4 @@
-const CACHE = "ghost-approved-music-v3";
+const CACHE = "echo-steps-original-score-v4";
 const OFFLINE_ASSETS = [
   "./",
   "./index.html",
@@ -25,9 +25,8 @@ const OFFLINE_ASSETS = [
   "./manifest.webmanifest",
   "./privacy.html",
   "./support.html",
-  "./assets/music/echo-run.mp3",
-  "./assets/music/ghost-circuit.mp3",
-  "./assets/music/last-exit.mp3",
+  "./assets/music/synthwave-house.mp3",
+  "./assets/music/menu-synth-wave.mp3",
   "./assets/icon-192.png",
   "./assets/icon-512.png",
 ];

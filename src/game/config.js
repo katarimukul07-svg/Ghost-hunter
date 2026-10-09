@@ -121,8 +121,13 @@ const SOUND_PACKS = [
   { id:"lofi",     label:"Lo-Fi",    cost:0, pickup:{freq:520,  type:"sine"},     complete:[{freq:392,type:"sine"},{freq:587,type:"sine"}],         sweepFreq:160, sweepType:"triangle" },
 ];
 
+// Gameplay music, chosen in Settings. Files are CC0 from OpenGameArt (see
+// assets/music/LICENSES.md); tracks without src are generated in code.
 const MUSIC_TRACKS = Object.freeze([
-  {id:"neon-rush",label:"Echo Run",genre:"Melodic EDM",src:"assets/music/echo-run.mp3"},
-  {id:"night-drive",label:"Ghost Circuit",genre:"Techno / breakbeat",src:"assets/music/ghost-circuit.mp3"},
-  {id:"acid-chase",label:"Last Exit",genre:"Acid techno",src:"assets/music/last-exit.mp3"},
+  {id:"synthwave-house",label:"Neon House",genre:"Synthwave house",src:"assets/music/synthwave-house.mp3"},
+  {id:"neon-rush",label:"Echo Run",genre:"Melodic EDM (generated)"},
+  {id:"night-drive",label:"Ghost Circuit",genre:"Techno (generated)"},
+  {id:"acid-chase",label:"Last Exit",genre:"Acid techno (generated)"},
 ]);
+// Main-menu music.
+const MENU_TRACK = Object.freeze({id:"menu-synth-wave",label:"Synth Wave",genre:"Calm synthwave",src:"assets/music/menu-synth-wave.mp3"});

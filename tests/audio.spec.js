@@ -60,15 +60,15 @@ test("overlapping effects render audible output with sample headroom",async({pag
   console.log("Audio overlap render",metrics);
 });
 
- test("three tracks preview, persist and stay separate from shop purchases",async({page})=>{
+ test("music tracks preview, persist and stay separate from shop purchases",async({page})=>{
   // This multi-screen journey includes offline caching, reloads and WebKit touch actions.
   test.setTimeout(60_000);
   await page.goto('/?test=1');await page.locator('#settingsBtn').click();
-  await expect(page.locator('#musicChoices button')).toHaveCount(3);
+  await expect(page.locator('#musicChoices button')).toHaveCount(4);
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
-  await expect.poll(()=>page.evaluate(async()=>{const found=await Promise.all(MUSIC_TRACKS.map(t=>caches.match(t.src)));return found.every(Boolean);})).toBe(true);
+  await expect.poll(()=>page.evaluate(async()=>{const found=await Promise.all([...MUSIC_TRACKS.filter(t=>t.src),MENU_TRACK].map(t=>caches.match(t.src)));return found.every(Boolean);})).toBe(true);
   await page.context().setOffline(true);
-  for(const title of ['Echo Run','Ghost Circuit','Last Exit']){
+  for(const title of ['Neon House','Echo Run','Ghost Circuit','Last Exit']){
     await page.locator('#musicChoices button').filter({hasText:title}).click();
     await expect.poll(()=>page.evaluate(()=>window.__ghostAudioTest.snapshot().musicActive)).toBe(true);
   }
@@ -78,7 +78,8 @@ test("overlapping effects render audible output with sample headroom",async({pag
   await expect.poll(()=>page.evaluate(()=>window.__ghostAudioTest.snapshot().musicActive)).toBe(true);
   const coins=await page.evaluate(()=>localStorage.getItem('echoSteps.coins'));
   await page.locator('#settingsBackBtn').click();
-  expect(await page.evaluate(()=>window.__ghostAudioTest.snapshot().musicActive)).toBe(false);
+  // Leaving Settings stops the preview and returns to the menu track.
+  await expect.poll(()=>page.evaluate(()=>window.__ghostAudioTest.snapshot().playingId)).toBe('menu-synth-wave');
   await page.context().setOffline(false);
   await page.reload();expect(await page.evaluate(()=>Sound.musicTrack())).toBe('acid-chase');
   expect(await page.evaluate(()=>localStorage.getItem('echoSteps.coins'))).toBe(coins);

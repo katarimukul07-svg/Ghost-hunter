@@ -183,7 +183,7 @@ function showStart(){
   el.over.classList.add("hidden"); el.pause.classList.add("hidden"); el.hud.classList.add("hidden");
   el.shop.classList.add("hidden");
   document.getElementById("settingsScreen").classList.add("hidden");
-  Sound.stopAmbient();
+  Sound.startMenuMusic();
   refreshCoinLine(); applyColorUI(); applyGhostUI();
   el.start.classList.remove("hidden");
 }
@@ -324,13 +324,19 @@ function openSettings(from="start"){
 }
 function closeSettings(){
   Sound.stopAmbient();settingsScreen.classList.add("hidden");
-  if(settingsReturnTo==="pause")el.pause.classList.remove("hidden");else el.start.classList.remove("hidden");
+  if(settingsReturnTo==="pause")el.pause.classList.remove("hidden");
+  else { el.start.classList.remove("hidden"); Sound.startMenuMusic(); }
 }
 document.getElementById("settingsBtn").addEventListener("click",()=>openSettings());
 document.getElementById("settingsBackBtn").addEventListener("click",closeSettings);
 document.getElementById("stopMusicPreview").addEventListener("click",()=>Sound.stopAmbient());
 document.getElementById("effectsPack").addEventListener("change",e=>selectSoundPack(e.target.value));
 document.getElementById("previewEffects").addEventListener("click",()=>{Sound.unlock();Sound.previewPack();});
+// Browsers only start audio after a tap, so the menu track begins on the first
+// touch of the start screen and again when the app returns to the foreground.
+const onMenu=()=>mode===STATE.START && !el.start.classList.contains("hidden");
+document.addEventListener("pointerdown",()=>{ Sound.unlock(); if(onMenu()) Sound.startMenuMusic(); },true);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden && onMenu()) Sound.startMenuMusic(); });
 window.addEventListener("ghost:music-status",e=>{document.getElementById("musicStatus").textContent=e.detail;});
 
 document.getElementById("settingsMuteBtn").addEventListener("click",()=>{
