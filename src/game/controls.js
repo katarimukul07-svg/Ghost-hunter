@@ -310,7 +310,7 @@ function refreshSettings(){
   const choices=document.getElementById("musicChoices"); choices.replaceChildren();
   for(const track of MUSIC_TRACKS){
     const button=document.createElement("button");button.className="chip music-choice";
-    button.textContent=track.label+" · "+track.genre;button.setAttribute("aria-pressed",String(Sound.musicTrack()===track.id));
+    button.textContent=track.label;button.setAttribute("aria-pressed",String(Sound.musicTrack()===track.id));
     button.addEventListener("click",()=>{Sound.setMusic(track.id);Sound.startAmbient();refreshSettings();});choices.append(button);
   }
   const packs=document.getElementById("effectsPack");packs.replaceChildren();
