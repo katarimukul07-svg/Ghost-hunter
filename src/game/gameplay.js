@@ -184,11 +184,17 @@ function update(dt) {
   updateObstacles(dt);
 
   const dx=pointer.x-player.x, dy=pointer.y-player.y, d=Math.hypot(dx,dy);
-  if (d>0.5){ const step=Math.min(d,playerSpeed); player.x+=(dx/d)*step; player.y+=(dy/d)*step; }
-  player.x = clamp(player.x, room.x+CFG.PLAYER_R, room.x+room.w-CFG.PLAYER_R);
-  player.y = clamp(player.y, room.y+CFG.PLAYER_R, room.y+room.h-CFG.PLAYER_R);
-  for (let pass=0;pass<2;pass++)
-    for (const o of obstacles){ const r=resolveCircleRect(player.x,player.y,CFG.PLAYER_R,o); player.x=r.x; player.y=r.y; }
+  // Move in sub-steps no longer than half the player radius, resolving walls after
+  // each one, so a fast step can never carry NODE through a thin obstacle.
+  const step = d>0.5 ? Math.min(d,playerSpeed) : 0;
+  const subSteps = Math.max(1, Math.ceil(step/(CFG.PLAYER_R*0.5)));
+  for (let s=0;s<subSteps;s++){
+    if (step){ player.x+=(dx/d)*step/subSteps; player.y+=(dy/d)*step/subSteps; }
+    player.x = clamp(player.x, room.x+CFG.PLAYER_R, room.x+room.w-CFG.PLAYER_R);
+    player.y = clamp(player.y, room.y+CFG.PLAYER_R, room.y+room.h-CFG.PLAYER_R);
+    for (let pass=0;pass<2;pass++)
+      for (const o of obstacles){ const r=resolveCircleRect(player.x,player.y,CFG.PLAYER_R,o); player.x=r.x; player.y=r.y; }
+  }
 
   currentPath.push({ x:player.x, y:player.y });
 
