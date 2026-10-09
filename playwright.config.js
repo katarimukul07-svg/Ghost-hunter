@@ -20,7 +20,7 @@ export default defineConfig({
     },
     {
       name: "mobile-webkit",
-      testMatch: /(mobile-release|backgrounds|audio)\.spec\.js/,
+      testMatch: /(mobile-release|backgrounds|audio|gameplay|automated-player|bonuses)\.spec\.js/,
       use: { ...devices["iPhone 13"] },
     },
   ],
