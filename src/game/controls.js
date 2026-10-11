@@ -227,6 +227,8 @@ async function initCoinStore(){
   try {
     const { products, canPay } = await store.products(COIN_PRODUCTS.map(p => p.id));
     coinStore.products = products || [];
+    const missing = COIN_PRODUCTS.filter(p => !coinStore.products.some(x => x.id === p.id)).map(p => p.id);
+    if (missing.length) console.warn("Coin packs not returned by the App Store:", missing.join(", "));
     document.getElementById("shopCoinsTab").classList.toggle("hidden", !canPay || !coinStore.products.length);
     const { transactions } = await store.pending();
     for (const t of transactions || []) await creditTransaction(t);

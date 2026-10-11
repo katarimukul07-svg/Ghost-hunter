@@ -115,6 +115,8 @@ public class EchoNativePlugin: CAPPlugin, CAPBridgedPlugin, GKGameCenterControll
         Task { @MainActor in
             do {
                 let found = try await Product.products(for: ids)
+                let missing = ids.filter { id in !found.contains { $0.id == id } }
+                print("EchoNative: requested \(ids.count) products, found \(found.map(\.id)), missing \(missing)")
                 found.forEach { self.products[$0.id] = $0 }
                 let list = found.map { ["id": $0.id, "displayName": $0.displayName, "displayPrice": $0.displayPrice] }
                 call.resolve(["products": list, "canPay": AppStore.canMakePayments])
