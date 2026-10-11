@@ -71,7 +71,7 @@ Shop prices are now provisional at 5–25 coins for paid dot/effect cosmetics an
 - Obstacles increase, grow, drift, and change shape as the run advances.
 - Progress, coins, cosmetics, sound settings, and best score currently persist in local storage on one device.
 - An optional account and non-economic sync client is built but disabled by default. It requires reviewed backend, privacy, and deletion setup before activation.
-- Version 1.0 has no paid coin packs, ads, analytics, tracking, accounts, or network dependency.
+- Version 1.0 on iOS adds a **Game Center leaderboard** (best rounds reached) and optional **coin packs** sold through the App Store (Shop → GET COINS). Coins are credited only from StoreKit-verified transactions. There are no ads, analytics, tracking, or accounts of our own; the web build stays fully offline with neither feature.
 
 ## Development
 
