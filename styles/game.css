@@ -159,3 +159,20 @@
 .coin-price{color:var(--ink);font-weight:700}
 .coin-tag{position:absolute;top:-9px;right:12px;padding:2px 8px;border-radius:8px;font-size:10px;
   letter-spacing:.08em;background:var(--sweep);color:#fff}
+
+/* Main menu: one neon colour per action, in play order. */
+#startScreen #shopBtn.menu-store { background:var(--sweep); box-shadow:0 0 18px rgba(198,107,255,.5); }
+#startScreen .menu-leaderboard { background:var(--prize); box-shadow:0 0 18px rgba(255,241,92,.45); }
+#startScreen .menu-settings { background:var(--exit); box-shadow:0 0 18px rgba(57,255,158,.4); }
+#startScreen #tutorialBtn.tutorial-menu-btn { background:#ff8a3d; color:var(--bg); border:none; box-shadow:0 0 18px rgba(255,138,61,.45); }
+#menuNotice { color:var(--prize); max-width:320px; }
+
+/* Store tabs: each category has its own colour; the active tab fills with it. */
+.tab[data-cat="colors"] { --tab:var(--player); }
+.tab[data-cat="trail"] { --tab:var(--exit); }
+.tab[data-cat="ghost"] { --tab:var(--ghost); }
+.tab[data-cat="death"] { --tab:#ff8a3d; }
+.tab[data-cat="coins"] { --tab:var(--prize); }
+.tab[data-cat="background"] { --tab:#5b8cff; }
+.tab[data-cat] { color:var(--tab); border-color:var(--tab); }
+.tab[data-cat].active { color:var(--bg); background:var(--tab); border-color:var(--tab); box-shadow:0 0 12px var(--tab); }

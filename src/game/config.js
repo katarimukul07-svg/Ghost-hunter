@@ -13,8 +13,12 @@ const CFG = {
   RAMP_START:7, GHOST_RAMP:0.01, WALL_DRIFT:0.9,
   OBSTACLES_START:2, OBSTACLES_ADD_EVERY:5, OBSTACLES_MAX:6,
   SIZE_EVERY:5, SIZE_GROW:0.10, SIZE_MAX:2.0, EXIT_MOVE_EVERY:5,
+  // Big moments are staggered so no round stacks them: obstacles arrive on
+  // rounds 5,10,15…, the exit moves on 3,8,13…, obstacles grow on 7,12,17…
+  EXIT_MOVE_OFFSET:3, SIZE_OFFSET:2,
   EXIT_HANDOFF_TICKS:120, EXIT_SAFE_PAD:32,
-  RETRY_COST:100,            // coins to revive at the same round after death
+  RETRY_COST:50,             // first revive in a run; each later revive doubles
+  RETRY_COST_MAX:400,
   SIMULATION_STEP:1/60,
   TOUCH_OFFSET_PX:52,
   BONUS_LIFETIME:4.5,
@@ -52,6 +56,13 @@ const BACKGROUNDS = Object.freeze([
 const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex"];
 const CONFETTI_COLORS = ["#ffd23f","#ff5ca8","#3d7bff","#39ff9e","#b06bff","#ff8a2b"];
 
+function exitMovesOnRound(r) {
+  return r >= CFG.EXIT_MOVE_OFFSET && (r - CFG.EXIT_MOVE_OFFSET) % CFG.EXIT_MOVE_EVERY === 0;
+}
+// 50, 100, 200, then 400 for every further revive in the same run.
+function reviveCost(revivesUsed) {
+  return Math.min(CFG.RETRY_COST_MAX, CFG.RETRY_COST * Math.pow(2, revivesUsed));
+}
 function gcRemoveForCompletedRounds(completed) {
   const sweepNumber = Math.max(1, Math.floor(completed / CFG.GC_MOVES));
   return Math.max(CFG.GC_REMOVE_MIN, CFG.GC_REMOVE_START - (sweepNumber - 1));

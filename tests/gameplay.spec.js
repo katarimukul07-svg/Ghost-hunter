@@ -120,7 +120,7 @@ test("keeps the old exit safe only for the relocation handoff", async ({ page })
   await page.evaluate(() => window.__echoStepsTest.prepareExitHandoff());
 
   const handoff = await page.evaluate(() => window.__echoStepsTest.snapshot());
-  expect(handoff.round).toBe(5);
+  expect(handoff.round).toBe(3);   // the exit first moves on round 3 (staggered from obstacles)
   expect(handoff.departureZone).not.toBeNull();
   expect(handoff.exit.x !== handoff.departureZone.x || handoff.exit.y !== handoff.departureZone.y).toBe(true);
 
@@ -166,7 +166,7 @@ test("distinguishes the objective from red circular ghosts", async ({ page }) =>
   const errors = collectPageErrors(page);
 
   await page.goto("/?test=1");
-  await expect(page.locator("#startScreen")).toContainText("yellow coin");
+  await expect(page.locator("#startScreen")).toBeVisible();   // the tutorial, not the menu, now teaches the coin
 
   const roles = await page.evaluate(() => window.__echoStepsTest.visualRoles());
   expect(roles.objective).toEqual({

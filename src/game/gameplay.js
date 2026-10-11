@@ -9,7 +9,7 @@ function resetGame() {
   pointer.x = player.x; pointer.y = player.y; pointer.active = false;
   ghosts = []; currentPath = []; particles = []; pops = []; shockwaves = [];
   departureZone = null;
-  frame = 0; grace = CFG.GRACE_TICKS; runCoins = 0;
+  frame = 0; grace = CFG.GRACE_TICKS; runCoins = 0; revivesThisRun = 0;
   ghostPhase = 0; ghostSpeed = 1; wallTime = 0;
   toast = null; shake = 0; deathTimer = 0; sweep = null;
   hasPrize = false; paused = false;
@@ -50,7 +50,7 @@ function completeRound() {
     sweep={t:0, remove:Math.min(gcPolicy.remove, ghosts.length), completedRounds};
     Sound.sweep();
   }
-  if (round % CFG.EXIT_MOVE_EVERY === 0){
+  if (exitMovesOnRound(round)){
     const oldExit={...exit};
     repositionExit();
     departureZone={...oldExit, ticks:CFG.EXIT_HANDOFF_TICKS};

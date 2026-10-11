@@ -13,7 +13,7 @@ let prize = null, hasPrize = false;
 
 let currentPath = [], ghosts = [];
 let frame = 0, round = 1, grace = 0;
-let coins = 0, runCoins = 0, bestRounds = 0;   // coins = spendable bank; bestRounds = leaderboard record
+let coins = 0, runCoins = 0, bestRounds = 0, revivesThisRun = 0;   // coins = spendable bank; bestRounds = leaderboard record
 let ghostPhase = 0, ghostSpeed = 1, wallTime = 0;
 let toast = null, particles = [], pops = [], shake = 0, deathTimer = 0;
 let sweep = null, paused = false;

@@ -53,6 +53,12 @@ public class EchoNativePlugin: CAPPlugin, CAPBridgedPlugin, GKGameCenterControll
                 call.resolve(self.playerPayload(player))
                 return
             }
+            // iOS calls the auth handler once per launch; after a decline,
+            // the player has to sign in from Settings.
+            if self.authHandlerInstalled && self.signInCalls.isEmpty {
+                call.resolve(["authenticated": false, "message": "Sign in to Game Center in Settings."])
+                return
+            }
             self.signInCalls.append(call)
             guard !self.authHandlerInstalled else { return }
             self.authHandlerInstalled = true
