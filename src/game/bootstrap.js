@@ -65,7 +65,7 @@ if (new URLSearchParams(location.search).has("test")) {
         completeRound();
       },
       prepareExitHandoff:()=>{
-        round=CFG.EXIT_MOVE_EVERY-1;
+        round=CFG.EXIT_MOVE_OFFSET-1;
         player.x=exit.x+exit.w/2; player.y=exit.y+exit.h/2;
         pointer.x=player.x; pointer.y=player.y; pointer.active=false;
         currentPath=[{x:player.x,y:player.y}]; hasPrize=true;

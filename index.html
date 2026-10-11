@@ -43,19 +43,14 @@
       <label class="mlabel">YOUR NAME</label>
       <input id="nameInput" maxlength="12" placeholder="Player" autocomplete="off" />
     </div>
-    <div class="sub">
-      <span style="color:var(--prize)">Grab the yellow coin.</span>
-      <span style="color:var(--exit)">Find the exit.</span><br>
-      Dodge your <span id="hintGhost" style="color:var(--ghost)">ghosts</span>.<br>
-      Tap to move your <span id="hintDot" style="color:var(--player)">dot</span>. Drag to steer.
-    </div>
+    <div class="sub hidden" id="menuNotice" role="status" aria-live="polite"></div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="startBtn">PLAY</button>
-      <button id="shopBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">SHOP</button>
-      <button id="settingsBtn" class="chip">SETTINGS</button>
+      <button id="shopBtn" class="menu-store">STORE</button>
+      <button id="gameCenterBtn" class="menu-leaderboard hidden">LEADERBOARD</button>
+      <button id="settingsBtn" class="menu-settings">SETTINGS</button>
       <button id="accountBtn" class="chip hidden">ACCOUNT</button>
       <button id="leaderboardBtn" class="chip hidden">LEADERBOARD</button>
-      <button id="gameCenterBtn" class="chip hidden">LEADERBOARD</button>
     </div>
   </div>
 
@@ -115,7 +110,7 @@
   </div>
 
   <div id="shopScreen" class="overlay hidden">
-    <h1 style="color:var(--sweep);text-shadow:0 0 14px rgba(198,107,255,.55)">SHOP</h1>
+    <h1 style="color:var(--sweep);text-shadow:0 0 14px rgba(198,107,255,.55)">STORE</h1>
     <div class="sub" id="shopCoinLine" style="color:var(--prize)">&#9670; 0 coins</div>
     <label class="mlabel" id="shopPreviewLabel">PREVIEW</label>
     <canvas id="shopPreview" width="360" height="120"></canvas>
@@ -167,7 +162,7 @@
     <div class="sub" id="newBest" style="color:var(--prize);text-shadow:0 0 12px rgba(255,241,92,.6);display:none">&#9733; NEW BEST &#9733;</div>
     <div class="sub" id="overSub"></div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-      <button id="retryBtn" style="background:var(--prize);box-shadow:0 0 18px rgba(255,241,92,.5)">RETRY &#9670;100</button>
+      <button id="retryBtn" style="background:var(--prize);box-shadow:0 0 18px rgba(255,241,92,.5)">RETRY &#9670;50</button>
       <button id="restartBtn">PLAY AGAIN</button>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">

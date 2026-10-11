@@ -1,11 +1,11 @@
 {
-  "identifier": "E5C0A001-0000-4000-8000-000000000010",
+  "identifier": "E5C0A010",
   "nonRenewingSubscriptions": [],
   "products": [
     {
       "displayPrice": "0.99",
       "familyShareable": false,
-      "internalID": "B6EF1028-AE19-5AD9-9C18-7C9BB9E3D38C",
+      "internalID": "E5C0A011",
       "localizations": [
         {
           "description": "200 coins for Echo Steps",
@@ -20,7 +20,7 @@
     {
       "displayPrice": "4.99",
       "familyShareable": false,
-      "internalID": "261BC67E-0184-5191-B7D7-E2630358350E",
+      "internalID": "E5C0A012",
       "localizations": [
         {
           "description": "1200 coins for Echo Steps",
@@ -35,7 +35,7 @@
     {
       "displayPrice": "9.99",
       "familyShareable": false,
-      "internalID": "C9AC19D6-650D-5503-BEE5-3A8953023E45",
+      "internalID": "E5C0A013",
       "localizations": [
         {
           "description": "3000 coins for Echo Steps",
@@ -49,14 +49,14 @@
     }
   ],
   "settings": {
-    "_applicationInternalID": "6820829497",
-    "_developerTeamID": "P83NDLU9CQ",
+    "_failTransactionsEnabled": false,
     "_locale": "en_US",
-    "_storefront": "USA"
+    "_storefront": "USA",
+    "_storeKitErrors": []
   },
   "subscriptionGroups": [],
   "version": {
-    "major": 4,
+    "major": 3,
     "minor": 0
   }
 }

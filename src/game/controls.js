@@ -58,7 +58,7 @@ for (const event of ["pointerup", "pointercancel", "lostpointercapture"])
 function refreshCoinLine(){
   el.coinLine.textContent = "\u25C6 " + coins + " coins \u00B7 best " + bestRounds + " rounds";
 }
-function applyColorUI(){ el.hintDot.style.color = playerColor; }
+function applyColorUI(){ if (el.hintDot) el.hintDot.style.color = playerColor; }
 function applyGhostUI(){ if (el.hintGhost) el.hintGhost.style.color = selectedGhostSkin; }
 let shopPurchase = null;
 function refreshShopBuy(){
@@ -227,6 +227,8 @@ async function initCoinStore(){
   try {
     const { products, canPay } = await store.products(COIN_PRODUCTS.map(p => p.id));
     coinStore.products = products || [];
+    const missing = COIN_PRODUCTS.filter(p => !coinStore.products.some(x => x.id === p.id)).map(p => p.id);
+    if (missing.length) console.warn("Coin packs not returned by the App Store:", missing.join(", "));
     document.getElementById("shopCoinsTab").classList.toggle("hidden", !canPay || !coinStore.products.length);
     const { transactions } = await store.pending();
     for (const t of transactions || []) await creditTransaction(t);
@@ -236,16 +238,22 @@ async function initCoinStore(){
 /* ---------- Game Center leaderboard (iOS only) ---------- */
 const gameCenterState = { signedIn: false };
 function showLeaderboardButtons(){
+  const available = Boolean(window.EchoStepsNative && EchoStepsNative.gameCenter && EchoStepsNative.gameCenter.available);
   for (const id of ["gameCenterBtn", "overLeaderboardBtn"])
-    document.getElementById(id).classList.toggle("hidden", !gameCenterState.signedIn);
+    document.getElementById(id).classList.toggle("hidden", !available);
+}
+function menuNotice(text){
+  const box = document.getElementById("menuNotice"); if (!box) return;
+  box.textContent = text; box.classList.remove("hidden");
+  clearTimeout(menuNotice.timer); menuNotice.timer = setTimeout(() => box.classList.add("hidden"), 4000);
 }
 async function initGameCenter(){
   const gc = window.EchoStepsNative && EchoStepsNative.gameCenter;
   if (!gc || !gc.available) return;
+  showLeaderboardButtons();
   try {
     const result = await gc.signIn();
     gameCenterState.signedIn = Boolean(result && result.authenticated);
-    showLeaderboardButtons();
     if (gameCenterState.signedIn && bestRounds > 0) await gc.submitScore(LEADERBOARD_ID, bestRounds);
   } catch(e){ console.warn("Game Center unavailable", e); }
 }
@@ -253,8 +261,18 @@ function submitLeaderboardScore(reached){
   if (!gameCenterState.signedIn || reached <= 0) return;
   EchoStepsNative.gameCenter.submitScore(LEADERBOARD_ID, reached).catch(e => console.warn("Score not submitted", e));
 }
-function openLeaderboard(){
-  if (gameCenterState.signedIn) EchoStepsNative.gameCenter.show(LEADERBOARD_ID).catch(()=>{});
+async function openLeaderboard(){
+  const gc = window.EchoStepsNative && EchoStepsNative.gameCenter;
+  if (!gc || !gc.available) return;
+  if (!gameCenterState.signedIn){
+    try {
+      const result = await gc.signIn();
+      gameCenterState.signedIn = Boolean(result && result.authenticated);
+      if (gameCenterState.signedIn && bestRounds > 0) await gc.submitScore(LEADERBOARD_ID, bestRounds);
+    } catch(e){ gameCenterState.signedIn = false; }
+  }
+  if (gameCenterState.signedIn) gc.show(LEADERBOARD_ID).catch(()=>{});
+  else menuNotice("Sign in to Game Center in your iPhone Settings to join the leaderboard.");
 }
 document.getElementById("gameCenterBtn").addEventListener("click", openLeaderboard);
 document.getElementById("overLeaderboardBtn").addEventListener("click", openLeaderboard);
@@ -299,23 +317,27 @@ function updateMuteBtn(){
 function refreshRetryBtn(){
   const btn = document.getElementById("retryBtn");
   if (!btn) return;
-  btn.innerHTML = "RETRY \u25C6" + CFG.RETRY_COST;
-  btn.style.opacity = (coins >= CFG.RETRY_COST) ? "1" : "0.5";
+  const cost = reviveCost(revivesThisRun);
+  btn.innerHTML = "RETRY \u25C6" + cost;
+  btn.style.opacity = (coins >= cost) ? "1" : "0.5";
 }
 function retryRun(){
-  if (coins < CFG.RETRY_COST){
+  const cost = reviveCost(revivesThisRun);
+  if (coins < cost){
     el.overSub.textContent = "Collect more coins in future runs to afford a revive.";
     haptic("medium");
     return;
   }
-  coins -= CFG.RETRY_COST; saveCoins();
-  player.x = room.x+room.w/2; player.y = room.y+room.h/2;
+  coins -= cost; saveCoins(); revivesThisRun++;
+  // Revive inside the exit: it's the safe zone, while the arena centre is where
+  // the first echo starts. The exit can't finish the round without the coin.
+  player.x = exit.x+exit.w/2; player.y = exit.y+exit.h/2;
   pointer.x = player.x; pointer.y = player.y; pointer.active = false;
   currentPath = []; frame = 0; ghostPhase = 0;
   grace = CFG.GRACE_TICKS*2;                                  // extra grace on revive
   hasPrize = false; paused = false;
   particles = []; pops = []; shockwaves = []; sweep = null;
-  departureZone = null;
+  departureZone = {...exit, ticks:CFG.EXIT_HANDOFF_TICKS};
   spawnPrize();
   toast = { text:"\u21BB REVIVED \u2014 GHOSTS STILL HUNT", t:0 };
   mode = STATE.PLAYING;

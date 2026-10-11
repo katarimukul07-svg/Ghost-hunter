@@ -93,3 +93,15 @@ test("web build shows neither coin packs nor the Game Center button", async ({ p
   await page.locator("#shopBtn").click();
   await expect(page.locator("#shopCoinsTab")).toBeHidden();
 });
+
+test("on iOS the menu reads PLAY, STORE, LEADERBOARD, SETTINGS, TUTORIAL even before Game Center sign-in", async ({ page }) => {
+  await page.addInitScript(mockNative(), { pending: [] });
+  await page.addInitScript(() => { window.Capacitor.Plugins.EchoNative.gameCenterSignIn = async () => ({ authenticated: false }); });
+  await page.goto("/?test=1");
+  await expect(page.locator("#gameCenterBtn")).toBeVisible();
+  const labels = await page.locator("#startScreen button:visible").allTextContents();
+  expect(labels.map(t => t.trim())).toEqual(["PLAY", "STORE", "LEADERBOARD", "SETTINGS", "TUTORIAL"]);
+  await page.locator("#gameCenterBtn").click();
+  await expect(page.locator("#menuNotice")).toContainText("Game Center");
+  expect(await page.evaluate(() => window.__nativeCalls.shown)).toBe(0);
+});

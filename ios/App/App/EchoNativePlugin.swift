@@ -53,6 +53,12 @@ public class EchoNativePlugin: CAPPlugin, CAPBridgedPlugin, GKGameCenterControll
                 call.resolve(self.playerPayload(player))
                 return
             }
+            // iOS calls the auth handler once per launch; after a decline,
+            // the player has to sign in from Settings.
+            if self.authHandlerInstalled && self.signInCalls.isEmpty {
+                call.resolve(["authenticated": false, "message": "Sign in to Game Center in Settings."])
+                return
+            }
             self.signInCalls.append(call)
             guard !self.authHandlerInstalled else { return }
             self.authHandlerInstalled = true
@@ -115,6 +121,8 @@ public class EchoNativePlugin: CAPPlugin, CAPBridgedPlugin, GKGameCenterControll
         Task { @MainActor in
             do {
                 let found = try await Product.products(for: ids)
+                let missing = ids.filter { id in !found.contains { $0.id == id } }
+                print("EchoNative: requested \(ids.count) products, found \(found.map(\.id)), missing \(missing)")
                 found.forEach { self.products[$0.id] = $0 }
                 let list = found.map { ["id": $0.id, "displayName": $0.displayName, "displayPrice": $0.displayPrice] }
                 call.resolve(["products": list, "canPay": AppStore.canMakePayments])

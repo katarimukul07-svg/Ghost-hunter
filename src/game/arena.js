@@ -76,7 +76,8 @@ function obstacleCountForRound(r) {
   return Math.min(CFG.OBSTACLES_MAX, CFG.OBSTACLES_START + Math.floor(r/CFG.OBSTACLES_ADD_EVERY));
 }
 function obstacleScaleForRound(r) {
-  return Math.min(CFG.SIZE_MAX, Math.pow(1+CFG.SIZE_GROW, Math.floor(r/CFG.SIZE_EVERY)));
+  const steps = Math.floor(Math.max(0, r - CFG.SIZE_OFFSET) / CFG.SIZE_EVERY);   // grows on rounds 7, 12, 17…
+  return Math.min(CFG.SIZE_MAX, Math.pow(1+CFG.SIZE_GROW, steps));
 }
 function buildObstacles() {
   const scale = obstacleScaleForRound(round);
