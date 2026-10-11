@@ -55,6 +55,7 @@
       <button id="settingsBtn" class="chip">SETTINGS</button>
       <button id="accountBtn" class="chip hidden">ACCOUNT</button>
       <button id="leaderboardBtn" class="chip hidden">LEADERBOARD</button>
+      <button id="gameCenterBtn" class="chip hidden">LEADERBOARD</button>
     </div>
   </div>
 
@@ -116,18 +117,20 @@
   <div id="shopScreen" class="overlay hidden">
     <h1 style="color:var(--sweep);text-shadow:0 0 14px rgba(198,107,255,.55)">SHOP</h1>
     <div class="sub" id="shopCoinLine" style="color:var(--prize)">&#9670; 0 coins</div>
-    <label class="mlabel">PREVIEW</label>
+    <label class="mlabel" id="shopPreviewLabel">PREVIEW</label>
     <canvas id="shopPreview" width="360" height="120"></canvas>
     <div class="tabs" id="shopTabs">
       <button class="tab" data-cat="colors">DOT COLOR</button>
       <button class="tab" data-cat="trail">TRAIL FX</button>
       <button class="tab" data-cat="ghost">GHOST SKIN</button>
       <button class="tab" data-cat="death">DEATH FX</button>
+      <button class="tab hidden" data-cat="coins" id="shopCoinsTab">GET COINS</button>
     </div>
     <div class="swatches" id="shopColors"></div>
     <div class="swatches hidden" id="shopTrail"></div>
     <div class="swatches hidden" id="shopGhost"></div>
     <div class="swatches hidden" id="shopDeath"></div>
+    <div class="coin-packs hidden" id="shopCoins" role="group" aria-label="Coin packs"></div>
     <div class="sub" id="shopHint">Tap an item to preview it. Owned items can be equipped instantly.</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="shopBuyBtn" type="button" class="hidden"></button>
@@ -170,6 +173,7 @@
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button id="menuBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">MENU</button>
       <button id="shareBtn" class="chip" style="color:var(--dim)">SHARE</button>
+      <button id="overLeaderboardBtn" class="chip hidden">LEADERBOARD</button>
     </div>
   </div>
 </div>

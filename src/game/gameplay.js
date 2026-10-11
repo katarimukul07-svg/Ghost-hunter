@@ -82,6 +82,7 @@ function finalizeDeath() {
   if (window.EchoStepsCloud) window.EchoStepsCloud.finishRankedRun();
   const isBest = reached > bestRounds;
   if (isBest){ bestRounds = reached; saveBestRounds(bestRounds); }
+  if (typeof submitLeaderboardScore === "function") submitLeaderboardScore(reached);
   el.finalRounds.textContent = reached;
   el.bestScore.textContent = bestRounds;
   el.finalCoins.textContent = runCoins;

@@ -27,6 +27,15 @@ const CFG = {
   BONUS_CACHE_COINS:3,
 };
 
+// Game Center leaderboard (best rounds reached) and App Store coin packs.
+// IDs must match App Store Connect exactly.
+const LEADERBOARD_ID = "echosteps.rounds.alltime";
+const COIN_PRODUCTS = Object.freeze([
+  { id:"com.mukulkatari.echosteps.coins200",  coins:200,  label:"200 COINS" },
+  { id:"com.mukulkatari.echosteps.coins1200", coins:1200, label:"1,200 COINS", tag:"POPULAR" },
+  { id:"com.mukulkatari.echosteps.coins3000", coins:3000, label:"3,000 COINS", tag:"BEST VALUE" },
+]);
+
 const BONUS_TYPES = Object.freeze({
   shield:{ label:"1-HIT", color:"#8dff6a", shape:"hex" },
   slow:{ label:"SLOW", color:"#c66bff", shape:"triangle" },

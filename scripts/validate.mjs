@@ -84,6 +84,12 @@ assert.equal(remoteAssets.length, 0, "the game must remain playable offline with
 
 assert.doesNotMatch(sourceBundle, /COIN_PACKS|purchaseCoins|Demo build|BUY COINS|WATCH REWARDED AD/i,
   "prototype commerce and ad UI must not ship");
+// Real coin packs exist only through StoreKit: coins are credited from verified
+// native transactions, deduplicated by ID, and never offered on the web build.
+assert.match(sourceBundle, /function creditTransaction\(/, "coin packs must credit through creditTransaction");
+assert.match(sourceBundle, /CREDITED_KEY/, "credited coin transactions must be deduplicated");
+assert.match(sourceBundle, /store\.available/, "coin packs must stay hidden without the native store");
+assert.match(index, /id="shopCoinsTab"[^>]*class="[^"]*hidden|class="[^"]*hidden[^"]*"[^>]*id="shopCoinsTab"/, "GET COINS must start hidden");
 assert.match(sourceBundle, /SWEEP IN/, "garbage collector countdown must use a clear label");
 assert.match(config, /BONUS_LIFETIME\s*:\s*4\.5/, "timed bonus window must remain intentionally short");
 assert.match(bonuses, /CFG\.BONUS_LIFETIME/, "bonus lifetime must read central configuration");

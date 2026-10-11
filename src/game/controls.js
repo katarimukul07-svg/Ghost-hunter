@@ -148,9 +148,14 @@ function refreshShopCoinLine(){
 function setShopTab(cat){
   shopConfirm.close(); pendingShopPurchase = null;
   shopPurchase = null; refreshShopBuy();
-  const map = { colors:el.shopColors, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath };
+  const map = { colors:el.shopColors, trail:el.shopTrail, ghost:el.shopGhost, death:el.shopDeath,
+    coins:document.getElementById("shopCoins") };
   Object.keys(map).forEach(k => map[k].classList.toggle("hidden", k!==cat));
   el.shopTabs.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.cat===cat));
+  const coinTab = cat==="coins";
+  el.shopPreview.classList.toggle("hidden", coinTab);
+  document.getElementById("shopPreviewLabel").classList.toggle("hidden", coinTab);
+  if (coinTab){ renderCoinPacks(); el.shopHint.textContent = "Coins unlock cosmetics and revives. Purchases are charged to your Apple Account."; return; }
   previewTab = cat;
   if (cat==="colors") previewColor = playerColor;
   else if (cat==="trail") previewTrail = selectedTrail;
@@ -164,6 +169,101 @@ function setShopTab(cat){
   };
   el.shopHint.textContent = hints[cat] || "Tap an item to preview it.";
 }
+/* ---------- Coin packs (App Store, iOS only) ----------
+   Coins are added only for transactions StoreKit has verified. The native side
+   keeps each transaction unfinished until it is credited here, and credited IDs
+   are remembered so a transaction replayed after a crash is never paid twice. */
+const coinStore = { products: [], busy: false };
+const CREDITED_KEY = "echoSteps.creditedTransactions";
+function creditedTransactions(){ try { return JSON.parse(ls(CREDITED_KEY) || "[]"); } catch(e){ return []; } }
+async function creditTransaction(t){
+  if (!t || !t.transactionId) return;
+  const pack = COIN_PRODUCTS.find(p => p.id === t.productId);
+  const done = creditedTransactions();
+  if (pack && !t.revoked && !done.includes(t.transactionId)){
+    const added = pack.coins * Math.max(1, t.quantity || 1);
+    coins += added; saveCoins();
+    done.push(t.transactionId); ss(CREDITED_KEY, JSON.stringify(done.slice(-500)));
+    refreshShopCoinLine(); refreshCoinLine(); refreshRetryBtn(); refreshShopBuy();
+    el.totalCoinsOver.textContent = coins;
+    el.shopHint.textContent = "+" + added.toLocaleString() + " coins added. Thank you!";
+    haptic("medium"); Sound.bonus();
+  }
+  try { await EchoStepsNative.store.finish(t.transactionId); } catch(e) { console.warn("finish failed", e); }
+}
+function renderCoinPacks(){
+  const box = document.getElementById("shopCoins"); box.replaceChildren();
+  for (const pack of COIN_PRODUCTS){
+    const product = coinStore.products.find(p => p.id === pack.id);
+    if (!product) continue;
+    const b = document.createElement("button"); b.type = "button"; b.className = "coin-pack";
+    b.disabled = coinStore.busy;
+    b.innerHTML = '<span class="coin-amount"></span><span class="coin-price"></span>';
+    b.querySelector(".coin-amount").textContent = "\u25C6 " + pack.label;
+    b.querySelector(".coin-price").textContent = product.displayPrice;
+    if (pack.tag){ const tag=document.createElement("span"); tag.className="coin-tag"; tag.textContent=pack.tag; b.prepend(tag); }
+    b.addEventListener("click", () => buyCoinPack(pack));
+    box.append(b);
+  }
+}
+async function buyCoinPack(pack){
+  if (coinStore.busy) return;
+  coinStore.busy = true; renderCoinPacks();
+  el.shopHint.textContent = "Opening the App Store…";
+  try {
+    const result = await EchoStepsNative.store.purchase(pack.id);
+    if (result.status === "purchased") await creditTransaction(result.transaction);
+    else if (result.status === "pending") el.shopHint.textContent = "Purchase is waiting for approval. Coins arrive once it's approved.";
+    else if (result.status === "cancelled") el.shopHint.textContent = "Purchase cancelled.";
+    else el.shopHint.textContent = "Purchase didn't go through. You weren't charged.";
+  } catch(e){
+    el.shopHint.textContent = "The App Store isn't available right now. Try again later.";
+  } finally { coinStore.busy = false; renderCoinPacks(); }
+}
+async function initCoinStore(){
+  const store = window.EchoStepsNative && EchoStepsNative.store;
+  if (!store || !store.available) return;
+  store.onTransaction(t => creditTransaction(t));
+  try {
+    const { products, canPay } = await store.products(COIN_PRODUCTS.map(p => p.id));
+    coinStore.products = products || [];
+    document.getElementById("shopCoinsTab").classList.toggle("hidden", !canPay || !coinStore.products.length);
+    const { transactions } = await store.pending();
+    for (const t of transactions || []) await creditTransaction(t);
+  } catch(e){ console.warn("Coin store unavailable", e); }
+}
+
+/* ---------- Game Center leaderboard (iOS only) ---------- */
+const gameCenterState = { signedIn: false };
+function showLeaderboardButtons(){
+  for (const id of ["gameCenterBtn", "overLeaderboardBtn"])
+    document.getElementById(id).classList.toggle("hidden", !gameCenterState.signedIn);
+}
+async function initGameCenter(){
+  const gc = window.EchoStepsNative && EchoStepsNative.gameCenter;
+  if (!gc || !gc.available) return;
+  try {
+    const result = await gc.signIn();
+    gameCenterState.signedIn = Boolean(result && result.authenticated);
+    showLeaderboardButtons();
+    if (gameCenterState.signedIn && bestRounds > 0) await gc.submitScore(LEADERBOARD_ID, bestRounds);
+  } catch(e){ console.warn("Game Center unavailable", e); }
+}
+function submitLeaderboardScore(reached){
+  if (!gameCenterState.signedIn || reached <= 0) return;
+  EchoStepsNative.gameCenter.submitScore(LEADERBOARD_ID, reached).catch(e => console.warn("Score not submitted", e));
+}
+function openLeaderboard(){
+  if (gameCenterState.signedIn) EchoStepsNative.gameCenter.show(LEADERBOARD_ID).catch(()=>{});
+}
+document.getElementById("gameCenterBtn").addEventListener("click", openLeaderboard);
+document.getElementById("overLeaderboardBtn").addEventListener("click", openLeaderboard);
+// bootstrap.js loads the saved coin bank and best score after this file runs,
+// so native services start only once every script has executed.
+function initNativeServices(){ initGameCenter(); initCoinStore(); }
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initNativeServices, { once:true });
+else setTimeout(initNativeServices, 0);
+
 let shopReturnTo = "start";   // where BACK sends us: "start" or "pause"
 function openShop(tab){
   refreshShopCoinLine(); buildShopAll(); setShopTab(tab || "colors");

@@ -1,0 +1,62 @@
+{
+  "identifier": "E5C0A001-0000-4000-8000-000000000010",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "B6EF1028-AE19-5AD9-9C18-7C9BB9E3D38C",
+      "localizations": [
+        {
+          "description": "200 coins for Echo Steps",
+          "displayName": "200 Coins",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.mukulkatari.echosteps.coins200",
+      "referenceName": "200 Coins",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "4.99",
+      "familyShareable": false,
+      "internalID": "261BC67E-0184-5191-B7D7-E2630358350E",
+      "localizations": [
+        {
+          "description": "1200 coins for Echo Steps",
+          "displayName": "1,200 Coins",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.mukulkatari.echosteps.coins1200",
+      "referenceName": "1,200 Coins",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "C9AC19D6-650D-5503-BEE5-3A8953023E45",
+      "localizations": [
+        {
+          "description": "3000 coins for Echo Steps",
+          "displayName": "3,000 Coins",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.mukulkatari.echosteps.coins3000",
+      "referenceName": "3,000 Coins",
+      "type": "Consumable"
+    }
+  ],
+  "settings": {
+    "_applicationInternalID": "6820829497",
+    "_developerTeamID": "P83NDLU9CQ",
+    "_locale": "en_US",
+    "_storefront": "USA"
+  },
+  "subscriptionGroups": [],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}
