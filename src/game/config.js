@@ -29,6 +29,7 @@ const CFG = {
   BONUS_DOUBLE_CHANCE:0.3,
   BONUS_SLOW_TIME:4,
   BONUS_CACHE_COINS:3,
+  RUN_BONUS_EVERY:5,         // +1 coin at game over for every 5 rounds completed this run
 };
 
 // Game Center leaderboard (best rounds reached) and App Store coin packs.
@@ -69,6 +70,8 @@ function formatCoinsCompact(n) {
   }
   return String(n);
 }
+// Coins for collecting a round's coin: deeper rounds pay more.
+function coinsForRound(r) { return r >= 20 ? 3 : r >= 10 ? 2 : 1; }
 function exitMovesOnRound(r) {
   return r >= CFG.EXIT_MOVE_OFFSET && (r - CFG.EXIT_MOVE_OFFSET) % CFG.EXIT_MOVE_EVERY === 0;
 }
@@ -110,10 +113,15 @@ const TRAILS = [
 ];
 const GHOST_SKINS = [
   { id:"#ff3554", label:"Crimson", cost:0 },
-  { id:"#c66bff", label:"Violet", cost:150 },
-  { id:"#39ff9e", label:"Toxic", cost:300 },
-  { id:"#eaf2ff", label:"Phantom", cost:800 },
+  { id:"#ff2bd6", label:"Violet", cost:150 },   // magenta
+  { id:"#ff7a1a", label:"Toxic", cost:300 },    // acid orange
+  { id:"#b3002d", label:"Phantom", cost:800 },  // blood red
 ];
+/* Ghost skins stay in a danger family (reds, magentas, oranges). The old colours
+   matched the sweep purple, the exit green and the +3 bonus white, so saves that
+   own or wear them move to the same-named skin's new colour. */
+const GHOST_SKIN_RENAMES = Object.freeze({ "#c66bff":"#ff2bd6", "#39ff9e":"#ff7a1a", "#eaf2ff":"#b3002d" });
+function migrateGhostSkinId(id){ return GHOST_SKIN_RENAMES[id] || id; }
 const DEATH_FX = [
   { id:"classic", label:"Classic", cost:0 },
   { id:"shockwave", label:"Shockwave", cost:250 },

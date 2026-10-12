@@ -123,8 +123,8 @@ function drawObstacles(){
   ctx.save();
   for (const o of obstacles){
     traceObstaclePath(o);
-    ctx.fillStyle="rgba(18,38,50,0.92)"; ctx.fill();
-    ctx.strokeStyle=C.wall; ctx.shadowColor=C.wall; ctx.shadowBlur=8; ctx.lineWidth=2;
+    ctx.fillStyle="rgba(34,74,92,0.95)"; ctx.fill();   // ~2:1 against the floor (was 1.3:1)
+    ctx.strokeStyle=C.wall; ctx.shadowColor=C.wall; ctx.shadowBlur=10; ctx.lineWidth=2.5;
     ctx.stroke(); ctx.shadowBlur=0;
   }
   ctx.restore();
@@ -245,7 +245,13 @@ function drawParticles(){
 }
 function drawPops(){
   ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font="600 15px ui-monospace, monospace";
-  for (const q of pops){ ctx.globalAlpha=Math.max(0,q.life); ctx.fillStyle=q.color; ctx.fillText(q.text,q.x,q.y); }
+  for (const q of pops){
+    // Keep the whole label inside the arena, e.g. "ROUND 3 CLEAR" at a side exit.
+    const half = ctx.measureText(q.text).width/2 + 6;
+    const x = clamp(q.x, room.x+half, room.x+room.w-half);
+    const y = clamp(q.y, room.y+14, room.y+room.h-14);
+    ctx.globalAlpha=Math.max(0,q.life); ctx.fillStyle=q.color; ctx.fillText(q.text,x,y);
+  }
   ctx.globalAlpha=1;
 }
 function drawHint(){
@@ -270,7 +276,7 @@ function drawShockwaves(){
   }
 }
 function drawToast(){
-  if (!toast) return;
+  if (!toast || mode!==STATE.PLAYING || paused) return;   // never show behind menus
   const a = toast.t<0.3 ? toast.t/0.3 : (toast.t>2.0 ? Math.max(0,(2.6-toast.t)/0.6) : 1);
   ctx.save(); ctx.globalAlpha=a; ctx.fillStyle=C.sweep;
   ctx.shadowColor=C.sweep; ctx.shadowBlur=16; ctx.font="600 18px ui-monospace, monospace";

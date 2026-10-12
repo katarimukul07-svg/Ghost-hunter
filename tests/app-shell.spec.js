@@ -3,29 +3,25 @@ import { collectPageErrors, completeTutorialForMostTests } from "./helpers.js";
 
 completeTutorialForMostTests(test);
 
-test("first launch tutorial is automatic, skippable, remembered, and replayable", async ({ page }) => {
+test("first launch tutorial opens from the menu only, is remembered, and replayable", async ({ page }) => {
   const errors = collectPageErrors(page);
 
   await page.goto("/");
-  await expect(page.locator("#tutorialScreen")).toBeVisible();
-  await expect(page.getByRole("heading", { name:"YOU ARE THE BLUE DOT" })).toBeVisible();
-  await expect(page.locator("#tutorialKicker")).toHaveText("STEP 1 OF 7");
-  await expect(page.getByRole("button", { name:"SKIP" })).toBeVisible();
-
-  await page.getByRole("button", { name:"NEXT" }).click();
-  await expect(page.getByRole("heading", { name:"COLLECT THE YELLOW COIN" })).toBeVisible();
-
-  await page.getByRole("button", { name:"SKIP" }).click();
+  // New players go straight to the menu and learn in-game; the tutorial waits in the menu.
   await expect(page.getByRole("heading", { name:"ECHO STEPS" })).toBeVisible();
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("echoSteps.tutorial.v1"))).toBe("complete");
-
-  await page.reload();
   await expect(page.locator("#tutorialScreen")).toBeHidden();
+
   await page.getByRole("button", { name:"Open tutorial" }).click();
   await expect(page.locator("#tutorialScreen")).toBeVisible();
   await expect(page.getByRole("heading", { name:"YOU ARE THE BLUE DOT" })).toBeVisible();
-  await expect(page.getByRole("button", { name:"CLOSE" })).toBeVisible();
+  await expect(page.locator("#tutorialKicker")).toHaveText("STEP 1 OF 7");
+  await page.getByRole("button", { name:"NEXT" }).click();
+  await expect(page.getByRole("heading", { name:"COLLECT THE YELLOW COIN" })).toBeVisible();
+  await page.getByRole("button", { name:"CLOSE" }).click();
+  await expect(page.getByRole("heading", { name:"ECHO STEPS" })).toBeVisible();
 
+  await page.reload();
+  await expect(page.locator("#tutorialScreen")).toBeHidden();
   expect(errors).toEqual([]);
 });
 

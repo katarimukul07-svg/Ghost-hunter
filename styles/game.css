@@ -1,6 +1,6 @@
   :root {
     --bg:#070b10; --grid:#0e2230; --player:#29e0ff; --ghost:#ff3554;
-    --prize:#fff15c; --exit:#39ff9e; --sweep:#c66bff; --wall:#3d6b7a;
+    --prize:#fff15c; --exit:#39ff9e; --sweep:#c66bff; --wall:#6fb3c8;
     --ink:#cfe9f5; --dim:#91aaba;
     --safe-top:env(safe-area-inset-top, 0px); --safe-right:env(safe-area-inset-right, 0px);
     --safe-bottom:env(safe-area-inset-bottom, 0px); --safe-left:env(safe-area-inset-left, 0px);
@@ -199,3 +199,9 @@
 #reviveOfferTitle { color:var(--prize); font-size:20px; margin-bottom:8px; }
 #reviveOfferText { margin:0 0 14px; line-height:1.4; }
 #reviveOffer .coin-packs { width:100%; margin:0 0 6px; }
+
+/* Apple's minimum tap target is 44x44pt. The pause button keeps its compact look;
+   an invisible hit area around it makes it easy to hit with a thumb. */
+#pauseBtn { position:relative; }
+#pauseBtn::after { content:""; position:absolute; left:50%; top:50%;
+  width:max(100%, 44px); height:max(100%, 44px); transform:translate(-50%,-50%); }
