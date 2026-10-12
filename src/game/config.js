@@ -56,6 +56,19 @@ const BACKGROUNDS = Object.freeze([
 const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex"];
 const CONFETTI_COLORS = ["#ffd23f","#ff5ca8","#3d7bff","#39ff9e","#b06bff","#ff8a2b"];
 
+// HUD coin label while playing: 999, 4.8K, 12.3K, 1.2M, 3.4B… (rounded down,
+// so the HUD never shows more coins than the bank holds). Menus show the full number.
+function formatCoinsCompact(n) {
+  n = Math.max(0, Math.floor(Number(n) || 0));
+  const units = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]];
+  for (const [size, suffix] of units) {
+    if (n >= size) {
+      const value = Math.floor(n / size * 10) / 10;
+      return (value >= 100 ? Math.floor(value) : value).toString() + suffix;
+    }
+  }
+  return String(n);
+}
 function exitMovesOnRound(r) {
   return r >= CFG.EXIT_MOVE_OFFSET && (r - CFG.EXIT_MOVE_OFFSET) % CFG.EXIT_MOVE_EVERY === 0;
 }

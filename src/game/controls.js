@@ -380,7 +380,10 @@ el.mute.addEventListener("click", ()=>{
   Sound.setMuted(!Sound.isMuted()); ss("echoSteps.mute", Sound.isMuted()?"1":"0"); updateMuteBtn();
 });
 document.getElementById("shareBtn").addEventListener("click", async ()=>{
-  const url=location.href;
+  // In the iOS app location.href is capacitor://localhost, so share the App Store page.
+  const url=(window.EchoStepsNative && EchoStepsNative.isNative)
+    ? "https://apps.apple.com/app/id6820829497"
+    : location.origin+location.pathname;
   // The active HUD round is not completed yet; share the same score as results.
   const completedRounds=round-1;
   const text=playerName+" completed "+completedRounds+" "+(completedRounds===1?"round":"rounds")+" in Echo Steps! Can you beat it?";
