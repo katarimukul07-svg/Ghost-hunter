@@ -53,3 +53,24 @@ test("big moments are staggered across rounds", async ({ page }) => {
     expect(changes, `round ${row.r}`).toBeLessThanOrEqual(1);
   }
 });
+
+test("HUD shows compact coins so the bar never wraps; menus keep the full number", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    localStorage.setItem("echoSteps.coins", "4881");
+  });
+  await page.goto("/?test=1");
+  await expect(page.locator("#coinLine")).toContainText("4881");
+  await page.getByRole("button", { name: "PLAY" }).click();
+  await expect(page.locator("#hudCoins")).toHaveText("4.8K");
+  const oneLine = await page.locator("#hud").boundingBox();
+  await page.evaluate(() => { localStorage.setItem("echoSteps.coins", "987654321"); coins = 987654321; });
+  await expect(page.locator("#hudCoins")).toHaveText("987M");
+  await page.evaluate(() => { const s = window.__echoStepsTest; for (let i = 0; i < 9; i++) s.completeRound(); });
+  const after = await page.locator("#hud").boundingBox();
+  expect(after.height).toBeLessThanOrEqual(oneLine.height + 1);
+  expect(await page.evaluate(() => [formatCoinsCompact(999), formatCoinsCompact(1000), formatCoinsCompact(1250000), formatCoinsCompact(1e9)]))
+    .toEqual(["999", "1K", "1.2M", "1B"]);
+});

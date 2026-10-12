@@ -359,7 +359,7 @@ function setHudText(node, value){ value = String(value); if (node.textContent !=
 const hudColors = new WeakMap();   // style.color reads back normalized, so remember what we set
 function setHudColor(node, value){ if (hudColors.get(node) !== value){ hudColors.set(node, value); node.style.color = value; } }
 function updateHUD(){
-  setHudText(el.round, round); setHudText(el.coins, coins);
+  setHudText(el.round, round); setHudText(el.coins, formatCoinsCompact(coins));
   const completedRounds = round - 1;
   const movesLeft = CFG.GC_MOVES - (completedRounds % CFG.GC_MOVES);
   const armed = ghosts.length > 0;
