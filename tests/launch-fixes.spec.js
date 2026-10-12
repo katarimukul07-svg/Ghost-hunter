@@ -87,3 +87,10 @@ test("pause button has at least a 44 point tap area", async ({ page }) => {
   await page.mouse.click(box.x + box.width/2 + 20, box.y + box.height/2 + 20);
   await expect(page.locator("#pauseScreen")).toBeVisible();
 });
+
+test("game over RETRY and LEADERBOARD use different colours", async ({ page }) => {
+  await page.goto("/?test=1");
+  await page.evaluate(() => document.getElementById("overLeaderboardBtn").classList.remove("hidden"));
+  const [retry, board] = await page.evaluate(() => ["retryBtn", "overLeaderboardBtn"].map(id => getComputedStyle(document.getElementById(id)).backgroundColor));
+  expect(retry).not.toBe(board);
+});

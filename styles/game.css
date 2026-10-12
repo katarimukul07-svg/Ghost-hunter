@@ -205,3 +205,7 @@
 #pauseBtn { position:relative; }
 #pauseBtn::after { content:""; position:absolute; left:50%; top:50%;
   width:max(100%, 44px); height:max(100%, 44px); transform:translate(-50%,-50%); }
+
+/* Game over: RETRY is coin yellow (it costs coins), so LEADERBOARD takes blue here
+   instead of sharing yellow. The main menu keeps its yellow LEADERBOARD. */
+#overScreen #overLeaderboardBtn.menu-leaderboard { background:#5b8cff; box-shadow:0 0 18px rgba(91,140,255,.45); }
