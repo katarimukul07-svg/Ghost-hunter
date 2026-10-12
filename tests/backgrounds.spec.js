@@ -7,31 +7,31 @@ test("backgrounds preview freely but require a confirmed coin purchase to equip"
   test.setTimeout(60_000);
   const errors = collectPageErrors(page);
   await page.addInitScript(() => {
-    if (localStorage.getItem("echoSteps.coins") === null) localStorage.setItem("echoSteps.coins", "100");
+    if (localStorage.getItem("echoSteps.coins") === null) localStorage.setItem("echoSteps.coins", "2000");
   });
   await page.goto("/?test=1");
   await page.locator("#shopBtn").click();
   await page.getByRole("button", { name:"BACKGROUND", exact:true }).click();
   const state = () => page.evaluate(() => window.__echoStepsBackgroundTest.snapshot());
   expect((await state()).available).toEqual(["classic","circuit","abyss","orbit"]);
-  for (const [label, price] of [["CIRCUIT FOUNDRY",15],["ABYSSAL NETWORK",25],["ORBITAL STATION",40]]) {
+  for (const [label, price] of [["CIRCUIT FOUNDRY",400],["ABYSSAL NETWORK",900],["ORBITAL STATION",1500]]) {
     await page.getByRole("button", { name:label, exact:true }).click();
     expect((await state()).selected).toBe("classic");
     await expect(page.locator("#shopBuyBtn")).toContainText(`${price} COINS`);
-    await expect(page.locator("#shopCoinLine")).toContainText("100 coins");
+    await expect(page.locator("#shopCoinLine")).toContainText("2000 coins");
   }
   expect((await state()).preview).toBe("orbit");
   await page.locator("#shopBuyBtn").click();
-  await expect(page.locator("#shopConfirmCost")).toHaveText("40 coins");
+  await expect(page.locator("#shopConfirmCost")).toHaveText("1500 coins");
   await page.locator("#shopConfirmCancel").click();
   expect((await state()).selected).toBe("classic");
   await page.locator("#shopBuyBtn").click();
   await page.locator("#shopConfirmBuy").click();
   expect((await state()).selected).toBe("orbit");
-  await expect(page.locator("#shopCoinLine")).toContainText("60 coins");
+  await expect(page.locator("#shopCoinLine")).toContainText("500 coins");
   await page.reload();
   expect((await state()).selected).toBe("orbit");
-  expect(await page.evaluate(() => localStorage.getItem("echoSteps.coins"))).toBe("60");
+  expect(await page.evaluate(() => localStorage.getItem("echoSteps.coins"))).toBe("500");
   await page.evaluate(() => {
     localStorage.setItem("echoSteps.background", "abyss");
     window.dispatchEvent(new CustomEvent("echosteps:save-changed", { detail:{key:"echoSteps.background"} }));

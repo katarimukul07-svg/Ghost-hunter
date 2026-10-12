@@ -89,7 +89,7 @@ for (const size of [{ width:320, height:568 }, { width:390, height:844 }]) {
   });
 }
 
-for (const balance of [0, 50]) {
+for (const balance of [0, 150]) {
   test(`shop previews without spending and buys explicitly with ${balance} coins`, async ({ page }) => {
     await page.addInitScript((value) => { if (localStorage.getItem("echoSteps.coins") === null) localStorage.setItem("echoSteps.coins", String(value)); }, balance);
     await page.goto("/");
@@ -100,28 +100,28 @@ for (const balance of [0, 50]) {
     expect(await page.evaluate(() => localStorage.getItem("echoSteps.color"))).not.toBe("#3d7bff");
     if (balance === 0) {
       await expect(page.locator("#shopBuyBtn")).toBeDisabled();
-      await expect(page.locator("#shopBuyBtn")).toHaveText("NEED 5 MORE COINS");
+      await expect(page.locator("#shopBuyBtn")).toHaveText("NEED 100 MORE COINS");
     } else {
       await page.locator("#shopBuyBtn").click();
       await expect(page.locator("#shopConfirm")).toBeVisible();
       await expect(page.locator("#shopConfirmItem")).toHaveText("Buy Pulse?");
-      await expect(page.locator("#shopConfirmCost")).toHaveText("5 coins");
+      await expect(page.locator("#shopConfirmCost")).toHaveText("100 coins");
       const bounds = await page.locator("#shopConfirm").boundingBox();
       const viewport = page.viewportSize();
       expect(Math.abs(bounds.y + bounds.height/2 - viewport.height/2)).toBeLessThan(2);
       expect(Math.abs(bounds.x + bounds.width/2 - viewport.width/2)).toBeLessThan(2);
       expect(bounds.y).toBeGreaterThan(47);
-      await expect(page.locator("#shopCoinLine")).toContainText("50 coins");
+      await expect(page.locator("#shopCoinLine")).toContainText("150 coins");
       await page.locator("#shopConfirmCancel").click();
-      await expect(page.locator("#shopCoinLine")).toContainText("50 coins");
+      await expect(page.locator("#shopCoinLine")).toContainText("150 coins");
       await page.locator("#shopBuyBtn").click();
       await page.locator("#shopConfirmBuy").click();
       await expect(page.locator("#shopConfirm")).not.toBeVisible();
-      await expect(page.locator("#shopCoinLine")).toContainText("45 coins");
+      await expect(page.locator("#shopCoinLine")).toContainText("50 coins");
       await expect(page.locator("#shopBuyBtn")).toBeHidden();
       expect(await page.evaluate(() => localStorage.getItem("echoSteps.color"))).toBe("#3d7bff");
       await page.locator("#shopColors").getByRole("button", { name:"Pulse", exact:true }).click();
-      await expect(page.locator("#shopCoinLine")).toContainText("45 coins");
+      await expect(page.locator("#shopCoinLine")).toContainText("50 coins");
       await page.reload();
       await page.locator("#shopBtn").click();
       await expect(page.locator("#shopColors").getByRole("button", { name:"Pulse", exact:true })).toHaveAttribute("aria-pressed", "true");
@@ -211,7 +211,7 @@ test('offline play and purchases persist after a browser process restart', async
     const errors = collectPageErrors(page);
     await page.addInitScript(() => {
       localStorage.setItem('echoSteps.tutorial.v1','complete');
-      localStorage.setItem('echoSteps.coins','50');
+      localStorage.setItem('echoSteps.coins','150');
     });
     await page.goto('http://127.0.0.1:4173/?test=1');
     // Native assets are bundled. Disconnect only after loading the web harness.
@@ -220,10 +220,10 @@ test('offline play and purchases persist after a browser process restart', async
     await page.locator('#shopColors').getByRole('button',{name:'Pulse',exact:true}).click();
     await page.locator('#shopBuyBtn').click();
     await page.locator('#shopConfirmCancel').click();
-    expect(await page.evaluate(()=>localStorage.getItem('echoSteps.coins'))).toBe('50');
+    expect(await page.evaluate(()=>localStorage.getItem('echoSteps.coins'))).toBe('150');
     await page.locator('#shopBuyBtn').click();
     await page.locator('#shopConfirmBuy').click();
-    expect(await page.evaluate(()=>localStorage.getItem('echoSteps.coins'))).toBe('45');
+    expect(await page.evaluate(()=>localStorage.getItem('echoSteps.coins'))).toBe('50');
     const saved = await page.evaluate(()=>Object.fromEntries(Object.entries(localStorage).filter(([k])=>k.startsWith('echoSteps.'))));
     await page.locator('#shopBackBtn').click();
     await page.locator('#startBtn').click();
@@ -237,13 +237,13 @@ test('offline play and purchases persist after a browser process restart', async
     const reopened = await context.newPage();
     await reopened.goto('http://127.0.0.1:4173/');
     await reopened.locator('#shopBtn').click();
-    await expect(reopened.locator('#shopCoinLine')).toContainText('45 coins');
+    await expect(reopened.locator('#shopCoinLine')).toContainText('50 coins');
     await expect(reopened.locator('#shopColors').getByRole('button',{name:'Pulse',exact:true})).toHaveAttribute('aria-pressed','true');
     const restored = await reopened.evaluate(()=>Object.fromEntries(Object.entries(localStorage).filter(([k])=>k.startsWith('echoSteps.'))));
     // A restart preserves currency, ownership and equipment; run state is transient.
     for (const key of ['echoSteps.coins','echoSteps.color','echoSteps.unlocked'])
       expect(restored[key],key).toBe(saved[key]);
-    expect(restored['echoSteps.coins']).toBe('45');
+    expect(restored['echoSteps.coins']).toBe('50');
     expect(restored['echoSteps.color']).toBe('#3d7bff');
     expect(restored['echoSteps.unlocked'].split(',')).toContain('#3d7bff');
   } finally { await context.close(); }
