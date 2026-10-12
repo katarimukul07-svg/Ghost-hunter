@@ -31,7 +31,6 @@
     </div>
     <div style="display:flex;gap:6px">
       <button id="pauseBtn" aria-label="Pause game" title="Pause game"><span class="pause-icon" aria-hidden="true"><span></span><span></span></span></button>
-      <button id="muteBtn" aria-label="Toggle sound" aria-pressed="false">&#9834; ON</button>
     </div>
   </div>
 
@@ -133,6 +132,15 @@
     </div>
   </div>
 
+  <dialog id="reviveOffer" aria-labelledby="reviveOfferTitle">
+    <h2 id="reviveOfferTitle">NOT ENOUGH COINS</h2>
+    <p id="reviveOfferText"></p>
+    <div class="coin-packs" id="reviveOfferPacks" role="group" aria-label="Coin packs"></div>
+    <p class="sub" id="reviveOfferStatus" role="status" aria-live="polite"></p>
+    <div class="shop-confirm-actions">
+      <button id="reviveOfferClose" type="button" class="menu-home">NO THANKS</button>
+    </div>
+  </dialog>
   <dialog id="shopConfirm" aria-labelledby="shopConfirmItem">
     <h2 id="shopConfirmItem"></h2>
     <p id="shopConfirmCost"></p>

@@ -74,3 +74,19 @@ test("HUD shows compact coins so the bar never wraps; menus keep the full number
   expect(await page.evaluate(() => [formatCoinsCompact(999), formatCoinsCompact(1000), formatCoinsCompact(1250000), formatCoinsCompact(1e9)]))
     .toEqual(["999", "1K", "1.2M", "1B"]);
 });
+
+for (const width of [375, 393, 430]) test(`HUD stays on one line at ${width}px with 4-digit coins and 2-digit sweep`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 852 });
+  await page.addInitScript(() => localStorage.setItem("echoSteps.coins", "4881"));
+  await page.goto("/?test=1");
+  await page.getByRole("button", { name: "PLAY" }).click();
+  const boxes = await page.evaluate(() => ["hudRound", "hudCoins", "hudGc", "pauseBtn"].map(id => {
+    const el = document.getElementById(id).closest(".hud-stat") || document.getElementById(id);
+    const r = el.getBoundingClientRect(); return { id, top: Math.round(r.top), bottom: Math.round(r.bottom), right: Math.round(r.right) };
+  }));
+  const tops = boxes.map(b => b.top);
+  expect(Math.max(...tops) - Math.min(...tops), JSON.stringify(boxes)).toBeLessThanOrEqual(4);
+  for (const b of boxes) expect(b.right, b.id).toBeLessThanOrEqual(width);
+  expect(await page.locator("#muteBtn").count()).toBe(0);   // sound toggle lives in Settings now
+  for (const b of boxes) expect(b.bottom - b.top, b.id).toBeLessThanOrEqual(34);
+});

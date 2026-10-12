@@ -105,3 +105,26 @@ test("on iOS the menu reads PLAY, STORE, LEADERBOARD, SETTINGS, TUTORIAL even be
   await expect(page.locator("#menuNotice")).toContainText("Game Center");
   expect(await page.evaluate(() => window.__nativeCalls.shown)).toBe(0);
 });
+
+test("an unaffordable revive offers coin packs, and buying one makes RETRY work", async ({ page }) => {
+  await page.addInitScript(mockNative(), { pending: [] });
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    localStorage.setItem("echoSteps.coins", "10"); localStorage.removeItem("echoSteps.creditedTransactions");
+  });
+  await page.goto("/?test=1");
+  await page.getByRole("button", { name: "PLAY" }).click();
+  await page.evaluate(() => { window.__echoStepsTest.putGhostOnPlayer(); window.__echoStepsTest.step(60); });
+  await page.locator("#retryBtn").click();
+  await expect(page.locator("#reviveOffer")).toBeVisible();
+  await expect(page.locator("#reviveOfferText")).toContainText("need 40 more");
+  const packs = page.locator("#reviveOfferPacks .coin-pack");
+  await expect(packs).toHaveCount(3);
+  await packs.first().click();
+  await expect(page.locator("#reviveOffer")).toBeHidden();
+  await expect(page.locator("#overSub")).toContainText("Tap RETRY");
+  await page.locator("#retryBtn").click();
+  expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).mode).toBe(1);
+  expect(await page.evaluate(() => localStorage.getItem("echoSteps.coins"))).toBe("160");
+});
