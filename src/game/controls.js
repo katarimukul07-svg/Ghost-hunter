@@ -307,9 +307,6 @@ function showStart(){
 }
 function updateMuteBtn(){
   const m=Sound.isMuted();
-  el.mute.innerHTML = m ? "&#9834; OFF" : "&#9834; ON";
-  el.mute.style.color = m ? C.dim : C.ink;
-  el.mute.setAttribute("aria-pressed", m ? "true" : "false");
   const settingsMute=document.getElementById("settingsMuteBtn");
   settingsMute.textContent=m?"SOUND OFF":"SOUND ON";settingsMute.setAttribute("aria-pressed",String(m));
 }
@@ -376,9 +373,7 @@ document.getElementById("pauseBtn").addEventListener("click", ()=>{
   if (mode!==STATE.PLAYING || paused) return;
   clearSteering(); paused = true; Sound.stopAmbient(); el.pause.classList.remove("hidden");
 });
-el.mute.addEventListener("click", ()=>{
-  Sound.setMuted(!Sound.isMuted()); ss("echoSteps.mute", Sound.isMuted()?"1":"0"); updateMuteBtn();
-});
+// Sound on/off lives in Settings (main menu and pause), not on the in-game HUD.
 document.getElementById("shareBtn").addEventListener("click", async ()=>{
   // In the iOS app location.href is capacitor://localhost, so share the App Store page.
   const url=(window.EchoStepsNative && EchoStepsNative.isNative)

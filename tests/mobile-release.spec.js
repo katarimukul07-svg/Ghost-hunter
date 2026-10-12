@@ -77,7 +77,7 @@ for (const size of [{ width:320, height:568 }, { width:390, height:844 }]) {
     expect(state.room.y + state.room.h).toBeLessThanOrEqual(size.height - 34);
     const hud = await page.locator("#hud").boundingBox();
     expect(hud.y + hud.height).toBeLessThanOrEqual(state.room.y);
-    for (const id of ["#pauseBtn", "#muteBtn"]) {
+    for (const id of ["#pauseBtn"]) {
       const box = await page.locator(id).boundingBox();
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width).toBeLessThanOrEqual(size.width);

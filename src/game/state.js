@@ -37,7 +37,7 @@ let previewParticles = [], previewShockwaves = [];
 const el = {
   hud:document.getElementById("hud"),
   round:document.getElementById("hudRound"), coins:document.getElementById("hudCoins"),
-  gc:document.getElementById("hudGc"), mute:document.getElementById("muteBtn"),
+  gc:document.getElementById("hudGc"),
   start:document.getElementById("startScreen"),
   pause:document.getElementById("pauseScreen"),
   over:document.getElementById("overScreen"),
