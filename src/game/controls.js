@@ -186,13 +186,23 @@ async function creditTransaction(t){
     done.push(t.transactionId); ss(CREDITED_KEY, JSON.stringify(done.slice(-500)));
     refreshShopCoinLine(); refreshCoinLine(); refreshRetryBtn(); refreshShopBuy();
     el.totalCoinsOver.textContent = coins;
-    el.shopHint.textContent = "+" + added.toLocaleString() + " coins added. Thank you!";
+    coinStatus("+" + added.toLocaleString() + " coins added. Thank you!");
+    reviveOfferAfterCredit();
     haptic("medium"); Sound.bonus();
   }
   try { await EchoStepsNative.store.finish(t.transactionId); } catch(e) { console.warn("finish failed", e); }
 }
 function renderCoinPacks(){
-  const box = document.getElementById("shopCoins"); box.replaceChildren();
+  for (const id of ["shopCoins", "reviveOfferPacks"]) renderCoinPacksInto(document.getElementById(id));
+}
+// Purchase feedback goes to the Store hint and, when it's open, the revive offer.
+function coinStatus(text){
+  el.shopHint.textContent = text;
+  const offer = document.getElementById("reviveOfferStatus"); if (offer) offer.textContent = text;
+}
+function renderCoinPacksInto(box){
+  if (!box) return;
+  box.replaceChildren();
   for (const pack of COIN_PRODUCTS){
     const product = coinStore.products.find(p => p.id === pack.id);
     if (!product) continue;
@@ -209,15 +219,15 @@ function renderCoinPacks(){
 async function buyCoinPack(pack){
   if (coinStore.busy) return;
   coinStore.busy = true; renderCoinPacks();
-  el.shopHint.textContent = "Opening the App Store…";
+  coinStatus("Opening the App Store…");
   try {
     const result = await EchoStepsNative.store.purchase(pack.id);
     if (result.status === "purchased") await creditTransaction(result.transaction);
-    else if (result.status === "pending") el.shopHint.textContent = "Purchase is waiting for approval. Coins arrive once it's approved.";
-    else if (result.status === "cancelled") el.shopHint.textContent = "Purchase cancelled.";
-    else el.shopHint.textContent = "Purchase didn't go through. You weren't charged.";
+    else if (result.status === "pending") coinStatus("Purchase is waiting for approval. Coins arrive once it's approved.");
+    else if (result.status === "cancelled") coinStatus("Purchase cancelled.");
+    else coinStatus("Purchase didn't go through. You weren't charged.");
   } catch(e){
-    el.shopHint.textContent = "The App Store isn't available right now. Try again later.";
+    coinStatus("The App Store isn't available right now. Try again later.");
   } finally { coinStore.busy = false; renderCoinPacks(); }
 }
 async function initCoinStore(){
@@ -282,6 +292,34 @@ function initNativeServices(){ initGameCenter(); initCoinStore(); }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initNativeServices, { once:true });
 else setTimeout(initNativeServices, 0);
 
+/* ---------- Revive without enough coins ----------
+   Tell the player what they're missing and, on iOS, offer the coin packs right
+   there. After a purchase covers the cost, the dialog closes and RETRY is ready. */
+const reviveOffer = document.getElementById("reviveOffer");
+function openReviveOffer(cost){
+  const short = cost - coins;
+  const canBuy = coinStore.products.length > 0;
+  document.getElementById("reviveOfferText").textContent =
+    "A revive costs \u25C6" + cost + ". You have \u25C6" + coins + " \u2014 you need " + short + " more." +
+    (canBuy ? " Get coins to jump back in:" : " Earn more coins by playing, then try again.");
+  document.getElementById("reviveOfferStatus").textContent = "";
+  renderCoinPacks();
+  el.overSub.textContent = "Not enough coins for a revive (\u25C6" + cost + ").";
+  if (!reviveOffer.open) reviveOffer.showModal();
+}
+function reviveOfferAfterCredit(){
+  if (!reviveOffer.open) return;
+  const cost = reviveCost(revivesThisRun);
+  if (coins >= cost){
+    reviveOffer.close();
+    el.overSub.textContent = "Coins added! Tap RETRY to jump back in.";
+  } else {
+    document.getElementById("reviveOfferText").textContent =
+      "Coins added. A revive costs \u25C6" + cost + "; you need " + (cost - coins) + " more.";
+  }
+}
+document.getElementById("reviveOfferClose").addEventListener("click", () => reviveOffer.close());
+
 let shopReturnTo = "start";   // where BACK sends us: "start" or "pause"
 function openShop(tab){
   refreshShopCoinLine(); buildShopAll(); setShopTab(tab || "colors");
@@ -320,11 +358,7 @@ function refreshRetryBtn(){
 }
 function retryRun(){
   const cost = reviveCost(revivesThisRun);
-  if (coins < cost){
-    el.overSub.textContent = "Collect more coins in future runs to afford a revive.";
-    haptic("medium");
-    return;
-  }
+  if (coins < cost){ haptic("medium"); openReviveOffer(cost); return; }
   coins -= cost; saveCoins(); revivesThisRun++;
   // Revive inside the exit: it's the safe zone, while the arena centre is where
   // the first echo starts. The exit can't finish the round without the coin.

@@ -45,7 +45,11 @@ test("a ghost death shows game over, refuses an unaffordable retry, and restarts
   expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).mode).toBe(2);
   await expect(page.locator("#overTitle")).toBeVisible();
   await page.locator("#retryBtn").click();
-  await expect(page.locator("#overSub")).toContainText("Collect more coins");
+  await expect(page.locator("#reviveOffer")).toBeVisible();
+  await expect(page.locator("#reviveOfferTitle")).toHaveText("NOT ENOUGH COINS");
+  await expect(page.locator("#reviveOfferText")).toContainText("Earn more coins");
+  await page.locator("#reviveOfferClose").click();
+  await expect(page.locator("#reviveOffer")).toBeHidden();
   expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).mode).toBe(2);
   await page.getByRole("button", { name:"PLAY AGAIN" }).click();
   const restarted = await page.evaluate(() => window.__echoStepsTest.snapshot());
