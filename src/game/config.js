@@ -94,12 +94,17 @@ function gcPolicyForCompletedRounds(completed) {
    not just a recolor. `id` stays the hex color so older saves keep matching. */
 const SKINS = [
   { id:"#29e0ff", label:"Node",  style:"solid",  cost:0  },   // plain glowing dot
-  { id:"#eaf2ff", label:"Ghost", style:"ring",   cost:0  },   // hollow outlined ring
+  { id:"#eaf2ff", label:"Halo",  style:"ring",   cost:0  },   // hollow outlined ring
   { id:"#3d7bff", label:"Pulse", style:"pulse",  cost:100 },   // core + breathing ring
-  { id:"#ff5ca8", label:"Comet", style:"comet",  cost:250 },   // spinning star spikes
-  { id:"#ff8a2b", label:"Blaze", style:"square", cost:400 },   // rotated glowing square
+  { id:"#d9b8ff", label:"Comet", style:"comet",  cost:250 },   // spinning star spikes
+  { id:"#9fd8ff", label:"Glacier", style:"square", cost:400 }, // rotated glowing square
   { id:"#b06bff", label:"Void",  style:"void",   cost:1000 },   // bright ring, hollow core
 ];
+/* Player skins stay cool or neutral so they never read as a ghost (all warm).
+   Comet was pink (next to the Violet ghost) and Blaze orange (same as Toxic);
+   saves that own or wear the old colours move to the same skin's new colour. */
+const SKIN_RENAMES = Object.freeze({ "#ff5ca8":"#d9b8ff", "#ff8a2b":"#9fd8ff" });
+function migrateSkinId(id){ return SKIN_RENAMES[id] || id; }
 function getSkinStyle(colorId){
   const s = SKINS.find(k=>k.id===colorId);
   return s ? s.style : "solid";
@@ -115,13 +120,14 @@ const GHOST_SKINS = [
   { id:"#ff3554", label:"Crimson", cost:0 },
   { id:"#ff2bd6", label:"Violet", cost:150 },   // magenta
   { id:"#ff7a1a", label:"Toxic", cost:300 },    // acid orange
-  { id:"#b3002d", label:"Phantom", cost:800 },  // blood red
+  { id:"#b3002d", label:"Phantom", cost:800, outline:"#ff6b81" },  // blood red; bright rim keeps it visible on navy
 ];
 /* Ghost skins stay in a danger family (reds, magentas, oranges). The old colours
    matched the sweep purple, the exit green and the +3 bonus white, so saves that
    own or wear them move to the same-named skin's new colour. */
 const GHOST_SKIN_RENAMES = Object.freeze({ "#c66bff":"#ff2bd6", "#39ff9e":"#ff7a1a", "#eaf2ff":"#b3002d" });
 function migrateGhostSkinId(id){ return GHOST_SKIN_RENAMES[id] || id; }
+function ghostOutline(colorId){ const s = GHOST_SKINS.find(k=>k.id===colorId); return s && s.outline; }
 const DEATH_FX = [
   { id:"classic", label:"Classic", cost:0 },
   { id:"shockwave", label:"Shockwave", cost:250 },

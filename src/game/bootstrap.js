@@ -16,7 +16,7 @@ unlockedDeathFX = loadOwnedList("echoSteps.deathOwned", DEATH_FX.filter(t=>t.cos
 unlockedSound = loadOwnedList("echoSteps.soundOwned", SOUND_PACKS.map(s=>s.id));   // all packs are free
 playerName = ls("echoSteps.name") || "";
 el.nameInput.value = playerName;
-const savedColor = ls("echoSteps.color");
+const savedColor = migrateSkinId(ls("echoSteps.color"));
 playerColor = (savedColor && unlocked.includes(savedColor)) ? savedColor : SKINS[0].id;
 playerStyle = getSkinStyle(playerColor);
 const savedTrail = ls("echoSteps.trail");
@@ -100,3 +100,10 @@ if ("serviceWorker" in navigator && !(window.EchoStepsNative && window.EchoSteps
   }));
 }
 "use strict";
+// The menu's dot-and-ghost demo is decoration; hold it still for reduced motion.
+(() => {
+  const demo = document.querySelector(".menu-demo");
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const apply = () => { if (demo && demo.pauseAnimations) mq.matches ? demo.pauseAnimations() : demo.unpauseAnimations(); };
+  apply(); mq.addEventListener && mq.addEventListener("change", apply);
+})();

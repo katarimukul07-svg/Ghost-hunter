@@ -32,7 +32,7 @@ test("revive costs 50, then 100, and puts the node in the safe exit", async ({ p
   await die();
   await expect(page.locator("#retryBtn")).toContainText("100");
   // A new run resets the price.
-  await page.getByRole("button", { name: "PLAY AGAIN" }).click();
+  await page.getByRole("button", { name: "NEW RUN" }).click();
   await die();
   await expect(page.locator("#retryBtn")).toContainText("50");
 });

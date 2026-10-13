@@ -12,7 +12,7 @@ function resetGame() {
   frame = 0; grace = CFG.GRACE_TICKS; runCoins = 0; revivesThisRun = 0;
   rankedReached = null; runBonusPaid = 0;
   ghostPhase = 0; ghostSpeed = 1; wallTime = 0;
-  toast = null; shake = 0; deathTimer = 0; sweep = null;
+  toast = null; shake = 0; deathTimer = 0; sweep = null; killerGhost = -1;
   hasPrize = false; paused = false;
   playerName = (el.nameInput.value || "").trim().slice(0,12) || "Player";
   ss("echoSteps.name", playerName);
@@ -41,7 +41,9 @@ function completeRound() {
   haptic("medium");
   if (!hintSeen && clearedRound===1){
     hintSeen=true; ss("echoSteps.hint","1");
-    toast = { text:"YOUR LAST PATH IS NOW A GHOST \u2014 AVOID IT", t:0 };   // first-run teaching, replaces the up-front tutorial
+    // First-run teaching, replaces the up-front tutorial. Wraps to the arena and
+    // rings the new ghost; held a little longer than ordinary notices.
+    toast = { text:"YOUR OLD ROUTE IS A GHOST\nDON'T TOUCH IT", t:0, teach:true, life:3.6 };
   }
   ghosts.push({ path: trimPathAtExit(currentPath) });
   round++; currentPath = []; frame = 0; ghostPhase = 0;
@@ -95,7 +97,7 @@ function finalizeDeath() {
   const rankedNote = document.getElementById("rankedNote");
   if (rankedNote){
     const parts = [];
-    if (revivesThisRun > 0) parts.push("Ranked score: " + ranked + " \u2014 revived rounds don't count");
+    if (revivesThisRun > 0) parts.push("Ranked score: " + ranked + " (revived rounds don't count)");
     if (bonusDue > 0) parts.push("+" + bonusDue + " run bonus");
     rankedNote.textContent = parts.join(" \u00B7 ");
     rankedNote.classList.toggle("hidden", parts.length === 0);
@@ -107,7 +109,7 @@ function finalizeDeath() {
   el.newBest.style.display = (isBest && ranked>0) ? "" : "none";
   el.overTitle.textContent = DEATH_TITLES[Math.floor(Math.random()*DEATH_TITLES.length)];
   el.overSub.textContent = playerName + ", " + DEATH_LINES[Math.floor(Math.random()*DEATH_LINES.length)];
-  refreshRetryBtn();
+  refreshRetryBtn(); refreshSavingFor();
   el.over.classList.remove("hidden");
   el.hud.classList.add("hidden");
 }
@@ -254,11 +256,11 @@ function update(dt) {
     const exposed = swept.filter(q => !inExitZone(q.x, q.y, CFG.GHOST_R) && !inDepartureZone(q.x, q.y, CFG.GHOST_R));
     for (const g of ghosts){
       const pos=ghostPos(g);
-      if (pos && exposed.some(q => dist2(q.x,q.y,pos.x,pos.y) < rr*rr)){ startDeath(); break; }
+      if (pos && exposed.some(q => dist2(q.x,q.y,pos.x,pos.y) < rr*rr)){ killerGhost = ghosts.indexOf(g); startDeath(); break; }
     }
   }
 
-  if (toast){ toast.t+=dt; if (toast.t>2.6) toast=null; }
+  if (toast){ toast.t+=dt; if (toast.t>(toast.life||2.6)) toast=null; }
   ghostPhase += ghostSpeed; frame++;
 }
 "use strict";

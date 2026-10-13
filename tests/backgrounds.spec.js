@@ -11,7 +11,7 @@ test("backgrounds preview freely but require a confirmed coin purchase to equip"
   });
   await page.goto("/?test=1");
   await page.locator("#shopBtn").click();
-  await page.getByRole("button", { name:"BACKGROUND", exact:true }).click();
+  await page.getByRole("button", { name:"ARENAS", exact:true }).click();
   const state = () => page.evaluate(() => window.__echoStepsBackgroundTest.snapshot());
   expect((await state()).available).toEqual(["classic","circuit","abyss","orbit"]);
   for (const [label, price] of [["CIRCUIT FOUNDRY",400],["ABYSSAL NETWORK",900],["ORBITAL STATION",1500]]) {

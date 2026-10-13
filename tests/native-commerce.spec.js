@@ -123,7 +123,7 @@ test("an unaffordable revive offers coin packs, and buying one makes RETRY work"
   await expect(packs).toHaveCount(3);
   await packs.first().click();
   await expect(page.locator("#reviveOffer")).toBeHidden();
-  await expect(page.locator("#overSub")).toContainText("Tap RETRY");
+  await expect(page.locator("#overSub")).toContainText("Tap REVIVE");
   await page.locator("#retryBtn").click();
   expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).mode).toBe(1);
   expect(await page.evaluate(() => localStorage.getItem("echoSteps.coins"))).toBe("160");

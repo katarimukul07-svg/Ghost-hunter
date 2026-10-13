@@ -209,3 +209,79 @@
 /* Game over: RETRY is coin yellow (it costs coins), so LEADERBOARD takes blue here
    instead of sharing yellow. The main menu keeps its yellow LEADERBOARD. */
 #overScreen #overLeaderboardBtn.menu-leaderboard { background:#5b8cff; box-shadow:0 0 18px rgba(91,140,255,.45); }
+
+/* ===== Build 13 UI review: one clear primary action per screen ===== */
+.visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+/* Main menu: PLAY is the only glowing button; colour identity stays on the
+   others as outlines; settings and tutorial step back to quiet text. */
+#startScreen { gap:12px; }
+.menu-top { position:absolute; top:calc(14px + var(--safe-top)); left:calc(16px + var(--safe-left)); }
+.name-chip { display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:0 14px;
+  border:1px solid rgba(255,255,255,.14); border-radius:22px; background:rgba(255,255,255,.04); color:var(--dim); }
+.name-chip #nameInput { width:9ch; padding:0; border:none; background:transparent; text-align:left; font-size:14px; color:var(--ink); }
+.name-chip:focus-within { border-color:var(--player); }
+.menu-demo { width:min(78vw,300px); height:auto; margin-bottom:4px; overflow:visible; }
+.menu-demo path { fill:none; stroke-width:2; }
+.menu-demo-trail { stroke:var(--player); opacity:.28; }
+.menu-demo-ghost-trail { stroke:var(--ghost); opacity:.4; stroke-dasharray:4 6; }
+.menu-demo-dot { fill:var(--player); filter:drop-shadow(0 0 6px var(--player)); }
+.menu-demo-ghost circle { fill:var(--ghost); }
+.menu-demo-ghost .eye { fill:var(--bg); }
+#coinLine { color:var(--prize); }
+.menu-actions { display:flex; flex-direction:column; gap:12px; width:min(100%,340px); margin-top:14px; }
+.menu-play { width:100%; min-height:62px; font-size:22px; font-weight:800; letter-spacing:3px; border-radius:12px;
+  box-shadow:0 0 26px rgba(41,224,255,.6); }
+.menu-pair { display:flex; gap:12px; }
+.menu-pair > button { flex:1 1 0; min-height:50px; padding:10px 8px; box-shadow:none; background:transparent; }
+#startScreen #shopBtn.menu-store { background:rgba(198,107,255,.10); border:1.5px solid var(--sweep); color:#e2c2ff; box-shadow:none; }
+#startScreen #gameCenterBtn.menu-leaderboard { background:rgba(91,140,255,.10); border:1.5px solid #5b8cff; color:#c2d4ff; box-shadow:none; }
+.menu-quiet { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+#startScreen .menu-quiet > button, #startScreen #tutorialBtn.tutorial-menu-btn {
+  min-height:44px; padding:8px 14px; background:transparent; border:none; box-shadow:none; color:var(--dim);
+  font-size:13px; letter-spacing:1px; }
+
+/* Game over: the score is the hero, NEW RUN is the one primary action, and
+   REVIVE states its cost and the rank rule before you spend. */
+#overScreen { gap:10px; }
+#overTitle { font-size:14px; letter-spacing:3px; color:var(--ghost); text-shadow:none; font-weight:600; }
+.over-score { display:flex; flex-direction:column; align-items:center; gap:2px; }
+.over-score #finalRounds { font-size:clamp(72px,24vw,104px); line-height:1; font-weight:800; color:#fff;
+  text-shadow:0 0 24px rgba(41,224,255,.5); }
+.over-score-label { font-size:12px; letter-spacing:2px; color:var(--dim); }
+.over-stats { display:flex; gap:18px; flex-wrap:wrap; justify-content:center; font-size:14px; color:var(--dim); }
+.over-stats b { color:#fff; }
+.over-coins, .over-coins b { color:var(--prize); }
+#newBest { color:var(--prize); text-shadow:0 0 12px rgba(255,241,92,.6); }
+#rankedNote { color:var(--dim); }
+.saving-for { width:min(100%,340px); padding:10px 12px; border-radius:10px; text-align:left;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); display:flex; flex-direction:column; gap:7px; }
+.saving-for-text { font-size:12px; color:var(--dim); }
+.saving-for-text b { color:#fff; }
+.saving-for-bar { height:6px; border-radius:3px; background:rgba(255,255,255,.08); overflow:hidden; }
+#savingForFill { height:100%; width:0; border-radius:3px; background:var(--prize); }
+.over-actions { display:flex; flex-direction:column; gap:10px; width:min(100%,340px); margin-top:6px; }
+#overScreen .over-primary { width:100%; min-height:58px; font-size:18px; font-weight:700; letter-spacing:1px; border-radius:12px;
+  box-shadow:0 0 22px rgba(41,224,255,.55); }
+#overScreen .over-revive { width:100%; min-height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  padding:8px 12px; border-radius:12px; background:rgba(255,241,92,.08); border:1.5px solid var(--prize); color:var(--prize); box-shadow:none; }
+#overScreen .over-revive.short { opacity:.6; }
+.over-revive-note { font-size:11px; letter-spacing:0; color:#d6cf86; }
+.over-secondary { display:flex; gap:10px; }
+#overScreen .over-secondary > button { flex:1 1 0; min-height:44px; padding:8px 6px; font-size:13px; border-radius:10px;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.18); color:var(--ink); box-shadow:none; }
+#overScreen .over-secondary > button.hidden { display:none !important; }
+
+/* Store: every category visible at once, and equal cards that show the
+   item itself instead of a plain colour dot. */
+#shopTabs { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); width:min(92vw,390px); max-width:none; overflow:visible; padding:0; }
+#shopTabs .tab { flex:none; padding:8px 4px; font-size:11px; }
+#shopTabs .tab.hidden { display:none !important; }
+.swatches { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; width:min(92vw,390px); max-width:none; }
+.skin { min-height:100px; padding:8px 4px; border-radius:10px; justify-content:center;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); }
+.skin .chip { min-width:0; width:100%; }
+.swatch { background:transparent; display:flex; align-items:center; justify-content:center; }
+.swatch.locked { border-color:rgba(255,255,255,.25); }
+.swatch-art { width:44px; height:44px; display:block; pointer-events:none; }
+.slabel { color:#fff; }

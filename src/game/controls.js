@@ -102,7 +102,7 @@ function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel
     b.className = (swatch?"swatch":"chip") + (item.id===getSel()?" sel":"") + (owned?"":" locked");
     b.setAttribute("aria-label", item.label);
     b.setAttribute("aria-pressed", String(item.id===getSel()));
-    if (swatch) b.style.background = item.id; else b.textContent = item.label;
+    if (swatch) b.append(skinThumb(item.id, previewCat)); else b.textContent = item.label;
     const price = document.createElement("div"); price.className = "price";
     price.textContent = owned ? (item.id===getSel() ? "EQUIPPED" : "OWNED") : ("\u25C6" + item.cost);
     b.addEventListener("click", () => {
@@ -125,6 +125,17 @@ function renderShopCategory(container, items, ownedArr, ownedKey, getSel, setSel
     wrap.appendChild(price);
     container.appendChild(wrap);
   });
+}
+/* Store thumbnails draw the real thing (the skin's shape, or a ghost with its
+   eyes and rim) instead of a plain colour circle. */
+function skinThumb(id, cat){
+  const size = 44, dpr = Math.min(3, window.devicePixelRatio || 1);
+  const c = document.createElement("canvas");
+  c.width = size*dpr; c.height = size*dpr; c.className = "swatch-art"; c.setAttribute("aria-hidden", "true");
+  const t = c.getContext("2d"); t.setTransform(dpr,0,0,dpr,0,0);
+  if (cat === "ghost") drawGhostBody(t, size/2, size/2, 10, id, 1);
+  else drawSkin(t, size/2, size/2, 10, id, getSkinStyle(id), 1, 0.4);
+  return c;
 }
 function buildShopAll(){
   renderShopCategory(el.shopColors, SKINS, unlocked, "echoSteps.unlocked",
@@ -162,7 +173,7 @@ function setShopTab(cat){
   else if (cat==="ghost") previewGhostColor = selectedGhostSkin;
   else if (cat==="death") setPreviewItem("death", selectedDeathFX);
   const hints = {
-    colors:"Tap a color to preview it. Buy with coins to equip it.",
+    colors:"Tap a skin to preview it. Buy with coins to equip it.",
     trail:"Preview the trail that follows your movement.",
     ghost:"Change how your ghosts appear.",
     death:"Preview the effect shown when an echo catches you.",
@@ -184,7 +195,7 @@ async function creditTransaction(t){
     const added = pack.coins * Math.max(1, t.quantity || 1);
     coins += added; saveCoins();
     done.push(t.transactionId); ss(CREDITED_KEY, JSON.stringify(done.slice(-500)));
-    refreshShopCoinLine(); refreshCoinLine(); refreshRetryBtn(); refreshShopBuy();
+    refreshShopCoinLine(); refreshCoinLine(); refreshRetryBtn(); refreshSavingFor(); refreshShopBuy();
     el.totalCoinsOver.textContent = coins;
     coinStatus("+" + added.toLocaleString() + " coins added. Thank you!");
     reviveOfferAfterCredit();
@@ -294,7 +305,7 @@ else setTimeout(initNativeServices, 0);
 
 /* ---------- Revive without enough coins ----------
    Tell the player what they're missing and, on iOS, offer the coin packs right
-   there. After a purchase covers the cost, the dialog closes and RETRY is ready. */
+   there. After a purchase covers the cost, the dialog closes and REVIVE is ready. */
 const reviveOffer = document.getElementById("reviveOffer");
 function openReviveOffer(cost){
   const short = cost - coins;
@@ -312,7 +323,7 @@ function reviveOfferAfterCredit(){
   const cost = reviveCost(revivesThisRun);
   if (coins >= cost){
     reviveOffer.close();
-    el.overSub.textContent = "Coins added! Tap RETRY to jump back in.";
+    el.overSub.textContent = "Coins added! Tap REVIVE to jump back in.";
   } else {
     document.getElementById("reviveOfferText").textContent =
       "Coins added. A revive costs \u25C6" + cost + "; you need " + (cost - coins) + " more.";
@@ -353,8 +364,30 @@ function refreshRetryBtn(){
   const btn = document.getElementById("retryBtn");
   if (!btn) return;
   const cost = reviveCost(revivesThisRun);
-  btn.innerHTML = "RETRY \u25C6" + cost;
-  btn.style.opacity = (coins >= cost) ? "1" : "0.5";
+  // Say what the coins buy before they're spent: same round, but the ranked
+  // score was fixed at the first death, so revived rounds never rank.
+  btn.replaceChildren();
+  const main = document.createElement("span"); main.textContent = "REVIVE \u00B7 \u25C6" + cost;
+  const note = document.createElement("span"); note.className = "over-revive-note";
+  note.textContent = "Continue round " + round + " \u00B7 extra rounds don't rank";
+  btn.append(main, note);
+  btn.setAttribute("aria-label", "Revive for " + cost + " coins. Continue round " + round + "; extra rounds don't count for rank.");
+  btn.classList.toggle("short", coins < cost);
+}
+/* Game over: show progress toward the cheapest cosmetic not owned yet, so a
+   short run still feels like it moved the player somewhere. */
+function refreshSavingFor(){
+  const box = document.getElementById("savingFor"); if (!box) return;
+  const pools = [[SKINS, unlocked], [GHOST_SKINS, unlockedGhostSkin], [TRAILS, unlockedTrail], [DEATH_FX, unlockedDeathFX]];
+  let goal = null;
+  for (const [items, owned] of pools)
+    for (const item of items)
+      if (item.cost > 0 && !owned.includes(item.id) && (!goal || item.cost < goal.cost)) goal = item;
+  box.classList.toggle("hidden", !goal);
+  if (!goal) return;
+  document.getElementById("savingForName").textContent = goal.label;
+  document.getElementById("savingForCount").textContent = coins >= goal.cost ? " \u00B7 ready to buy!" : " \u00B7 " + coins + " / " + goal.cost;
+  document.getElementById("savingForFill").style.width = Math.min(100, Math.round(coins/goal.cost*100)) + "%";
 }
 function retryRun(){
   const cost = reviveCost(revivesThisRun);
