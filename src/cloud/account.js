@@ -89,7 +89,7 @@
     playerStyle = getSkinStyle(playerColor);
     const trail = ls(keys.trail);
     selectedTrail = unlockedTrail.includes(trail) ? trail : TRAILS[0].id;
-    const ghost = ls(keys.ghostSkin);
+    const ghost = migrateGhostSkinId(ls(keys.ghostSkin));
     selectedGhostSkin = unlockedGhostSkin.includes(ghost) ? ghost : GHOST_SKINS[0].id;
     const death = ls(keys.deathfx);
     selectedDeathFX = unlockedDeathFX.includes(death) ? death : DEATH_FX[0].id;

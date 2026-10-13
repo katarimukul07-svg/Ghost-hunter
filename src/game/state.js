@@ -14,6 +14,10 @@ let prize = null, hasPrize = false;
 let currentPath = [], ghosts = [];
 let frame = 0, round = 1, grace = 0;
 let coins = 0, runCoins = 0, bestRounds = 0, revivesThisRun = 0;   // coins = spendable bank; bestRounds = leaderboard record
+// Only the rounds reached before the first revive are ranked (Game Center + best),
+// so bought revives can't buy leaderboard places. runBonusPaid avoids paying the
+// run-end bonus twice when a revived run ends again.
+let rankedReached = null, runBonusPaid = 0;
 let ghostPhase = 0, ghostSpeed = 1, wallTime = 0;
 let toast = null, particles = [], pops = [], shake = 0, deathTimer = 0;
 let sweep = null, paused = false;
@@ -171,6 +175,9 @@ function loadOwnedList(key, freeIds){
 function saveOwnedList(key, list){ ss(key, list.join(",")); }
 
 /* Collect a coin: +1 to the run haul and the permanent bank. */
-function collectCoin(x, y){ coins++; runCoins++; saveCoins(); pop(x, y, "+1", C.prize); }
+function collectCoin(x, y){
+  const n = coinsForRound(round);
+  coins += n; runCoins += n; saveCoins(); pop(x, y, "+" + n, C.prize);
+}
 function pop(x, y, text, color){ pops.push({ x, y, text, color, life:1 }); }
 "use strict";

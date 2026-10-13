@@ -10,6 +10,7 @@ function resetGame() {
   ghosts = []; currentPath = []; particles = []; pops = []; shockwaves = [];
   departureZone = null;
   frame = 0; grace = CFG.GRACE_TICKS; runCoins = 0; revivesThisRun = 0;
+  rankedReached = null; runBonusPaid = 0;
   ghostPhase = 0; ghostSpeed = 1; wallTime = 0;
   toast = null; shake = 0; deathTimer = 0; sweep = null;
   hasPrize = false; paused = false;
@@ -38,7 +39,10 @@ function completeRound() {
   shockwaves.push({ x:exit.x+exit.w/2, y:exit.y+exit.h/2, t:0 });
   pop(exit.x+exit.w/2, exit.y+exit.h/2, "ROUND " + clearedRound + " CLEAR", C.exit);
   haptic("medium");
-  if (!hintSeen && clearedRound===1){ hintSeen=true; ss("echoSteps.hint","1"); }
+  if (!hintSeen && clearedRound===1){
+    hintSeen=true; ss("echoSteps.hint","1");
+    toast = { text:"YOUR LAST PATH IS NOW A GHOST \u2014 AVOID IT", t:0 };   // first-run teaching, replaces the up-front tutorial
+  }
   ghosts.push({ path: trimPathAtExit(currentPath) });
   round++; currentPath = []; frame = 0; ghostPhase = 0;
   const completedRounds = round - 1;
@@ -80,14 +84,27 @@ function finalizeDeath() {
   mode = STATE.OVER;
   const reached = round - 1;
   if (window.EchoStepsCloud) window.EchoStepsCloud.finishRankedRun();
-  const isBest = reached > bestRounds;
-  if (isBest){ bestRounds = reached; saveBestRounds(bestRounds); }
-  if (typeof submitLeaderboardScore === "function") submitLeaderboardScore(reached);
+  // The first death fixes the ranked score; revived rounds still pay coins but don't rank.
+  if (rankedReached === null) rankedReached = reached;
+  const ranked = rankedReached;
+  const isBest = ranked > bestRounds;
+  if (isBest){ bestRounds = ranked; saveBestRounds(bestRounds); }
+  if (typeof submitLeaderboardScore === "function") submitLeaderboardScore(ranked);
+  const bonusDue = Math.floor(reached / CFG.RUN_BONUS_EVERY) - runBonusPaid;
+  if (bonusDue > 0){ coins += bonusDue; runCoins += bonusDue; runBonusPaid += bonusDue; saveCoins(); }
+  const rankedNote = document.getElementById("rankedNote");
+  if (rankedNote){
+    const parts = [];
+    if (revivesThisRun > 0) parts.push("Ranked score: " + ranked + " \u2014 revived rounds don't count");
+    if (bonusDue > 0) parts.push("+" + bonusDue + " run bonus");
+    rankedNote.textContent = parts.join(" \u00B7 ");
+    rankedNote.classList.toggle("hidden", parts.length === 0);
+  }
   el.finalRounds.textContent = reached;
   el.bestScore.textContent = bestRounds;
   el.finalCoins.textContent = runCoins;
   el.totalCoinsOver.textContent = coins;
-  el.newBest.style.display = (isBest && reached>0) ? "" : "none";
+  el.newBest.style.display = (isBest && ranked>0) ? "" : "none";
   el.overTitle.textContent = DEATH_TITLES[Math.floor(Math.random()*DEATH_TITLES.length)];
   el.overSub.textContent = playerName + ", " + DEATH_LINES[Math.floor(Math.random()*DEATH_LINES.length)];
   refreshRetryBtn();

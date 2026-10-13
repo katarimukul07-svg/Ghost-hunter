@@ -191,7 +191,8 @@
       if (event.key === "ArrowLeft" && stepIndex > 0) screen.querySelector("#tutorialBack").click();
     });
 
-    if (!readComplete()) requestAnimationFrame(() => openTutorial(true));
+    // No up-front tutorial: new players start playing and are taught in-game
+    // (round-1 hints, ghost and bonus toasts). The full tutorial stays in the menu.
 
     Object.defineProperty(window, "__echoStepsTutorialTest", {
       value:Object.freeze({

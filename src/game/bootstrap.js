@@ -10,7 +10,8 @@ coins = parseInt(ls("echoSteps.coins"), 10) || 0;
 bestRounds = loadBestRounds();
 unlocked = loadUnlocked();
 unlockedTrail = loadOwnedList("echoSteps.trailOwned", TRAILS.filter(t=>t.cost===0).map(t=>t.id));
-unlockedGhostSkin = loadOwnedList("echoSteps.ghostOwned", GHOST_SKINS.filter(t=>t.cost===0).map(t=>t.id));
+unlockedGhostSkin = Array.from(new Set(loadOwnedList("echoSteps.ghostOwned", GHOST_SKINS.filter(t=>t.cost===0).map(t=>t.id)).map(migrateGhostSkinId)));
+if (ls("echoSteps.ghostOwned") && unlockedGhostSkin.join(",") !== ls("echoSteps.ghostOwned")) saveOwnedList("echoSteps.ghostOwned", unlockedGhostSkin);
 unlockedDeathFX = loadOwnedList("echoSteps.deathOwned", DEATH_FX.filter(t=>t.cost===0).map(t=>t.id));
 unlockedSound = loadOwnedList("echoSteps.soundOwned", SOUND_PACKS.map(s=>s.id));   // all packs are free
 playerName = ls("echoSteps.name") || "";
@@ -20,7 +21,7 @@ playerColor = (savedColor && unlocked.includes(savedColor)) ? savedColor : SKINS
 playerStyle = getSkinStyle(playerColor);
 const savedTrail = ls("echoSteps.trail");
 selectedTrail = (savedTrail && unlockedTrail.includes(savedTrail)) ? savedTrail : TRAILS[0].id;
-const savedGhostSkin = ls("echoSteps.ghostSkin");
+const savedGhostSkin = migrateGhostSkinId(ls("echoSteps.ghostSkin"));
 selectedGhostSkin = (savedGhostSkin && unlockedGhostSkin.includes(savedGhostSkin)) ? savedGhostSkin : GHOST_SKINS[0].id;
 const savedDeathFX = ls("echoSteps.deathfx");
 selectedDeathFX = (savedDeathFX && unlockedDeathFX.includes(savedDeathFX)) ? savedDeathFX : DEATH_FX[0].id;
