@@ -1,6 +1,6 @@
 # Echo Steps store preparation packet
 
-Status: reviewable draft. Not submitted; no real-device or signing claim.
+Status (Oct 13, 2026): iOS 1.0 build 12 submitted to App Review, Waiting for Review. The submitted copy, products and privacy answers live in [STORE_LISTING.md](../../STORE_LISTING.md); this packet keeps the evidence and owner gates.
 
 ## Listing copy
 
@@ -14,9 +14,11 @@ obstacles, use short-lived bonuses, and survive until the Garbage Collector
 clears old echoes. Fast touch controls and offline play keep each run simple to
 start and challenging to master.
 
-Ranked competition, cloud recovery, rewarded ads and paid purchases must not be
-advertised in the listing until they are actually enabled and accepted in the
-submitted binary. The current release default remains offline guest play.
+The iOS listing advertises the Game Center leaderboard and optional coin packs,
+which are both in the submitted binary. Our own ranked competition, cloud
+recovery and rewarded ads must not be advertised until they are enabled and
+accepted in a submitted binary. The Google Play listing must not mention coin
+packs or a leaderboard until Android has them (#51).
 
 ## Evidence and owner gates
 
