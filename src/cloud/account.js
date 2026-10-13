@@ -84,7 +84,7 @@
     bestRounds = loadBestRounds();
     playerName = ls(keys.name) || "";
     el.nameInput.value = playerName;
-    const color = ls(keys.color);
+    const color = migrateSkinId(ls(keys.color));
     playerColor = unlocked.includes(color) ? color : SKINS[0].id;
     playerStyle = getSkinStyle(playerColor);
     const trail = ls(keys.trail);

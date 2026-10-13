@@ -141,7 +141,8 @@
     menuButton.className = "tutorial-menu-btn";
     menuButton.textContent = "TUTORIAL";
     menuButton.setAttribute("aria-label", "Open tutorial");
-    play.parentElement.appendChild(menuButton);
+    // The menu keeps PLAY alone; the tutorial sits with the quiet secondary actions.
+    (document.getElementById("menuQuiet") || play.parentElement).appendChild(menuButton);
 
     const screen = document.createElement("section");
     screen.id = "tutorialScreen";

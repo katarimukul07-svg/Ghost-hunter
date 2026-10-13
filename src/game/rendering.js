@@ -183,6 +183,11 @@ function drawPrize(){
 const reducedMotionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 function drawGhostBody(context,x,y,r,color,alpha){
   glow(context,x,y,r,color,reducedMotionPreference.matches ? 1 : alpha);
+  const rim = ghostOutline(color);
+  if (rim){
+    context.save(); context.globalAlpha=0.95; context.strokeStyle=rim; context.lineWidth=Math.max(1.5,r*.22);
+    context.beginPath(); context.arc(x,y,r*1.02,0,Math.PI*2); context.stroke(); context.restore();
+  }
   context.save(); context.globalAlpha=1; context.fillStyle="#070b10";
   for (const side of [-1,1]) {
     context.beginPath(); context.arc(x+side*r*.30,y-r*.12,Math.max(1.4,r*.18),0,Math.PI*2); context.fill();
@@ -197,8 +202,29 @@ function drawGhosts(){
     for (let k=1;k<p.length;k+=3) ctx.lineTo(p[k].x,p[k].y);
     ctx.stroke(); ctx.globalAlpha=1;
     const flick=(i===0 && sweep)?(0.45+0.4*Math.sin(performance.now()/40)):1;
-    drawGhostBody(ctx,pos.x,pos.y,CFG.GHOST_R,selectedGhostSkin,flick);
+    const dimmed = mode===STATE.DYING && killerGhost>=0 && i!==killerGhost;
+    if (dimmed) ctx.globalAlpha=0.3;
+    drawGhostBody(ctx,pos.x,pos.y,CFG.GHOST_R,selectedGhostSkin,dimmed?0.3:flick);
+    ctx.globalAlpha=1;
+    const teaching = toast && toast.teach && i===ghosts.length-1 && mode===STATE.PLAYING;
+    if (teaching || (mode===STATE.DYING && i===killerGhost)) drawGhostCallout(g, pos);
   }
+}
+/* A white ring calls out one ghost: the brand-new one while it is being taught,
+   and the one that caught you during the death animation, with its route traced
+   so you can see where it was heading. */
+function drawGhostCallout(g, pos){
+  const t = performance.now()/1000;
+  ctx.save();
+  if (mode===STATE.DYING){
+    const p=g.path; ctx.strokeStyle=selectedGhostSkin; ctx.globalAlpha=0.55; ctx.lineWidth=2.5; ctx.setLineDash([6,6]);
+    ctx.beginPath(); ctx.moveTo(p[0].x,p[0].y); for (let k=1;k<p.length;k+=2) ctx.lineTo(p[k].x,p[k].y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  const r = CFG.GHOST_R*2.1 + (reducedMotionPreference.matches ? 0 : Math.sin(t*8)*2);
+  ctx.globalAlpha=0.95; ctx.strokeStyle="#fff"; ctx.lineWidth=2; ctx.shadowColor="#fff"; ctx.shadowBlur=10;
+  ctx.beginPath(); ctx.arc(pos.x,pos.y,r,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
 }
 function drawSweep(){
   if (!sweep) return; const x=room.x+sweep.t*room.w; ctx.save();
@@ -254,18 +280,49 @@ function drawPops(){
   }
   ctx.globalAlpha=1;
 }
+/* Canvas text never wraps by itself, and a centred line wider than the arena
+   clips at both ends on phones. Split on "\n", then wrap each line to maxW. */
+function wrapCanvasText(target, text, maxW){
+  const lines = [];
+  for (const para of String(text).split("\n")){
+    let line = "";
+    for (const word of para.split(" ")){
+      const next = line ? line + " " + word : word;
+      if (line && target.measureText(next).width > maxW){ lines.push(line); line = word; }
+      else line = next;
+    }
+    lines.push(line);
+  }
+  return lines;
+}
+// A dark plate behind teaching text keeps it readable over any background or ghost.
+function drawTextPlate(target, lines, cx, cy, lineH, maxW, border){
+  const w = Math.min(maxW, Math.max(...lines.map(l => target.measureText(l).width))) + 24;
+  const h = lines.length*lineH + 14;
+  const base = target.globalAlpha;
+  target.save(); target.shadowBlur = 0;
+  target.beginPath(); target.roundRect(cx-w/2, cy-h/2, w, h, 8);
+  target.globalAlpha = base*0.86; target.fillStyle = C.bg || "#070b10"; target.fill();
+  target.globalAlpha = base*0.6; target.strokeStyle = border; target.lineWidth = 1; target.stroke();
+  target.restore();
+}
 function drawHint(){
   if (hintSeen || round!==1) return;
-  const a=0.45+0.45*Math.sin(performance.now()/300);
+  const a=0.55+0.4*Math.sin(performance.now()/300);
   const target = hasPrize ? { x:exit.x+exit.w/2, y:exit.y+exit.h/2 } : prize;
   if (target){
     ctx.save(); ctx.globalAlpha=a*0.35; ctx.strokeStyle=hasPrize?C.exit:C.prize;
     ctx.setLineDash([6,8]); ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(player.x,player.y); ctx.lineTo(target.x,target.y); ctx.stroke(); ctx.restore();
   }
-  ctx.globalAlpha=a; ctx.fillStyle=hasPrize?C.exit:C.ink; ctx.font="600 15px ui-monospace, monospace";
-  ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.fillText(hasPrize?"NOW REACH THE GREEN EXIT":"DRAG TO THE YELLOW DIAMOND", player.x, player.y-30);
-  ctx.globalAlpha=1;
+  // Pinned to the bottom of the arena so it never follows the dot off-screen.
+  ctx.save(); ctx.font="600 14px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  const maxW = room.w - 32, lineH = 18;
+  const lines = wrapCanvasText(ctx, hasPrize ? "NOW REACH THE GREEN EXIT" : "TAP OR DRAG TO THE YELLOW DIAMOND", maxW);
+  const cx = room.x+room.w/2, cy = room.y+room.h - 16 - lines.length*lineH/2;
+  drawTextPlate(ctx, lines, cx, cy, lineH, maxW, hasPrize ? C.exit : C.prize);
+  ctx.globalAlpha=Math.max(0.75,a); ctx.fillStyle=hasPrize?C.exit:C.ink;
+  lines.forEach((l,i) => ctx.fillText(l, cx, cy - (lines.length-1)*lineH/2 + i*lineH));
+  ctx.restore();
 }
 function drawShockwaves(){
   for (const s of shockwaves){
@@ -277,11 +334,18 @@ function drawShockwaves(){
 }
 function drawToast(){
   if (!toast || mode!==STATE.PLAYING || paused) return;   // never show behind menus
-  const a = toast.t<0.3 ? toast.t/0.3 : (toast.t>2.0 ? Math.max(0,(2.6-toast.t)/0.6) : 1);
-  ctx.save(); ctx.globalAlpha=a; ctx.fillStyle=C.sweep;
-  ctx.shadowColor=C.sweep; ctx.shadowBlur=16; ctx.font="600 18px ui-monospace, monospace";
+  const life = toast.life || 2.6;
+  const a = toast.t<0.3 ? toast.t/0.3 : (toast.t>life-0.6 ? Math.max(0,(life-toast.t)/0.6) : 1);
+  ctx.save(); ctx.globalAlpha=a; ctx.font="600 17px ui-monospace, monospace";
   ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.fillText(toast.text, room.x+room.w/2, room.y+room.h*0.16); ctx.restore();
+  const maxW = room.w - 40, lineH = 22;
+  const lines = wrapCanvasText(ctx, toast.text, maxW);
+  const cx = room.x+room.w/2, cy = room.y + 18 + lines.length*lineH/2;
+  if (toast.teach) drawTextPlate(ctx, lines, cx, cy, lineH, maxW, selectedGhostSkin);
+  ctx.fillStyle = toast.teach ? "#fff" : C.sweep;
+  if (!toast.teach){ ctx.shadowColor=C.sweep; ctx.shadowBlur=16; }
+  lines.forEach((l,i) => ctx.fillText(l, cx, cy - (lines.length-1)*lineH/2 + i*lineH));
+  ctx.restore();
 }
 function render(){
   ctx.clearRect(0,0,W,H);

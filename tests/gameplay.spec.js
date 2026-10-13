@@ -24,7 +24,7 @@ for (const completedRounds of [0, 1, 4]) {
     }, completedRounds);
     await expect(page.locator("#overScreen")).toBeVisible();
     await expect(page.locator("#finalRounds")).toHaveText(String(completedRounds));
-    await expect(page.locator("#finalRounds").locator("..")).toHaveText(`Rounds completed: ${completedRounds}`);
+    await expect(page.locator("#finalRounds").locator("..")).toHaveText(`${completedRounds}ROUNDS COMPLETED`);
     expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).round).toBe(completedRounds+1);
     await page.locator("#shareBtn").click();
     const shared = await page.evaluate(() => window.__sharedResult);
@@ -51,7 +51,7 @@ test("a ghost death shows game over, refuses an unaffordable retry, and restarts
   await page.locator("#reviveOfferClose").click();
   await expect(page.locator("#reviveOffer")).toBeHidden();
   expect((await page.evaluate(() => window.__echoStepsTest.snapshot())).mode).toBe(2);
-  await page.getByRole("button", { name:"PLAY AGAIN" }).click();
+  await page.getByRole("button", { name:"NEW RUN" }).click();
   const restarted = await page.evaluate(() => window.__echoStepsTest.snapshot());
   expect(restarted.mode).toBe(1);
   expect(restarted.round).toBe(1);

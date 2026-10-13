@@ -21,6 +21,7 @@ let rankedReached = null, runBonusPaid = 0;
 let ghostPhase = 0, ghostSpeed = 1, wallTime = 0;
 let toast = null, particles = [], pops = [], shake = 0, deathTimer = 0;
 let sweep = null, paused = false;
+let killerGhost = -1;   // index of the ghost that ended the run, for the death callout
 let shockwaves = [];
 
 let playerColor = SKINS[0].id, playerStyle = SKINS[0].style, playerName = "";
@@ -164,8 +165,11 @@ function saveBestRounds(v){ ss("echoSteps.bestRounds", String(v)); }
 function saveCoins(){ ss("echoSteps.coins", String(coins)); }
 function loadUnlocked(){
   const base = SKINS.filter(k=>k.cost===0).map(k=>k.id);
-  const saved = (ls("echoSteps.unlocked")||"").split(",").filter(Boolean);
-  return Array.from(new Set(base.concat(saved)));
+  const raw = ls("echoSteps.unlocked")||"";
+  const saved = raw.split(",").filter(Boolean).map(migrateSkinId);
+  const list = Array.from(new Set(base.concat(saved)));
+  if (raw && saved.join(",") !== raw) ss("echoSteps.unlocked", list.join(","));
+  return list;
 }
 function saveUnlocked(){ ss("echoSteps.unlocked", unlocked.join(",")); }
 function loadOwnedList(key, freeIds){

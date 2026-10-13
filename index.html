@@ -35,24 +35,35 @@
   </div>
 
   <div id="startScreen" class="overlay">
+    <div class="menu-top">
+      <label class="name-chip" for="nameInput"><span class="visually-hidden">Your name</span>
+        <input id="nameInput" maxlength="12" placeholder="Player" autocomplete="off" /><span aria-hidden="true">&#9998;</span>
+      </label>
+    </div>
+    <svg class="menu-demo" viewBox="0 0 300 110" aria-hidden="true">
+      <path class="menu-demo-ghost-trail" d="M20 88 C 80 10, 140 110, 200 44 S 268 54, 282 26"/>
+      <path class="menu-demo-trail" d="M20 88 C 80 10, 140 110, 200 44 S 268 54, 282 26"/>
+      <g class="menu-demo-ghost"><circle r="9" /><circle class="eye" cx="-3" cy="-1.5" r="1.8"/><circle class="eye" cx="3" cy="-1.5" r="1.8"/>
+        <animateMotion dur="4.2s" begin="0.9s" repeatCount="indefinite" path="M20 88 C 80 10, 140 110, 200 44 S 268 54, 282 26"/></g>
+      <circle class="menu-demo-dot" r="7"><animateMotion dur="4.2s" repeatCount="indefinite" path="M20 88 C 80 10, 140 110, 200 44 S 268 54, 282 26"/></circle>
+    </svg>
     <h1>ECHO STEPS</h1>
     <div class="sub">Your past wants a rematch.</div>
-    <div class="sub" id="coinLine" style="color:var(--prize)">&#9670; 0 coins &middot; best 0 rounds</div>
-    <div class="menu">
-      <label class="mlabel">YOUR NAME</label>
-      <input id="nameInput" maxlength="12" placeholder="Player" autocomplete="off" />
-    </div>
+    <div class="sub" id="coinLine">&#9670; 0 coins &middot; best 0 rounds</div>
     <div class="sub hidden" id="menuNotice" role="status" aria-live="polite"></div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-      <button id="startBtn">PLAY</button>
-      <button id="shopBtn" class="menu-store">STORE</button>
-      <button id="gameCenterBtn" class="menu-leaderboard hidden">LEADERBOARD</button>
-      <button id="settingsBtn" class="menu-settings">SETTINGS</button>
-      <button id="accountBtn" class="chip hidden">ACCOUNT</button>
-      <button id="leaderboardBtn" class="chip hidden">LEADERBOARD</button>
+    <div class="menu-actions">
+      <button id="startBtn" class="menu-play">PLAY</button>
+      <div class="menu-pair">
+        <button id="shopBtn" class="menu-store">STORE</button>
+        <button id="gameCenterBtn" class="menu-leaderboard hidden">LEADERBOARD</button>
+      </div>
+      <div class="menu-quiet" id="menuQuiet">
+        <button id="settingsBtn" class="menu-settings">SETTINGS</button>
+        <button id="accountBtn" class="chip hidden">ACCOUNT</button>
+        <button id="leaderboardBtn" class="chip hidden">LEADERBOARD</button>
+      </div>
     </div>
   </div>
-
   <div id="settingsScreen" class="overlay hidden" aria-label="Settings">
     <h1>SETTINGS</h1>
     <button id="settingsMuteBtn" class="chip" aria-label="Toggle all sound" aria-pressed="false">SOUND ON</button>
@@ -114,9 +125,9 @@
     <label class="mlabel" id="shopPreviewLabel">PREVIEW</label>
     <canvas id="shopPreview" width="360" height="120"></canvas>
     <div class="tabs" id="shopTabs">
-      <button class="tab" data-cat="colors">DOT COLOR</button>
-      <button class="tab" data-cat="trail">TRAIL FX</button>
-      <button class="tab" data-cat="ghost">GHOST SKIN</button>
+      <button class="tab" data-cat="colors">PLAYER</button>
+      <button class="tab" data-cat="trail">TRAILS</button>
+      <button class="tab" data-cat="ghost">GHOSTS</button>
       <button class="tab" data-cat="death">DEATH FX</button>
       <button class="tab hidden" data-cat="coins" id="shopCoinsTab">GET COINS</button>
     </div>
@@ -163,21 +174,27 @@
   </div>
 
   <div id="overScreen" class="overlay hidden">
-    <h1 id="overTitle" style="color:var(--ghost);text-shadow:0 0 14px rgba(255,53,84,.55)">GHOST GOT YOU!</h1>
-    <div class="stat">Rounds completed: <b id="finalRounds">0</b></div>
-    <div class="stat" style="font-size:15px">Best: <span id="bestScore">0</span> rounds &middot; +<span id="finalCoins">0</span> coins</div>
-    <div class="stat" style="font-size:16px;color:var(--prize)">&#9670; <b id="totalCoinsOver">0</b> coins banked</div>
-    <div class="sub hidden" id="rankedNote" style="color:var(--dim)"></div>
-    <div class="sub" id="newBest" style="color:var(--prize);text-shadow:0 0 12px rgba(255,241,92,.6);display:none">&#9733; NEW BEST &#9733;</div>
-    <div class="sub" id="overSub"></div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-      <button id="retryBtn" style="background:var(--prize);box-shadow:0 0 18px rgba(255,241,92,.5)">RETRY &#9670;50</button>
-      <button id="restartBtn">PLAY AGAIN</button>
+    <h1 id="overTitle">GHOST GOT YOU!</h1>
+    <div class="over-score"><b id="finalRounds">0</b><span class="over-score-label">ROUNDS COMPLETED</span></div>
+    <div class="over-stats">
+      <span>Best <b id="bestScore">0</b></span>
+      <span class="over-coins">+<span id="finalCoins">0</span> &#9670; &middot; <b id="totalCoinsOver">0</b> banked</span>
     </div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-      <button id="menuBtn" style="background:var(--sweep);box-shadow:0 0 18px rgba(198,107,255,.5)">MENU</button>
-      <button id="shareBtn" class="menu-share">SHARE</button>
-      <button id="overLeaderboardBtn" class="menu-leaderboard hidden">LEADERBOARD</button>
+    <div class="sub" id="newBest" style="display:none">&#9733; NEW BEST &#9733;</div>
+    <div class="sub hidden" id="rankedNote"></div>
+    <div id="savingFor" class="saving-for hidden" aria-live="polite">
+      <div class="saving-for-text">Saving for <b id="savingForName"></b><span id="savingForCount"></span></div>
+      <div class="saving-for-bar"><div id="savingForFill"></div></div>
+    </div>
+    <div class="sub" id="overSub"></div>
+    <div class="over-actions">
+      <button id="restartBtn" class="over-primary">NEW RUN &middot; FREE</button>
+      <button id="retryBtn" class="over-revive">REVIVE &middot; &#9670;50</button>
+      <div class="over-secondary">
+        <button id="menuBtn">MENU</button>
+        <button id="shareBtn">SHARE</button>
+        <button id="overLeaderboardBtn" class="menu-leaderboard hidden">LEADERBOARD</button>
+      </div>
     </div>
   </div>
 </div>

@@ -195,7 +195,7 @@
   const tab=document.createElement("button");
   tab.className="tab";
   tab.dataset.cat="background";
-  tab.textContent="BACKGROUND";
+  tab.textContent="ARENAS";
   el.shopTabs.appendChild(tab);
 
   const backgroundContainer=document.createElement("div");
