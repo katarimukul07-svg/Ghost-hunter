@@ -33,5 +33,7 @@ jobs:
               --base main \
               --head "$HEAD_BRANCH" \
               --title "Review proposed changes from $HEAD_BRANCH" \
-              --body "Automated pull request. The repository owner must review and approve this change after all required CI checks pass."
+              --body "Automated pull request. The repository owner must review and approve this change after all required CI checks pass.
+
+          Docs rule (WORKFLOW.md): this pull request must update the related .md files, or explain why none apply."
           fi
