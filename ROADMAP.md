@@ -2,28 +2,31 @@
 
 ## Product direction
 
-Version 1.0 is a focused, replayable mobile arcade game built around worldwide score competition. The launch path keeps the core hook—each completed route becomes a lethal echo, while the Garbage Collector periodically reduces accumulated danger—while adding only the backend needed for secure identity, ranked scores, leaderboards, cloud recovery, and future verified purchases.
+Version 1.0 is a focused, replayable mobile arcade game built around score competition. It keeps the core hook—each completed route becomes a lethal echo, while the Garbage Collector periodically reduces accumulated danger—and ships on iOS first with a Game Center leaderboard and optional App Store coin packs. Our own server-verified leaderboard follows the Google Play release.
 
-## Version 1.0 scope
+**Status (Oct 13, 2026):** iOS 1.0 (build 12) is submitted to App Review and set to release automatically no earlier than Oct 15, 2026. Store details are recorded in [STORE_LISTING.md](STORE_LISTING.md).
+
+## Version 1.0 scope (iOS, shipped to App Review)
 
 Included:
 
-- Fast portrait-mode runs with touch controls, pause/resume, haptics, synthesized audio, and offline play.
+- Fast portrait-mode runs with touch controls, pause/resume, haptics, music and synthesized sound effects, and offline play.
 - Fair shape-aware collisions, reachable prizes, protected exits, and a Garbage Collector that meaningfully relieves pressure.
-- Local best score, earned coins, cosmetic unlocks, and coin-funded retries.
-- Optional rewarded ads for a revive or coins after a real provider is connected and consent is implemented.
-- Crash reporting and minimal privacy-conscious gameplay analytics for balancing.
-- Android and iOS packages, store assets, privacy disclosures, age ratings, and closed testing.
+- Local best score, earned coins, cosmetic unlocks (player, trails, ghosts, death effects, arenas), and coin-funded revives (50 → 100 → 200 → 400 per run).
+- **Game Center leaderboard** `echosteps.rounds.alltime` (best rounds reached), with a 0–5000 score range in App Store Connect.
+- **Three StoreKit 2 coin packs**: 200 coins $0.99, 1,200 coins $4.99, 3,000 coins $9.99. Coins are credited only after StoreKit verifies the transaction.
+- App Privacy: Data Not Collected.
 
-Not included in the initial launch:
+Not included in 1.0:
 
-- Paid coin packs or other in-app purchases.
-- Player accounts or cloud saves.
-- The global leaderboard, which is paused for launch and planned to return 1–2 weeks after the Google Play release, once the server replay validator is live.
+- Ads (rewarded ads arrive in iOS 1.1 and at the Google Play launch, #66).
+- Analytics or crash reporting beyond App Store Connect's built-in stats.
+- Player accounts or cloud saves of our own.
+- The Supabase server-verified leaderboard, which connects once the Google Play version is released (#63).
 - Daily challenges, multiplayer, or live events.
 - Advertising that interrupts active gameplay.
 
-These are post-launch options only if retention data supports them.
+Next releases: iOS 1.0.1 ships the UI review changes merged in PR #78 (build 13). Google Play (#51) needs Google Play Billing and Play Games before it matches iOS.
 
 ## Milestones
 
@@ -82,7 +85,7 @@ Exit criteria: a modified client cannot directly mint currency, grant paid inven
 
 - Fix launch issues before adding features.
 - Review retention, round completion, death causes, retry usage, ad completion, and cosmetic engagement.
-- Bring back the global leaderboard 1–2 weeks after the Google Play release.
+- Connect the Supabase server-verified leaderboard once the Google Play version is released (#63); start it fresh rather than importing Game Center scores.
 - Consider daily challenges only after the launch loop demonstrates retention.
 
 ## Quality gates

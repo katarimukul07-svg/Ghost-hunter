@@ -5,11 +5,12 @@ This repository is managed as a release project, not as a collection of direct e
 ## Branch and review policy
 
 1. Start each change from the latest `main`.
-2. Use a focused branch such as `fix/input-drag-state` or `feat/mobile-shell`.
+2. Use a focused branch such as `fix/input-drag-state` or `feature/mobile-shell`.
 3. Keep behavior changes separate from large mechanical refactors when practical.
 4. Run `npm test` before opening a pull request.
-5. Review the changed-file list and diff before merging.
-6. Merge only when automated checks pass and the change has a clear rollback commit.
+5. Update the related `.md` files in the same pull request (README, ROADMAP, STORE_LISTING, release docs, or the docs for the area you changed), so the docs always record what is being pushed. If no doc applies, say why in the pull request.
+6. Review the changed-file list and diff before merging.
+7. Merge only when automated checks pass and the change has a clear rollback commit.
 
 Branches under `codex/`, `fix/`, `feature/`, `chore/`, `release/`, or `setup/`
 automatically receive a pull request authored by GitHub Actions. This keeps the
@@ -28,7 +29,7 @@ A change is complete when:
 - Automated validation passes.
 - New logic has an appropriate deterministic test or browser test once the test harness exists.
 - Mobile layout, touch input, pause/resume, and offline behavior have been considered.
-- Documentation and release notes are updated when user-visible behavior changes.
+- The related `.md` files are updated in the same pull request (owner rule, Oct 13, 2026).
 - The pull request is merged and the GitHub Pages build is verified when it affects the web game.
 
 ## Release safety
