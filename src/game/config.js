@@ -35,7 +35,7 @@ const CFG = {
 // Everything the game says out loud during a run. Edit the wording here.
 // Keep each line short: it shows in the middle of the arena for a few seconds.
 const CAPTIONS = Object.freeze({
-  teach:      "See that ghost? That's your old route.\nDon't bump into yourself!",
+  teach:      "See that ghost? That's you!\nDon't bump into yourself!",
   getsWild:   "Warm-up's over. Hold on tight!",
   exitMoved:  "Psst... the exit moved!",
   revived:    "You're back! The ghosts didn't leave, though.",

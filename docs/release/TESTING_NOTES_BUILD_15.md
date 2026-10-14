@@ -1,7 +1,7 @@
-# Build 15: owner testing notes (Oct 14, 2026)
+# Builds 15–16: owner testing notes (Oct 14, 2026)
 
 Owner played build 14 on an iPhone and asked for these fixes before the Oct 15
-launch. Build 15 replaces build 14 in App Review for version 1.0.
+launch. Build 15 carried the fixes; build 16 adds the owner's caption edit and replaces build 14 in App Review for version 1.0.
 
 | Note from testing | Cause found | Fix in build 15 |
 |---|---|---|
@@ -13,4 +13,4 @@ launch. Build 15 replaces build 14 in App Review for version 1.0.
 | Captions feel machine-written | Terse system wording | All in-run captions moved to `CAPTIONS` in `src/game/config.js` (edit wording there) and rewritten; tutorial rewritten in the same voice |
 | Obstacles should not all be edged shapes | 6 shapes | 10 shapes: added pill, star, plus and pentagon. Outlines live in `OBSTACLE_POLYGONS` and drive both drawing and collisions |
 
-Captions are owner-approved before release.
+Captions were approved by the owner on Oct 14, with one edit: the first-ghost line reads "See that ghost? That's you! / Don't bump into yourself!".
