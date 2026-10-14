@@ -1,6 +1,6 @@
 {
   "name": "echo-steps-garbage-collector",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "A minimalist arcade survival game where your past moves become enemies.",
