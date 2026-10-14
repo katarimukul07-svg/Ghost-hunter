@@ -17,7 +17,7 @@ The repository contains the web game plus Capacitor 8 projects for Android and i
 
 ### Release plan
 
-1. **iOS 1.0 (submitted).** Guest play with a Game Center leaderboard and optional App Store coin packs; no accounts of our own, ads or analytics. iOS 1.0.1 follows with the UI review changes (PR #78).
+1. **iOS 1.0 (submitted).** Guest play with a Game Center leaderboard and optional App Store coin packs; no accounts of our own, ads or analytics. iOS 1.0.1 (build 13) follows with the UI review changes (PR #78); it goes to TestFlight first and is submitted after 1.0 is live.
 2. **Google Play release (#51).** Android release signing, Google Play Billing for the same coin packs, Play Games, and rewarded ads from day one (#66).
 3. **Verified leaderboard, once the Google Play version is released (#63).** Supabase hosts the leaderboard and only accepts scores the server replay validator has verified: `scripts/build.mjs` refuses `ECHO_RANKED_ACTIVATE=1` until then.
 

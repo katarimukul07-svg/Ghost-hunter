@@ -26,7 +26,7 @@ Not included in 1.0:
 - Daily challenges, multiplayer, or live events.
 - Advertising that interrupts active gameplay.
 
-Next releases: iOS 1.0.1 ships the UI review changes merged in PR #78 (build 13). Google Play (#51) needs Google Play Billing and Play Games before it matches iOS.
+Next releases: iOS 1.0.1 (build 13) ships the UI review changes merged in PR #78. It is uploaded to TestFlight while 1.0 is in review and submitted after 1.0 goes live. Google Play (#51) needs Google Play Billing and Play Games before it matches iOS.
 
 ## Milestones
 

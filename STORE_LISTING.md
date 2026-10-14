@@ -9,7 +9,7 @@ the listing, review notes, products or privacy answers change.
 - App name: Echo Steps: Ghost Run
 - Short name: Echo Steps
 - Bundle/application ID: `com.mukulkatari.echosteps`
-- Version: 1.0.0 (App Store version 1.0, build 12)
+- Version: 1.0.1 in the repo (build 13, TestFlight). App Store version 1.0, build 12, is the one in App Review; the copy below is what was submitted for it
 - Category: Games — Arcade
 - Orientation: Portrait
 - Release: automatic after App Review, no earlier than Oct 15, 2026 5:00 AM GMT
