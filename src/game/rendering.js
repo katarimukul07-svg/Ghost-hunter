@@ -347,11 +347,14 @@ function drawToast(){
   ctx.textAlign="center"; ctx.textBaseline="middle";
   const maxW = room.w - 48, lineH = 23;
   const lines = wrapCanvasText(ctx, toast.text, maxW);
-  // Centered in the arena on a dark plate so it reads over ghosts and obstacles.
+  // Centered in the arena with no box behind it, so nothing in play is hidden.
+  // A thin dark outline keeps the letters readable over ghosts and obstacles.
   const cx = room.x+room.w/2, cy = room.y + room.h/2;
-  const accent = toast.teach ? selectedGhostSkin : (toast.priority >= 3 ? C.exit : C.sweep);
-  drawTextPlate(ctx, lines, cx, cy, lineH, maxW, accent);
-  ctx.fillStyle = toast.teach ? "#fff" : accent;
+  const accent = toast.teach ? "#fff" : (toast.priority >= 3 ? C.exit : C.sweep);
+  const y0 = cy - (lines.length-1)*lineH/2;
+  ctx.lineJoin = "round"; ctx.lineWidth = 4; ctx.strokeStyle = C.bg || "#070b10";
+  lines.forEach((l,i) => ctx.strokeText(l, cx, y0 + i*lineH));
+  ctx.fillStyle = accent;
   lines.forEach((l,i) => ctx.fillText(l, cx, cy - (lines.length-1)*lineH/2 + i*lineH));
   ctx.restore();
 }

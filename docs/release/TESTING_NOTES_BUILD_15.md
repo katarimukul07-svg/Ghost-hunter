@@ -1,7 +1,7 @@
-# Builds 15–16: owner testing notes (Oct 14, 2026)
+# Builds 15–17: owner testing notes (Oct 14, 2026)
 
 Owner played build 14 on an iPhone and asked for these fixes before the Oct 15
-launch. Build 15 carried the fixes; build 16 adds the owner's caption edit and replaces build 14 in App Review for version 1.0.
+launch. Build 15 carried the fixes; build 16 added the owner's caption edit; build 17 fixes the two issues from the owner's build 16 test and replaces build 14 in App Review for version 1.0.
 
 | Note from testing | Cause found | Fix in build 15 |
 |---|---|---|
@@ -14,3 +14,10 @@ launch. Build 15 carried the fixes; build 16 adds the owner's caption edit and r
 | Obstacles should not all be edged shapes | 6 shapes | 10 shapes: added pill, star, plus and pentagon. Outlines live in `OBSTACLE_POLYGONS` and drive both drawing and collisions |
 
 Captions were approved by the owner on Oct 14, with one edit: the first-ghost line reads "See that ghost? That's you! / Don't bump into yourself!".
+
+## Build 17 (after the owner's build 16 test)
+
+| Note from testing | Cause | Fix |
+|---|---|---|
+| Music still doesn't come back after a lock | iOS sometimes refuses to resume an interrupted audio context | `revive()` in `src/game/audio.js` tries to resume; if the context is still not running after 300 ms it closes it and builds a fresh one (decoded tracks are reused) |
+| The notice box hides part of the game for a moment | Notices were drawn on a dark box in the middle of the arena | No box: centered text with a thin dark outline, so nothing in play is covered |
