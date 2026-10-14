@@ -25,7 +25,18 @@ const Sound = (() => {
       master.gain.value=muted?0:0.7; music.gain.value=musicLevel*0.7; effects.gain.value=effectsLevel;
     } catch(e){ ctx=null; }
   }
-  function unlock(){ ensure(); if(ctx?.state==="suspended") ctx.resume().catch(()=>{}); }
+  // iOS puts the context in "interrupted" (not "suspended") after a lock, call
+  // or app switch, so resume from any state that is not running. A closed
+  // context cannot be resumed and is rebuilt; decoded tracks stay cached.
+  function unlock(){
+    if(ctx?.state==="closed"){ ctx=null; buffers.clear(); }
+    ensure();
+    if(ctx && ctx.state!=="running") ctx.resume().catch(()=>{});
+  }
+  // A tap after an interruption is the user gesture iOS needs to restart audio.
+  document.addEventListener("pointerdown",()=>{ if(ctx && ctx.state!=="running") unlock(); },{passive:true,capture:true});
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden && ctx && ctx.state!=="running") unlock(); });
+  window.addEventListener("echosteps:app-state",event=>{ if(event.detail?.isActive && ctx && ctx.state!=="running") unlock(); });
   function voice(freq,dur,type,vol,bus,when,glide){
     if(!ctx || muted || voices.size>=48) return;
     const t=when ?? ctx.currentTime, o=ctx.createOscillator(), g=ctx.createGain();

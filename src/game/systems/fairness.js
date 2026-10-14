@@ -39,8 +39,10 @@
           {x:x+w*0.25,y}, {x:x+w*0.75,y}, {x:x+w,y:cy},
           {x:x+w*0.75,y:y+h}, {x:x+w*0.25,y:y+h}, {x,y:cy}
         ];
-      default:
-        return null;
+      default: {
+        const pts = OBSTACLE_POLYGONS[o.shape];
+        return pts ? pts.map(([px, py]) => ({ x: x + px * w, y: y + py * h })) : null;
+      }
     }
   }
 
@@ -61,8 +63,9 @@
     return dx * dx + dy * dy <= 1;
   }
 
+  const isRounded = o => o.shape === "rounded" || o.shape === "pill";
   function roundedRectHit(px, py, r, o) {
-    const radius = Math.min(o.w, o.h) * 0.3;
+    const radius = Math.min(o.w, o.h) * OBSTACLE_CORNER[o.shape];
     const ix = o.x + radius, iy = o.y + radius;
     const iw = Math.max(0, o.w - radius * 2), ih = Math.max(0, o.h - radius * 2);
     if (px >= ix - r && px <= ix + iw + r && py >= o.y - r && py <= o.y + o.h + r) return true;
@@ -76,7 +79,7 @@
 
   function circleHitsObstacle(px, py, r, o) {
     if (o.shape === "circle") return ellipseHit(px, py, r, o);
-    if (o.shape === "rounded") return roundedRectHit(px, py, r, o);
+    if (isRounded(o)) return roundedRectHit(px, py, r, o);
     const poly = polygonForObstacle(o);
     if (poly) return circleHitsPolygon(px, py, r, poly);
     return rectCircleHit(px, py, r, o);
@@ -122,7 +125,7 @@
 
   function resolveRoundedRectCircle(cx, cy, r, o) {
     if (!roundedRectHit(cx, cy, r, o)) return { x:cx, y:cy };
-    const radius = Math.min(o.w, o.h) * 0.3;
+    const radius = Math.min(o.w, o.h) * OBSTACLE_CORNER[o.shape];
     const ix = clamp(cx, o.x + radius, o.x + o.w - radius);
     const iy = clamp(cy, o.y + radius, o.y + o.h - radius);
     const dx = cx - ix, dy = cy - iy, d = Math.hypot(dx, dy);
@@ -137,7 +140,7 @@
   const resolveCircleRectBase = resolveCircleRect;
   resolveCircleRect = function shapeAwareResolve(cx, cy, r, o) {
     if (o.shape === "circle") return resolveEllipseCircle(cx, cy, r, o);
-    if (o.shape === "rounded") return resolveRoundedRectCircle(cx, cy, r, o);
+    if (isRounded(o)) return resolveRoundedRectCircle(cx, cy, r, o);
     const poly = polygonForObstacle(o);
     if (poly) return resolvePolygonCircle(cx, cy, r, poly);
     return resolveCircleRectBase(cx, cy, r, o);
@@ -293,7 +296,7 @@
       }
     }
     prize = null;
-    toast = { text:"⚠ GRID LOCKED — RESHUFFLING", t:0 };
+    notify(CAPTIONS.reshuffle, 1);
     obstacleLayout = makeObstacleLayout(obstacleCountForRound(round));
     buildObstacles();
     reserveSafeCorridors();
@@ -343,7 +346,7 @@
       const removedByBase = ghostCountBefore - ghosts.length;
       const remaining = Math.max(0, Math.min(sweepRemove, ghostCountBefore) - removedByBase);
       if (remaining) ghosts.splice(0, remaining);
-      toast = { text:"♻ MEMORY CLEANED — " + sweepRemove + " GHOST" + (sweepRemove === 1 ? "" : "S") + " CLEARED", t:0 };
+      notify(CAPTIONS.sweep(sweepRemove), 2);
     }
   };
 

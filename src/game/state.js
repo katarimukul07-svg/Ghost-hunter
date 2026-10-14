@@ -20,6 +20,13 @@ let coins = 0, runCoins = 0, bestRounds = 0, revivesThisRun = 0;   // coins = sp
 let rankedReached = null, runBonusPaid = 0;
 let ghostPhase = 0, ghostSpeed = 1, wallTime = 0;
 let toast = null, particles = [], pops = [], shake = 0, deathTimer = 0;
+// One notice at a time. Priority 3 = must see (teaching, exit moved),
+// 2 = big moment, 1 = nice to know. A lower one never replaces a higher one
+// that is still on screen, so important notices can't get buried.
+function notify(text, priority = 1, extra = {}) {
+  if (toast && toast.t < (toast.life || 2.6) && (toast.priority || 1) > priority) return;
+  toast = { text, t: 0, priority, ...extra };
+}
 let sweep = null, paused = false;
 let killerGhost = -1;   // index of the ghost that ended the run, for the death callout
 let shockwaves = [];

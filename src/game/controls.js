@@ -403,7 +403,7 @@ function retryRun(){
   particles = []; pops = []; shockwaves = []; sweep = null;
   departureZone = {...exit, ticks:CFG.EXIT_HANDOFF_TICKS};
   spawnPrize();
-  toast = { text:"\u21BB REVIVED \u2014 GHOSTS STILL HUNT", t:0 };
+  notify(CAPTIONS.revived, 2);
   mode = STATE.PLAYING;
   el.over.classList.add("hidden");
   el.hud.classList.remove("hidden");

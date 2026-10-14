@@ -124,7 +124,7 @@ test("keeps the old exit safe only for the relocation handoff", async ({ page })
   await page.evaluate(() => window.__echoStepsTest.prepareExitHandoff());
 
   const handoff = await page.evaluate(() => window.__echoStepsTest.snapshot());
-  expect(handoff.round).toBe(3);   // the exit first moves on round 3 (staggered from obstacles)
+  expect(handoff.round).toBe(8);   // the exit first moves on round 8 (staggered from obstacles)
   expect(handoff.departureZone).not.toBeNull();
   expect(handoff.exit.x !== handoff.departureZone.x || handoff.exit.y !== handoff.departureZone.y).toBe(true);
 

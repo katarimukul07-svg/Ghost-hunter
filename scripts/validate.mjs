@@ -93,7 +93,7 @@ assert.match(index, /id="shopCoinsTab"[^>]*class="[^"]*hidden|class="[^"]*hidden
 assert.match(sourceBundle, /SWEEP IN/, "garbage collector countdown must use a clear label");
 assert.match(config, /BONUS_LIFETIME\s*:\s*4\.5/, "timed bonus window must remain intentionally short");
 assert.match(bonuses, /CFG\.BONUS_LIFETIME/, "bonus lifetime must read central configuration");
-assert.match(bonuses, /DOUBLE BONUS/, "double bonus decision event is missing");
+assert.match(bonuses, /CAPTIONS\.bonusTwo/, "double bonus decision event is missing");
 assert.match(bonuses, /round\s*<\s*2/, "bonuses must not interrupt the teaching round");
 assert.match(fairness, /shapeAwareResolve/, "shape-aware collision handling is missing");
 

@@ -110,13 +110,20 @@ function traceObstaclePath(o){
       ctx.closePath();
       break;
     }
-    case "rounded": {
-      const r = Math.min(w,h)*0.3;
+    case "rounded":
+    case "pill": {
+      const r = Math.min(w,h)*OBSTACLE_CORNER[o.shape];
       ctx.beginPath(); ctx.roundRect(x,y,w,h,r);
       break;
     }
-    default:
-      ctx.beginPath(); ctx.rect(x,y,w,h);
+    default: {
+      const pts = OBSTACLE_POLYGONS[o.shape];
+      ctx.beginPath();
+      if (pts) {
+        pts.forEach(([px,py],i)=>{ const gx=x+px*w, gy=y+py*h; i===0?ctx.moveTo(gx,gy):ctx.lineTo(gx,gy); });
+        ctx.closePath();
+      } else ctx.rect(x,y,w,h);
+    }
   }
 }
 function drawObstacles(){
@@ -338,12 +345,13 @@ function drawToast(){
   const a = toast.t<0.3 ? toast.t/0.3 : (toast.t>life-0.6 ? Math.max(0,(life-toast.t)/0.6) : 1);
   ctx.save(); ctx.globalAlpha=a; ctx.font="600 17px ui-monospace, monospace";
   ctx.textAlign="center"; ctx.textBaseline="middle";
-  const maxW = room.w - 40, lineH = 22;
+  const maxW = room.w - 48, lineH = 23;
   const lines = wrapCanvasText(ctx, toast.text, maxW);
-  const cx = room.x+room.w/2, cy = room.y + 18 + lines.length*lineH/2;
-  if (toast.teach) drawTextPlate(ctx, lines, cx, cy, lineH, maxW, selectedGhostSkin);
-  ctx.fillStyle = toast.teach ? "#fff" : C.sweep;
-  if (!toast.teach){ ctx.shadowColor=C.sweep; ctx.shadowBlur=16; }
+  // Centered in the arena on a dark plate so it reads over ghosts and obstacles.
+  const cx = room.x+room.w/2, cy = room.y + room.h/2;
+  const accent = toast.teach ? selectedGhostSkin : (toast.priority >= 3 ? C.exit : C.sweep);
+  drawTextPlate(ctx, lines, cx, cy, lineH, maxW, accent);
+  ctx.fillStyle = toast.teach ? "#fff" : accent;
   lines.forEach((l,i) => ctx.fillText(l, cx, cy - (lines.length-1)*lineH/2 + i*lineH));
   ctx.restore();
 }
