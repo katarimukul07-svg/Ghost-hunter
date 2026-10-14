@@ -43,7 +43,7 @@ const CAPTIONS = Object.freeze({
   bonusTwo:   "Two bonuses! Pick one, fast.",
   shield:     "Shield's up. Next hit's on us.",
   slowMo:     "Slow-mo! Ghosts are crawling for 4 seconds.",
-  cache:      "+3 coins. Cha-ching!",
+  cache:      "+3 coins! Nice grab.",
   shieldSaved:"Phew! Your shield took that one.",
   reshuffle:  "Too crowded in here. Shuffling things around...",
   sweep: n => n === 1 ? "Cleanup time! 1 ghost gone." : "Cleanup time! " + n + " ghosts gone.",

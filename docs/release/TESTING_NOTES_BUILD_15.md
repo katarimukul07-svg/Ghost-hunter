@@ -1,7 +1,7 @@
-# Builds 15–17: owner testing notes (Oct 14, 2026)
+# Builds 15–18: owner testing notes (Oct 14, 2026)
 
 Owner played build 14 on an iPhone and asked for these fixes before the Oct 15
-launch. Build 15 carried the fixes; build 16 added the owner's caption edit; build 17 fixes the two issues from the owner's build 16 test and replaces build 14 in App Review for version 1.0.
+launch. Build 15 carried the fixes; build 16 added the owner's caption edit; build 17 fixed the two issues from the owner's build 16 test; build 18 changes one caption and replaces build 14 in App Review for version 1.0.
 
 | Note from testing | Cause found | Fix in build 15 |
 |---|---|---|
@@ -21,3 +21,7 @@ Captions were approved by the owner on Oct 14, with one edit: the first-ghost li
 |---|---|---|
 | Music still doesn't come back after a lock | iOS sometimes refuses to resume an interrupted audio context | `revive()` in `src/game/audio.js` tries to resume; if the context is still not running after 300 ms it closes it and builds a fresh one (decoded tracks are reused) |
 | The notice box hides part of the game for a moment | Notices were drawn on a dark box in the middle of the arena | No box: centered text with a thin dark outline, so nothing in play is covered |
+
+## Build 18
+
+The +3 coins caption changed from "+3 coins. Cha-ching!" to "+3 coins! Nice grab." at the owner's request.
