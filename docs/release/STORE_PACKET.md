@@ -1,6 +1,6 @@
 # Echo Steps store preparation packet
 
-Status (Oct 13, 2026): iOS 1.0 build 12 submitted to App Review, Waiting for Review. The submitted copy, products and privacy answers live in [STORE_LISTING.md](../../STORE_LISTING.md); this packet keeps the evidence and owner gates.
+Status (Oct 13, 2026): iOS 1.0 build 14 (with the PR #78 UI review changes) submitted to App Review on Oct 13, replacing build 12. The submitted copy, products and privacy answers live in [STORE_LISTING.md](../../STORE_LISTING.md); this packet keeps the evidence and owner gates.
 
 ## Listing copy
 

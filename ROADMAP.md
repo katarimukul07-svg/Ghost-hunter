@@ -4,9 +4,9 @@
 
 Version 1.0 is a focused, replayable mobile arcade game built around score competition. It keeps the core hook—each completed route becomes a lethal echo, while the Garbage Collector periodically reduces accumulated danger—and ships on iOS first with a Game Center leaderboard and optional App Store coin packs. Our own server-verified leaderboard follows the Google Play release.
 
-**Status (Oct 13, 2026):** iOS 1.0 (build 12) is submitted to App Review and set to release automatically no earlier than Oct 15, 2026. Store details are recorded in [STORE_LISTING.md](STORE_LISTING.md).
+**Status (Oct 13, 2026):** iOS 1.0 (build 14) is submitted to App Review and set to release automatically no earlier than Oct 15, 2026. Store details are recorded in [STORE_LISTING.md](STORE_LISTING.md).
 
-## Version 1.0 scope (iOS, shipped to App Review)
+## Version 1.0 scope (iOS, build 14 in App Review)
 
 Included:
 
@@ -26,7 +26,7 @@ Not included in 1.0:
 - Daily challenges, multiplayer, or live events.
 - Advertising that interrupts active gameplay.
 
-Next releases: iOS 1.0.1 ships the UI review changes merged in PR #78 (build 13). Google Play (#51) needs Google Play Billing and Play Games before it matches iOS.
+The UI review changes merged in PR #78 ship in 1.0 itself: build 14 replaced build 12 in App Review on Oct 13, keeping the Oct 15 release date. Build 13 (uploaded as 1.0.1) is superseded. Google Play (#51) needs Google Play Billing and Play Games before it matches iOS.
 
 ## Milestones
 

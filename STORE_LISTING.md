@@ -1,6 +1,6 @@
 # Echo Steps store listing
 
-Mirrors what was submitted to App Store Connect for iOS 1.0 (build 12, submitted
+Mirrors what was submitted to App Store Connect for iOS 1.0 (build 14, submitted
 Oct 2026, status Waiting for Review). Update this file in the same PR whenever
 the listing, review notes, products or privacy answers change.
 
@@ -9,7 +9,7 @@ the listing, review notes, products or privacy answers change.
 - App name: Echo Steps: Ghost Run
 - Short name: Echo Steps
 - Bundle/application ID: `com.mukulkatari.echosteps`
-- Version: 1.0.0 (App Store version 1.0, build 12)
+- Version: 1.0.0 (App Store version 1.0, build 14). Build 14 replaced build 12 in App Review on Oct 13 so the UI review changes (PR #78) launch on Oct 15. Build 13, uploaded as 1.0.1, is superseded
 - Category: Games — Arcade
 - Orientation: Portrait
 - Release: automatic after App Review, no earlier than Oct 15, 2026 5:00 AM GMT
