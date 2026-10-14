@@ -110,8 +110,7 @@ function traceObstaclePath(o){
       ctx.closePath();
       break;
     }
-    case "rounded":
-    case "pill": {
+    case "rounded": {
       const r = Math.min(w,h)*OBSTACLE_CORNER[o.shape];
       ctx.beginPath(); ctx.roundRect(x,y,w,h,r);
       break;

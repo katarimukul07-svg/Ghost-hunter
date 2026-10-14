@@ -1,7 +1,7 @@
-# Builds 15–18: owner testing notes (Oct 14, 2026)
+# Builds 15–19: owner testing notes (Oct 14, 2026)
 
 Owner played build 14 on an iPhone and asked for these fixes before the Oct 15
-launch. Build 15 carried the fixes; build 16 added the owner's caption edit; build 17 fixed the two issues from the owner's build 16 test; build 18 changes one caption and replaces build 14 in App Review for version 1.0.
+launch. Build 15 carried the fixes; build 16 added the owner's caption edit; build 17 fixed the two issues from the owner's build 16 test; build 18 changed one caption; build 19 removes the extra obstacle shapes and replaces build 14 in App Review for version 1.0.
 
 | Note from testing | Cause found | Fix in build 15 |
 |---|---|---|
@@ -25,3 +25,7 @@ Captions were approved by the owner on Oct 14, with one edit: the first-ghost li
 ## Build 18
 
 The +3 coins caption changed from "+3 coins. Cha-ching!" to "+3 coins! Nice grab." at the owner's request.
+
+## Build 19
+
+The four obstacle shapes added in build 15 (pill, star, plus, pentagon) are removed at the owner's request. Obstacles are back to the original six: rectangle, rounded rectangle, circle, diamond, triangle and hexagon. Circles were already included. The shared outline support (`OBSTACLE_POLYGONS`) stays in place, empty, for future shapes.

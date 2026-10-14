@@ -71,18 +71,14 @@ const BACKGROUNDS = Object.freeze([
   { id:"orbit", label:"ORBITAL STATION", cost:1500 },
 ]);
 
-// Ten obstacle shapes, picked evenly. More than about ten stops reading at a
-// glance on a phone. Every shape is solid: no rings or gaps to misjudge.
-const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex","pill","star","plus","pentagon"];
-// Outlines for the newer straight-edged shapes as fractions of the obstacle's
-// box. Rendering and collisions both read these, so what you see is what hits.
-const OBSTACLE_POLYGONS = Object.freeze({
-  pentagon: [[0.5,0],[1,0.38],[0.81,1],[0.19,1],[0,0.38]],
-  star: [[0.5,0],[0.62,0.36],[1,0.38],[0.69,0.6],[0.8,1],[0.5,0.77],[0.2,1],[0.31,0.6],[0,0.38],[0.38,0.36]],
-  plus: [[0.33,0],[0.67,0],[0.67,0.33],[1,0.33],[1,0.67],[0.67,0.67],[0.67,1],[0.33,1],[0.33,0.67],[0,0.67],[0,0.33],[0.33,0.33]],
-});
-// Corner radius as a share of the shorter side: "rounded" boxes and "pill" capsules.
-const OBSTACLE_CORNER = Object.freeze({ rounded: 0.3, pill: 0.5 });
+// The six obstacle shapes, picked evenly. (Four extra shapes were
+// tried in builds 15-18 and removed at the owner's request.)
+const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex"];
+// Extra straight-edged outlines as fractions of the obstacle's box. Rendering
+// and collisions both read this, so a shape added here draws and hits the same.
+const OBSTACLE_POLYGONS = Object.freeze({});
+// Corner radius as a share of the shorter side.
+const OBSTACLE_CORNER = Object.freeze({ rounded: 0.3 });
 const CONFETTI_COLORS = ["#ffd23f","#ff5ca8","#3d7bff","#39ff9e","#b06bff","#ff8a2b"];
 
 // HUD coin label while playing: 999, 4.8K, 12.3K, 1.2M, 3.4B… (rounded down,

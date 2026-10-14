@@ -63,7 +63,7 @@
     return dx * dx + dy * dy <= 1;
   }
 
-  const isRounded = o => o.shape === "rounded" || o.shape === "pill";
+  const isRounded = o => o.shape === "rounded";
   function roundedRectHit(px, py, r, o) {
     const radius = Math.min(o.w, o.h) * OBSTACLE_CORNER[o.shape];
     const ix = o.x + radius, iy = o.y + radius;
