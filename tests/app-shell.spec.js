@@ -13,10 +13,10 @@ test("first launch tutorial opens from the menu only, is remembered, and replaya
 
   await page.getByRole("button", { name:"Open tutorial" }).click();
   await expect(page.locator("#tutorialScreen")).toBeVisible();
-  await expect(page.getByRole("heading", { name:"YOU ARE THE BLUE DOT" })).toBeVisible();
+  await expect(page.getByRole("heading", { name:"HEY, THAT'S YOU!" })).toBeVisible();
   await expect(page.locator("#tutorialKicker")).toHaveText("STEP 1 OF 7");
   await page.getByRole("button", { name:"NEXT" }).click();
-  await expect(page.getByRole("heading", { name:"COLLECT THE YELLOW COIN" })).toBeVisible();
+  await expect(page.getByRole("heading", { name:"GRAB THE COIN" })).toBeVisible();
   await page.getByRole("button", { name:"CLOSE" }).click();
   await expect(page.getByRole("heading", { name:"ECHO STEPS" })).toBeVisible();
 

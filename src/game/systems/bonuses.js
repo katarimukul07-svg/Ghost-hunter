@@ -51,7 +51,7 @@
     }
     bonuses.push(...spawned);
     if (spawned.length) {
-      toast = { text:spawned.length > 1 ? "⚡ DOUBLE BONUS — CHOOSE FAST!" : "⚡ BONUS SIGNAL — MOVE!", t:0 };
+      notify(spawned.length > 1 ? CAPTIONS.bonusTwo : CAPTIONS.bonusOne, 1);
       haptic("light");
     }
   }
@@ -59,14 +59,14 @@
   function collectBonus(bonus) {
     if (bonus.type === "shield") {
       shieldCharges = 1;
-      toast = { text:"BUFFER READY — ONE HIT BLOCKED", t:0 };
+      notify(CAPTIONS.shield, 1);
     } else if (bonus.type === "slow") {
       slowTime = Math.max(slowTime, CFG.BONUS_SLOW_TIME);
-      toast = { text:"ECHO THROTTLE — 4 SECONDS", t:0 };
+      notify(CAPTIONS.slowMo, 1);
     } else {
       coins += CFG.BONUS_CACHE_COINS; runCoins += CFG.BONUS_CACHE_COINS; saveCoins();
       pop(bonus.x, bonus.y, "+3 COINS", BONUS_TYPES.cache.color);
-      toast = { text:"CACHE COLLECTED — +3 COINS", t:0 };
+      notify(CAPTIONS.cache, 1);
     }
     burst(particles, bonus.x, bonus.y, BONUS_TYPES[bonus.type].color, 22);
     shockwaves.push({ x:bonus.x, y:bonus.y, t:0 });
@@ -83,7 +83,7 @@
       grace = Math.max(grace, 75);
       burst(particles, player.x, player.y, BONUS_TYPES.shield.color, 30);
       shockwaves.push({ x:player.x, y:player.y, t:0 });
-      toast = { text:"BUFFER SAVED YOU!", t:0 };
+      notify(CAPTIONS.shieldSaved, 2);
       haptic("heavy");
       return;
     }

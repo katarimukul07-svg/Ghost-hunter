@@ -49,7 +49,7 @@ test("first-run teaching text wraps inside a narrow arena", async ({ page }) => 
   await page.locator("#startBtn").click();
   const widest = await page.evaluate(() => {
     ctx.font = "600 17px ui-monospace, monospace";
-    const lines = wrapCanvasText(ctx, "YOUR OLD ROUTE IS A GHOST\nDON'T TOUCH IT", room.w - 40);
+    const lines = wrapCanvasText(ctx, CAPTIONS.teach, room.w - 48);
     return { room: room.w, widest: Math.max(...lines.map(l => ctx.measureText(l).width)) };
   });
   expect(widest.widest).toBeLessThanOrEqual(widest.room - 40);

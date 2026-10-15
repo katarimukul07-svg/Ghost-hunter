@@ -14,8 +14,8 @@ const CFG = {
   OBSTACLES_START:2, OBSTACLES_ADD_EVERY:5, OBSTACLES_MAX:6,
   SIZE_EVERY:5, SIZE_GROW:0.10, SIZE_MAX:2.0, EXIT_MOVE_EVERY:5,
   // Big moments are staggered so no round stacks them: obstacles arrive on
-  // rounds 5,10,15…, the exit moves on 3,8,13…, obstacles grow on 7,12,17…
-  EXIT_MOVE_OFFSET:3, SIZE_OFFSET:2,
+  // rounds 5,10,15…, the exit moves on 8,13,18…, obstacles grow on 7,12,17…
+  EXIT_MOVE_OFFSET:8, SIZE_OFFSET:2,   // first exit move on round 8 so new players settle in
   EXIT_HANDOFF_TICKS:120, EXIT_SAFE_PAD:32,
   RETRY_COST:50,             // first revive in a run; each later revive doubles
   RETRY_COST_MAX:400,
@@ -31,6 +31,23 @@ const CFG = {
   BONUS_CACHE_COINS:3,
   RUN_BONUS_EVERY:5,         // +1 coin at game over for every 5 rounds completed this run
 };
+
+// Everything the game says out loud during a run. Edit the wording here.
+// Keep each line short: it shows in the middle of the arena for a few seconds.
+const CAPTIONS = Object.freeze({
+  teach:      "See that ghost? That's you!\nDon't bump into yourself!",
+  getsWild:   "Warm-up's over. Hold on tight!",
+  exitMoved:  "Psst... the exit moved!",
+  revived:    "You're back! The ghosts didn't leave, though.",
+  bonusOne:   "Ooh, a bonus! Grab it quick.",
+  bonusTwo:   "Two bonuses! Pick one, fast.",
+  shield:     "Shield's up. Next hit's on us.",
+  slowMo:     "Slow-mo! Ghosts are crawling for 4 seconds.",
+  cache:      "+3 coins! Nice grab.",
+  shieldSaved:"Phew! Your shield took that one.",
+  reshuffle:  "Too crowded in here. Shuffling things around...",
+  sweep: n => n === 1 ? "Cleanup time! 1 ghost gone." : "Cleanup time! " + n + " ghosts gone.",
+});
 
 // Game Center leaderboard (best rounds reached) and App Store coin packs.
 // IDs must match App Store Connect exactly.
@@ -54,7 +71,14 @@ const BACKGROUNDS = Object.freeze([
   { id:"orbit", label:"ORBITAL STATION", cost:1500 },
 ]);
 
+// The six obstacle shapes, picked evenly. (Four extra shapes were
+// tried in builds 15-18 and removed at the owner's request.)
 const OBSTACLE_SHAPES = ["rect","rounded","circle","diamond","triangle","hex"];
+// Extra straight-edged outlines as fractions of the obstacle's box. Rendering
+// and collisions both read this, so a shape added here draws and hits the same.
+const OBSTACLE_POLYGONS = Object.freeze({});
+// Corner radius as a share of the shorter side.
+const OBSTACLE_CORNER = Object.freeze({ rounded: 0.3 });
 const CONFETTI_COLORS = ["#ffd23f","#ff5ca8","#3d7bff","#39ff9e","#b06bff","#ff8a2b"];
 
 // HUD coin label while playing: 999, 4.8K, 12.3K, 1.2M, 3.4B… (rounded down,

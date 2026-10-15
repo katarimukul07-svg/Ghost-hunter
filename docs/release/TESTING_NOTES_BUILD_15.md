@@ -1,0 +1,31 @@
+# Builds 15–19: owner testing notes (Oct 14, 2026)
+
+Owner played build 14 on an iPhone and asked for these fixes before the Oct 15
+launch. Build 15 carried the fixes; build 16 added the owner's caption edit; build 17 fixed the two issues from the owner's build 16 test; build 18 changed one caption; build 19 removes the extra obstacle shapes and replaces build 14 in App Review for version 1.0.
+
+| Note from testing | Cause found | Fix in build 15 |
+|---|---|---|
+| Music and effects stop after locking the phone or leaving the app | iOS puts the audio context in "interrupted", but the game only resumed it from "suspended" | `src/game/audio.js` resumes from any non-running state, on return to the app and on the next tap |
+| The first exit move comes too fast for new players | First move on round 3 (`EXIT_MOVE_OFFSET: 3`) | First move on round 8, then 13, 18… (still never on the same round as new obstacles or growth) |
+| No notice when the exit moves | The notice existed but "COIN COLLECTED" fired every round and replaced it | Notices now have a priority (`notify()` in `src/game/state.js`); a lower one never replaces a higher one still on screen. The every-round coin notice is gone |
+| Notices sit at the top | Drawn 18px below the top of the arena | Centered in the arena on a dark plate, readable over ghosts and obstacles |
+| Too many notices | 12 notices, newest always won | Coin notice removed; priorities keep important ones visible |
+| Captions feel machine-written | Terse system wording | All in-run captions moved to `CAPTIONS` in `src/game/config.js` (edit wording there) and rewritten; tutorial rewritten in the same voice |
+| Obstacles should not all be edged shapes | 6 shapes | 10 shapes: added pill, star, plus and pentagon. Outlines live in `OBSTACLE_POLYGONS` and drive both drawing and collisions |
+
+Captions were approved by the owner on Oct 14, with one edit: the first-ghost line reads "See that ghost? That's you! / Don't bump into yourself!".
+
+## Build 17 (after the owner's build 16 test)
+
+| Note from testing | Cause | Fix |
+|---|---|---|
+| Music still doesn't come back after a lock | iOS sometimes refuses to resume an interrupted audio context | `revive()` in `src/game/audio.js` tries to resume; if the context is still not running after 300 ms it closes it and builds a fresh one (decoded tracks are reused) |
+| The notice box hides part of the game for a moment | Notices were drawn on a dark box in the middle of the arena | No box: centered text with a thin dark outline, so nothing in play is covered |
+
+## Build 18
+
+The +3 coins caption changed from "+3 coins. Cha-ching!" to "+3 coins! Nice grab." at the owner's request.
+
+## Build 19
+
+The four obstacle shapes added in build 15 (pill, star, plus, pentagon) are removed at the owner's request. Obstacles are back to the original six: rectangle, rounded rectangle, circle, diamond, triangle and hexagon. Circles were already included. The shared outline support (`OBSTACLE_POLYGONS`) stays in place, empty, for future shapes.

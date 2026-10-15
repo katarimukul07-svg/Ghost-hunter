@@ -25,7 +25,33 @@ const Sound = (() => {
       master.gain.value=muted?0:0.7; music.gain.value=musicLevel*0.7; effects.gain.value=effectsLevel;
     } catch(e){ ctx=null; }
   }
-  function unlock(){ ensure(); if(ctx?.state==="suspended") ctx.resume().catch(()=>{}); }
+  // iOS puts the context in "interrupted" (not "suspended") after a lock, call
+  // or app switch, and sometimes refuses to resume it at all. Try to resume;
+  // if it is still not running shortly after, throw it away and build a fresh
+  // one. Decoded tracks are plain AudioBuffers and work in the new context.
+  let reviving=null;
+  function revive(){
+    if(reviving) return reviving;
+    reviving=(async()=>{
+      try{
+        if(ctx?.state==="closed") ctx=null;
+        if(!ctx){ ensure(); }
+        if(!ctx || ctx.state==="running") return;
+        try{ await Promise.race([ctx.resume(), new Promise(r=>setTimeout(r,300))]); }catch(e){}
+        if(ctx.state==="running") return;
+        const old=ctx; ctx=null; musicSource=null;
+        try{ old.close(); }catch(e){}
+        ensure();
+        if(ctx && ctx.state!=="running"){ try{ await Promise.race([ctx.resume(), new Promise(r=>setTimeout(r,300))]); }catch(e){} }
+      } finally { reviving=null; }
+    })();
+    return reviving;
+  }
+  function unlock(){ revive(); }
+  // A tap after an interruption is the user gesture iOS needs to restart audio.
+  document.addEventListener("pointerdown",()=>{ if(ctx && ctx.state!=="running") unlock(); },{passive:true,capture:true});
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden && ctx && ctx.state!=="running") unlock(); });
+  window.addEventListener("echosteps:app-state",event=>{ if(event.detail?.isActive && ctx && ctx.state!=="running") unlock(); });
   function voice(freq,dur,type,vol,bus,when,glide){
     if(!ctx || muted || voices.size>=48) return;
     const t=when ?? ctx.currentTime, o=ctx.createOscillator(), g=ctx.createGain();
@@ -79,7 +105,7 @@ const Sound = (() => {
   }
   // Plays one bundled track on a seamless loop.
   async function play(id){
-    unlock(); if(!ctx) return;
+    await revive(); if(!ctx) return;
     if(timer!==null && playingId===id) return;
     if(timer!==null) stopAmbient();
     timer=true; playingId=id; const epoch=++musicEpoch; const track=trackById(id);

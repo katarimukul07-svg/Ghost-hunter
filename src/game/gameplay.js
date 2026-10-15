@@ -43,7 +43,7 @@ function completeRound() {
     hintSeen=true; ss("echoSteps.hint","1");
     // First-run teaching, replaces the up-front tutorial. Wraps to the arena and
     // rings the new ghost; held a little longer than ordinary notices.
-    toast = { text:"YOUR OLD ROUTE IS A GHOST\nDON'T TOUCH IT", t:0, teach:true, life:3.6 };
+    notify(CAPTIONS.teach, 3, { teach:true, life:3.6 });
   }
   ghosts.push({ path: trimPathAtExit(currentPath) });
   round++; currentPath = []; frame = 0; ghostPhase = 0;
@@ -51,7 +51,7 @@ function completeRound() {
   const gcPolicy = gcPolicyForCompletedRounds(completedRounds);
   grace = CFG.GRACE_TICKS; hasPrize = false;
   if (round>CFG.RAMP_START) ghostSpeed *= (1+CFG.GHOST_RAMP);
-  if (round===CFG.RAMP_START+1) toast = { text:"\u26A0 THINGS GET WILD!", t:0 };
+  if (round===CFG.RAMP_START+1) notify(CAPTIONS.getsWild, 2);
   if (gcPolicy.shouldSweep && ghosts.length && !sweep) {
     sweep={t:0, remove:Math.min(gcPolicy.remove, ghosts.length), completedRounds};
     Sound.sweep();
@@ -60,7 +60,7 @@ function completeRound() {
     const oldExit={...exit};
     repositionExit();
     departureZone={...oldExit, ticks:CFG.EXIT_HANDOFF_TICKS};
-    toast = { text:"\u21C4 EXIT MOVED \u2014 DEPARTURE SAFE!", t:0 };
+    notify(CAPTIONS.exitMoved, 3, { life:3.2 });
   }
   const wantObstacles = obstacleCountForRound(round);
   const atMaxObstacles = wantObstacles >= CFG.OBSTACLES_MAX;
@@ -228,8 +228,7 @@ function update(dt) {
       shockwaves.push({ x:prize.x, y:prize.y, t:0 });
       collectCoin(prize.x, prize.y);            // +1 coin (currency)
       haptic("medium");
-      hasPrize=true; prize=null; Sound.pickup();
-      toast = { text:"COIN COLLECTED — FIND THE EXIT", t:0 };
+      hasPrize=true; prize=null; Sound.pickup();   // no notice: the exit glow and round-1 hint say where to go
     }
   }
   if (hasPrize){

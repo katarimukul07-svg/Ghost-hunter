@@ -45,7 +45,7 @@ test("big moments are staggered across rounds", async ({ page }) => {
     return rows;
   });
   const by = r => schedule[r - 1];
-  expect(schedule.filter(x => x.exit).map(x => x.r)).toEqual([3, 8, 13, 18]);
+  expect(schedule.filter(x => x.exit).map(x => x.r)).toEqual([8, 13, 18]);
   expect(by(4).obstacles).toBe(2); expect(by(5).obstacles).toBe(3); expect(by(10).obstacles).toBe(4);
   expect(by(6).scale).toBe(1); expect(by(7).scale).toBeCloseTo(1.1); expect(by(12).scale).toBeCloseTo(1.21);
   for (const row of schedule) {
