@@ -8,7 +8,7 @@ test("first launch tutorial opens from the menu only, is remembered, and replaya
 
   await page.goto("/");
   // New players go straight to the menu and learn in-game; the tutorial waits in the menu.
-  await expect(page.getByRole("heading", { name:"ECHO STEPS" })).toBeVisible();
+  await expect(page.getByRole("heading", { name:"GHOST TRAIL" })).toBeVisible();
   await expect(page.locator("#tutorialScreen")).toBeHidden();
 
   await page.getByRole("button", { name:"Open tutorial" }).click();
@@ -18,7 +18,7 @@ test("first launch tutorial opens from the menu only, is remembered, and replaya
   await page.getByRole("button", { name:"NEXT" }).click();
   await expect(page.getByRole("heading", { name:"GRAB THE COIN" })).toBeVisible();
   await page.getByRole("button", { name:"CLOSE" }).click();
-  await expect(page.getByRole("heading", { name:"ECHO STEPS" })).toBeVisible();
+  await expect(page.getByRole("heading", { name:"GHOST TRAIL" })).toBeVisible();
 
   await page.reload();
   await expect(page.locator("#tutorialScreen")).toBeHidden();
@@ -29,7 +29,7 @@ test("loads the menu and starts a run without runtime errors", async ({ page }) 
   const errors = collectPageErrors(page);
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "ECHO STEPS" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "GHOST TRAIL" })).toBeVisible();
   await expect(page.locator("#coinLine")).toContainText("coins");
 
   await page.getByRole("button", { name: "PLAY" }).click();
@@ -66,7 +66,7 @@ test("pauses for native lifecycle interruption and handles native Back", async (
   await expect(page.getByRole("heading", { name: "PAUSED" })).toBeVisible();
 
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("echosteps:back")));
-  await expect(page.getByRole("heading", { name: "ECHO STEPS" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "GHOST TRAIL" })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -78,7 +78,7 @@ test("reloads offline after the install cache is ready", async ({ page, context 
   await context.setOffline(true);
   try {
     await page.reload();
-    await expect(page.getByRole("heading", { name: "ECHO STEPS" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "GHOST TRAIL" })).toBeVisible();
   } finally {
     await context.setOffline(false);
   }

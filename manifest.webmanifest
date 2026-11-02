@@ -1,6 +1,6 @@
 {
-  "name": "Echo Steps: Ghost Run",
-  "short_name": "Echo Steps",
+  "name": "Ghost Trail Arcade",
+  "short_name": "Ghost Trail",
   "description": "Outrun the echoes created by your own past routes.",
   "start_url": "./",
   "scope": "./",

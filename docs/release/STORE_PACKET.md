@@ -4,7 +4,7 @@ Status (Oct 13, 2026): iOS 1.0 build 19 (PR #78 UI review changes plus owner tes
 
 ## Listing copy
 
-**Store name:** Echo Steps: Ghost Run (App Store Connect record); home-screen name: Echo Steps
+**Store name:** Ghost Trail Arcade from 1.0.1 (1.0 shipped as Echo Steps: Ghost Run); home-screen name: Ghost Trail
 
 **Short description:** Collect the prize. Reach the exit. Survive your own echoes.
 
