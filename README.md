@@ -1,4 +1,6 @@
-# Echo Steps: Ghost Run
+# Ghost Trail Arcade
+
+(Shipped as "Echo Steps: Ghost Run" in 1.0; renamed in 1.0.1. The repository and bundle ID keep the old name.)
 
 A minimalist mobile arcade game for iPhone and Android where every completed route becomes a lethal echo. Collect the prize, escape, and survive your own history until the Garbage Collector clears old paths.
 
@@ -13,11 +15,11 @@ See [music update evidence](docs/release/TECHNO_MUSIC_SETTINGS.md).
 
 ## Current status
 
-The repository contains the web game plus Capacitor 8 projects for Android and iOS. iOS version 1.0 (build 19, with the UI review changes and owner testing fixes) is submitted to App Review (App Store Connect record: "Echo Steps: Ghost Run", bundle ID `com.mukulkatari.echosteps`) and set to release automatically no earlier than Oct 15, 2026. The submitted listing, products and privacy answers are recorded in [STORE_LISTING.md](STORE_LISTING.md).
+The repository contains the web game plus Capacitor 8 projects for Android and iOS. iOS version 1.0 (build 19) is live on the App Store since Nov 2, 2026 (bundle ID `com.mukulkatari.echosteps`). Version 1.0.1 (build 20) renames the app to "Ghost Trail Arcade" ([notes](docs/release/RELEASE_1.0.1.md)). The submitted listing, products and privacy answers are recorded in [STORE_LISTING.md](STORE_LISTING.md).
 
 ### Release plan
 
-1. **iOS 1.0 (submitted).** Guest play with a Game Center leaderboard and optional App Store coin packs; no accounts of our own, ads or analytics. Build 19 adds the owner testing fixes ([notes](docs/release/TESTING_NOTES_BUILD_15.md)).
+1. **iOS 1.0 (live Nov 2, 2026; 1.0.1 renames it to Ghost Trail Arcade).** Guest play with a Game Center leaderboard and optional App Store coin packs; no accounts of our own, ads or analytics. Build 19 adds the owner testing fixes ([notes](docs/release/TESTING_NOTES_BUILD_15.md)).
 2. **Google Play release (#51).** Android release signing, Google Play Billing for the same coin packs, Play Games, and rewarded ads from day one (#66).
 3. **Verified leaderboard, once the Google Play version is released (#63).** Supabase hosts the leaderboard and only accepts scores the server replay validator has verified: `scripts/build.mjs` refuses `ECHO_RANKED_ACTIVATE=1` until then.
 
