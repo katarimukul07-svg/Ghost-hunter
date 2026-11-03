@@ -1,8 +1,8 @@
 # Ghost Trail Arcade store listing
 
 Mirrors App Store Connect. iOS 1.0 (build 19) went live on Nov 2, 2026 as
-"Echo Steps: Ghost Run". Version 1.0.1 (build 20) renames the app to "Ghost Trail
-Arcade" ([release notes](docs/release/RELEASE_1.0.1.md)). Update this file in the same PR whenever
+"Echo Steps: Ghost Run". Version 1.0.1 (build 20) renamed the app to "Ghost Trail
+Arcade" and is live since Nov 3, 2026 ([release notes](docs/release/RELEASE_1.0.1.md)). Update this file in the same PR whenever
 the listing, review notes, products or privacy answers change.
 
 ## Identity
@@ -10,7 +10,7 @@ the listing, review notes, products or privacy answers change.
 - App name: Ghost Trail Arcade (from 1.0.1; 1.0 shipped as "Echo Steps: Ghost Run". "Echo Steps" and "Ghost Trail" were taken on the App Store)
 - Short name (home screen): Ghost Trail
 - Bundle/application ID: `com.mukulkatari.echosteps`
-- Version: 1.0.1 (App Store version 1.0.1, build 20: rename only). Version 1.0 build 19 is live. Build 19 adds the owner testing fixes ([notes](docs/release/TESTING_NOTES_BUILD_15.md)) and replaces build 14 in App Review. Build 14 replaced build 12 for the UI review changes (PR #78); build 13 (uploaded as 1.0.1) is superseded
+- Version: 1.0.1 (App Store version 1.0.1, build 20: rename only), live since Nov 3, 2026; released automatically after App Review. Version 1.0 (build 19) went live Nov 2, 2026. Build 19 adds the owner testing fixes ([notes](docs/release/TESTING_NOTES_BUILD_15.md)) and replaces build 14 in App Review. Build 14 replaced build 12 for the UI review changes (PR #78); build 13 (uploaded as 1.0.1) is superseded
 - Category: Games — Arcade
 - Orientation: Portrait
 - Release: automatic after App Review, no earlier than Oct 15, 2026 5:00 AM GMT

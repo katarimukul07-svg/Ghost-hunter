@@ -4,7 +4,7 @@
 
 Version 1.0 is a focused, replayable mobile arcade game built around score competition. It keeps the core hook—each completed route becomes a lethal echo, while the Garbage Collector periodically reduces accumulated danger—and ships on iOS first with a Game Center leaderboard and optional App Store coin packs. Our own server-verified leaderboard follows the Google Play release.
 
-**Status (Nov 2, 2026):** iOS 1.0 (build 19) is live on the App Store. Version 1.0.1 (build 20) renames the app to "Ghost Trail Arcade" ([notes](docs/release/RELEASE_1.0.1.md)). Store details are recorded in [STORE_LISTING.md](STORE_LISTING.md).
+**Status (Nov 3, 2026):** iOS 1.0 (build 19) went live on Nov 2, 2026. Version 1.0.1 (build 20), which renames the app to "Ghost Trail Arcade", is live since Nov 3 ([notes](docs/release/RELEASE_1.0.1.md)). Store details are recorded in [STORE_LISTING.md](STORE_LISTING.md).
 
 ## Version 1.0 scope (iOS, build 19, live)
 
