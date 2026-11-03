@@ -18,3 +18,7 @@ The owner asked for a shorter name that describes the game. "Echo Steps" and "Gh
 | Version | 1.0 (build 19) | 1.0.1 (build 20); Android versionName 1.0.1, versionCode 2 |
 
 No gameplay changes. The bundle ID, product IDs, Game Center leaderboard ID, saved progress and the repository name stay the same, so players keep their coins and scores. Internal code names (comments, console logs, `EchoStepsNative`, the ranked client build tag) are unchanged.
+
+## Status
+
+Submitted to App Review on Nov 2, 2026 at 11:12 AM CT (set to release automatically after approval) and live on the App Store on Nov 3, 2026.
